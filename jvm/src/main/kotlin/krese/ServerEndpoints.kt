@@ -7,5 +7,6 @@ interface EndpointDefinition {
     fun getPathTitle() : String
     fun getPathHeader() : String
     fun getTermsAndConditions() : List<String>
-    fun getBodyHTML() : String //will be sanitized of any script and iframe
+    fun getBodyHTML() : String //currently escaped, will be sanitized of any script and iframe
 }
+
