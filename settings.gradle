@@ -1,0 +1,4 @@
+rootProject.name = 'krese'
+include 'jvm'
+include 'common'
+include 'js'
