@@ -5,7 +5,7 @@ data class Block(val id: Long, val label: String)
 
 data class BlockSet(val availableBlocks: List<Block>)
 
-data class SpecificBlockSetSelection(val selected : HashSet<Int>)
+data class SpecificBlockSetSelection(val selected : HashSet<Long>)
 
 data class Email(val address: String) {
     init {
@@ -22,6 +22,26 @@ data class Timespan(val from: Long, val to: Long) {
             throw Exception("Timespan is illegal (endtime before starttime)")
         }
     }
+
+    fun intersects(other: Timespan): Boolean {
+        return !(from > other.to || to < other.from)
+    }
+
+    fun intersectsOrTangents(other: Timespan): Boolean {
+        return (!(from > other.to || to < other.from)) || isNeighbor(other)
+    }
+
+    fun isNeighbor(other: Timespan): Boolean {
+        return this.immediatelyAfter(other) || this.immediatelyBefore(other)
+    }
+
+    fun immediatelyBefore(other: Timespan): Boolean {
+        return this.to == other.from
+    }
+
+    fun immediatelyAfter(other: Timespan): Boolean {
+        return this.from == other.to
+    }
 }
 
 enum class BookingState {
@@ -31,7 +51,7 @@ enum class BookingState {
     Declined,
 }
 
-data class Booking(val timestamp_created: Long, val timestamp_edited: Long, val publicUser: PublicUser, val timespan: Timespan, val comment: String, val state: BookingState)
+data class Booking(val timestamp_created: Long, val timestamp_edited: Long, val publicUser: PublicUser, val timespan: Timespan, val selectedResources: SpecificBlockSetSelection, val comment: String, val state: BookingState)
 
 data class FullBooking(val booking: Booking, val fullUser: FullUser)
 

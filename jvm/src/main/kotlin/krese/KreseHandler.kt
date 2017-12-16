@@ -3,7 +3,6 @@ package krese
 import krese.data.Booking
 import krese.data.Timespan
 
-data class RawJWT(val text: String)
 
 interface KreseHandable {
     fun applyJWT(jwt: RawJWT): String
