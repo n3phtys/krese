@@ -6,7 +6,7 @@ val configParentDir = "config"
 fun main(args: Array<String>) {
     println("Hello World from JVM Server")
 
-    runExposedExample()
+    //runExposedExample()
 
     createConfigFileDefaultIfNoConfigExists(configParentDir)
 
