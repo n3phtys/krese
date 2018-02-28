@@ -7,6 +7,14 @@ import org.jetbrains.exposed.sql.SchemaUtils.create
 import org.jetbrains.exposed.dao.*
 
 
+//TODO: IMPORTANT:
+/*
+We need to have two levels of resources: one named and one number
+it's for example possible to have 2 rooms ( A and B) with 4 beds each.
+Someone should be able to select B-3 for 3 beds in room B. The second layer is only a number. The first is a named entity one can actually select
+ */
+
+
 object FullBookings : IntIdTable() {
     val eventchainindex = varchar("eventchainindex", 50).index()
     val name = varchar("name", 50).index()

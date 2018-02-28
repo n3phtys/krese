@@ -1,7 +1,36 @@
 package krese.data
 
+/*
+Gästezimmer KA (2 Betten)
+Gästezimmer Berlin laut Mail (multi hierarchy)
+Skihütte mit 10 Betten
+Saal KA (nur eine Einheit)
+ */
 
-data class Block(val id: Long, val label: String)
+/*
+CRUD Operationen
+erfordern exakte ID jedes Reservable
+
+GUI erlaubt es zu wechseln über links
+jeder link ist einzigartig
+
+Liste auch noch zu jedem Reservable verfügbare Dateien und Texte auf
+Baue Webseiten on-the-fly aus den verfügbaren Dateien
+ */
+
+
+data class UniqueReservableKey(val id: String) {
+    init {
+        if (!isValidKey(id)) {
+            throw Exception("Key is not valid")
+        }
+    }
+}
+
+expect fun isValidKey(str: String) : Boolean
+
+
+data class Block(val id: Long, val label: String, val secondLayerUnitsCount: Int)
 
 data class BlockSet(val availableBlocks: List<Block>)
 
