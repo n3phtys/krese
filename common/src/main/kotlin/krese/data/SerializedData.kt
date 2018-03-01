@@ -20,11 +20,11 @@ Baue Webseiten on-the-fly aus den verfügbaren Dateien
 
 
 data class UniqueReservableKey(val id: String) {
-    init {
+    /*init {
         if (!isValidKey(id)) {
             throw Exception("Key is not valid")
         }
-    }
+    }*/
 }
 
 expect fun isValidKey(str: String) : Boolean
@@ -34,23 +34,23 @@ data class Block(val id: Long, val label: String, val secondLayerUnitsCount: Int
 
 data class BlockSet(val availableBlocks: List<Block>)
 
-data class SpecificBlockSetSelection(val selected : HashSet<Long>)
+data class SpecificBlockSetSelection(val selected : Set<Long>)
 
 data class Email(val address: String) {
-    init {
+    /*init {
         if (!isValidEmail(address)) {
             throw Exception("Email is not valid")
         }
-    }
+    }*/
 }
 data class FullUser(val id: Long, val publicinfo : PublicUser, val email: Email, val telephone: String)
 data class PublicUser(val nickname: String)
 data class Timespan(val from: Long, val to: Long) {
-    init {
+    /*init {
         if (from > to) {
             throw Exception("Timespan is illegal (endtime before starttime)")
         }
-    }
+    }*/
 
     fun intersects(other: Timespan): Boolean {
         return !(from > other.to || to < other.from)

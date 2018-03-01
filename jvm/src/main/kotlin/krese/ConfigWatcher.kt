@@ -1,24 +1,15 @@
 package krese
 
 import com.google.gson.Gson
-import kotlinx.coroutines.experimental.CommonPool
-import kotlinx.coroutines.experimental.launch
-import org.jetbrains.ktor.routing.*
-import org.jetbrains.ktor.application.*
-import org.jetbrains.ktor.features.DefaultHeaders
-import org.jetbrains.ktor.application.*
-import org.jetbrains.ktor.features.*
-import org.jetbrains.ktor.host.*
-import org.jetbrains.ktor.http.*
-import org.jetbrains.ktor.netty.*
-import org.jetbrains.ktor.response.*
-import org.jetbrains.ktor.routing.*
-import org.jetbrains.ktor.request.*     // for recieve
-import org.jetbrains.ktor.util.*
 import com.google.gson.GsonBuilder
-import org.jetbrains.ktor.content.*
 import java.io.File
-import java.nio.charset.Charset
+import io.ktor.application.*
+import io.ktor.http.*
+import io.ktor.response.*
+import io.ktor.routing.*
+import io.ktor.content.*
+import io.ktor.server.engine.*
+import io.ktor.server.netty.*
 import java.nio.file.FileSystems
 import java.nio.file.Files
 import java.nio.file.Path
@@ -29,7 +20,6 @@ import java.util.concurrent.TimeUnit
 
 class ApplicationHolder(func: (Config) -> Unit) {
 
-    var server: NettyApplicationHost? = null
 
     fun startWith(config: Config): Unit {
         //launch(CommonPool) {
@@ -37,7 +27,18 @@ class ApplicationHolder(func: (Config) -> Unit) {
 
         println("PWD = ${File("").absolutePath}")
 
-        server = embeddedServer<NettyApplicationHost>(Netty, config.port) {
+                val server = embeddedServer(Netty, 8080) {
+                    routing {
+                        static("") {
+                            resources("web")
+                            defaultResource("web/index.html")
+                        }
+                    }
+                }
+        server.start(wait = true)
+
+
+                /*embeddedServer(Netty, config.port) {
             routing {
                 static("") {
                     resources("web")
@@ -64,15 +65,14 @@ class ApplicationHolder(func: (Config) -> Unit) {
                             call.respondText("JWT received: $jwt")
                         }
                     }
-                }
             }
-        }
+                }*/
 
         println("Server spawned at ${System.currentTimeMillis()}")
 
 
         //launch(CommonPool) {
-        server!!.start(wait = true)
+        //server!!.start(wait = true)
         //}
 
         println("Server is running on port ${config.port}  at ${System.currentTimeMillis()}")
@@ -81,7 +81,7 @@ class ApplicationHolder(func: (Config) -> Unit) {
     }
 
     fun terminate(): Unit {
-        server!!.stop(5000, 10000, TimeUnit.MILLISECONDS)
+        //server!!.stop(5000, 10000, TimeUnit.MILLISECONDS)
     }
 }
 
