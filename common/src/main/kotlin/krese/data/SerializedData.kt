@@ -86,3 +86,18 @@ data class FullBooking(val booking: Booking, val fullUser: FullUser)
 
 
 expect fun isValidEmail(address: String) : Boolean
+
+
+
+data class PostRequest(
+        val jwt: String,
+        val delete: Boolean,
+        val accept: Boolean,
+        val payload: FullBooking
+)
+
+data class PostResponse(
+        val successful: Boolean,
+        val finished: Boolean,
+        val message: String
+)

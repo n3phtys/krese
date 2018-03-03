@@ -1,0 +1,30 @@
+@startuml
+User -> Krese: Create/Update Reservation Form Post
+
+alt User is logged in and valid
+
+    Krese -> User: HTTP OK
+    Krese -> User: Confirmation Email
+    
+else Login does not exist / is invalid
+
+    Krese -> User: HTTP "Requires Authentication via Mail"
+    Krese -> User: Request Authentication Email
+    User -> Krese: Authenticate via JWT Link (persists authentication via localstorage)
+    
+end
+
+    Krese-> Operator: New Reservation Email
+
+alt Accept via Mail
+	Operator -> Krese: JWT Link
+else Accept via Website
+	Operator -> Krese: Website Accept Button
+end
+
+    Krese -> User: Accepted Email
+    Krese -> Operator: Accepted Email
+
+
+   
+@enduml

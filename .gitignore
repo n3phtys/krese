@@ -7,3 +7,9 @@ js/static/web/js.meta.js
 js/static/web/kotlin.js
 js/static/web/kotlin.meta.js
 js/static/web/*.js
+build/
+common/build/
+js/build/
+jvm/build/
+doc/plantuml.jar
+*.iml

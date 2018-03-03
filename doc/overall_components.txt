@@ -1,0 +1,38 @@
+@startuml
+
+
+interface "Env Property Loader" as CGL
+interface "Expose" as EXP
+interface "MySQL" as SQL
+interface "Java Mail" as Mail
+
+[Database\nEncapsulation] ..> EXP : use
+[Database\nConfig] ..> CGL : use
+[Application\nConfig] ..> CGL : use
+EXP ..> SQL : use
+
+[Mail Service] ..> Mail : use 
+
+[Database\nEncapsulation] ..> [Database\nConfig] 
+[Mail\nTemplater]
+[Auth Verifier]
+[Filesystem\nWrapper] ..> Filesystem : use
+
+[JWTReceiver] ..> Ktor : use
+[POSTReceiver] ..> Ktor : use
+[GETReceiver] ..> Ktor : use
+[GETReceiver] ..> [Business\nLogic]
+[POSTReceiver] ..> [Business\nLogic]
+[JWTReceiver] ..> [Business\nLogic]
+
+[Business\nLogic] ..> [Mail Service]
+[Business\nLogic] ..> [Filesystem\nWrapper] 
+[Business\nLogic] ..> [Auth Verifier]
+[Business\nLogic] ..> [Mail\nTemplater]
+[Business\nLogic] ..> [Database\nEncapsulation] 
+
+[JWTReceiver] ..> [Application\nConfig]
+[GETReceiver] ..> [Application\nConfig]
+[POSTReceiver] ..> [Application\nConfig]
+
+@enduml
