@@ -1,4 +1,4 @@
-package krese
+package krese.test
 
 import junit.framework.Assert.assertEquals
 import krese.data.isValidKey
@@ -16,5 +16,6 @@ class CalculatorTest {
         assertEquals(false, isValidKey("/"))
         assertEquals(true, isValidKey("my/key215"))
         assertEquals(true, isValidKey("mykey215"))
+        assertEquals(false, isValidKey("aa//aa"))
     }
 }

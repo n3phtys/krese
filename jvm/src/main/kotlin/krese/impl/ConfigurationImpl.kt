@@ -3,7 +3,7 @@ package krese.impl
 import krese.ApplicationConfiguration
 import krese.DatabaseConfiguration
 
-object Configuration : DatabaseConfiguration, ApplicationConfiguration {
+class ConfigurationImpl : DatabaseConfiguration, ApplicationConfiguration {
     override val databasePort: String
         get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
     override val databaseHost: String

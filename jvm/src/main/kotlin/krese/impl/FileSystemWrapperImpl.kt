@@ -5,7 +5,7 @@ import com.github.salomonbrys.kodein.instance
 import com.google.gson.Gson
 import krese.ApplicationConfiguration
 import krese.FileSystemWrapper
-import krese.Reservable
+import krese.data.Reservable
 import krese.data.UniqueReservableKey
 import java.io.File
 import java.nio.file.Path

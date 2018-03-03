@@ -1,9 +1,7 @@
 package krese
 
-import krese.data.Booking
-import krese.data.Email
-import krese.data.PostResponse
-import krese.data.UniqueReservableKey
+import krese.data.*
+import krese.impl.FullBooking
 import org.joda.time.DateTimeUtils.currentTimeMillis
 import java.nio.file.Path
 

@@ -1,6 +1,4 @@
-package krese
-
-import krese.data.UniqueReservableKey
+package krese.data
 
 
 data class ReservableElement(

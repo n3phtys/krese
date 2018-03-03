@@ -13,3 +13,7 @@ js/build/
 jvm/build/
 doc/plantuml.jar
 *.iml
+web/*.js
+web/index.html
+js/static/web/index.html
+*.kjsm

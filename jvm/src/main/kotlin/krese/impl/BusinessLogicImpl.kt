@@ -1,18 +1,18 @@
 package krese.impl
 
+import com.github.salomonbrys.kodein.Kodein
 import krese.BusinessLogic
-import krese.FullBooking
-import krese.GetResponse
+import krese.data.GetResponse
 import krese.UserProfile
 import krese.data.PostResponse
 import krese.data.UniqueReservableKey
 
-class BusinessLogicImpl: BusinessLogic {
-    override fun incomingCreateUpdateReservation(reservation: FullBooking, userProfile: UserProfile?): PostResponse {
+class BusinessLogicImpl(private val kodein: Kodein): BusinessLogic {
+    override fun incomingEmailUserAuthentication(reservation: FullBooking, userProfile: UserProfile?): PostResponse {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
-    override fun incomingEmailUserAuthentication(reservation: FullBooking, userProfile: UserProfile?): PostResponse {
+    override fun incomingCreateUpdateReservation(reservation: FullBooking, userProfile: UserProfile?): PostResponse {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 

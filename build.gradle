@@ -1,5 +1,5 @@
 buildscript {
-    ext.kotlin_version = '1.2.21'
+    ext.kotlin_version = '1.2.30'
 
     repositories {
         maven {     url 'http://dl.bintray.com/kotlin/kotlin-eap-1.2' }
@@ -7,6 +7,7 @@ buildscript {
     }
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        //classpath 'org.junit.platform:junit-platform-gradle-plugin:1.1.0'
     }
 }
 
@@ -60,11 +61,11 @@ configure(project(':js')) {
             })
         }
         from compileKotlin2Js.destinationDir
-        into "${projectDir}/static/web"
+        into "${projectDir}/../web"
 
         copy {
-            from 'js/index.html'
-            into "${projectDir}/static/web"
+            from "${projectDir}/index.html"
+            into "${projectDir}/../web"
         }
 
         dependsOn classes
@@ -93,11 +94,28 @@ configure(project(':jvm')) {
             srcDirs += ["../js/static"]
         }
 
+        test {
+            java {
+                srcDirs = ["${projectDir}/test/kotlin"]
+            }
+        }
+
         main.compileClasspath += configurations.provided
         test.compileClasspath += configurations.provided
         test.runtimeClasspath += configurations.provided
+
+        test {
+            java {
+                srcDirs = ["test/model"]  // Note @Peter's comment below
+            }
+        }
     }
 
+    test {
+        beforeTest { descriptor ->
+            logger.lifecycle("Running test: ${descriptor}")
+        }
+    }
 
 
     compileKotlin.kotlinOptions.jvmTarget = "1.8"
@@ -115,7 +133,6 @@ configure(project(':jvm')) {
         // https://mvnrepository.com/artifact/org.mariadb.jdbc/mariadb-java-client
         compile group: 'org.mariadb.jdbc', name: 'mariadb-java-client', version: '2.2.0'
 
-        compile 'com.google.code.gson:gson:2.8.2'
 
         // https://mvnrepository.com/artifact/com.google.code.gson/gson
         compile group: 'com.google.code.gson', name: 'gson', version: '2.8.2'
@@ -127,6 +144,8 @@ configure(project(':jvm')) {
 
         compile 'com.github.salomonbrys.kodein:kodein:4.1.0'
         compile "io.ktor:ktor-server-netty:$ktor_version"
+
+
 
         testCompile "junit:junit:4.12"
         testCompile "org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version"

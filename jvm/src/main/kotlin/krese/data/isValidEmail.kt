@@ -14,7 +14,7 @@ actual fun isValidKey(str: String): Boolean {
                 return false;
             } else {
                 val r = Regex("[a-z0-9|/]+")
-                return r.matches(str)
+                return r.matches(str) && !str.contains("//")
             }
         }
 }

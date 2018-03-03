@@ -1,17 +1,11 @@
 package krese
 
+import com.github.salomonbrys.kodein.Kodein
+import com.github.salomonbrys.kodein.bind
+import com.github.salomonbrys.kodein.singleton
+import krese.impl.*
 
-val configParentDir = "config"
 
 fun main(args: Array<String>) {
-    println("Hello World from JVM Server")
-
-    //runExposedExample()
-
-    createConfigFileDefaultIfNoConfigExists(configParentDir)
-
-    executeWheneverConfigFileChanges( configParentDir) { config : Config ->
-        println("Executing function for config ${config.toString()}")
-    }
-
+    Server(kodein).start()
 }
