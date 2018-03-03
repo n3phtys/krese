@@ -5,4 +5,4 @@ jdk:
   - openjdk8
   - openjdk9
 script:
-  - gradle test
+  - ./gradlew test
