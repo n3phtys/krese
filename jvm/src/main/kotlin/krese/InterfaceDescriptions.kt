@@ -3,6 +3,9 @@ package krese
 import krese.data.*
 import krese.impl.DbBooking
 import krese.impl.DbBookingInputData
+import krese.impl.DbBookingOutputData
+import org.jetbrains.exposed.dao.EntityID
+import org.joda.time.DateTime
 import org.joda.time.DateTimeUtils.currentTimeMillis
 import java.nio.file.Path
 
@@ -14,13 +17,13 @@ interface FileSystemWrapper {
 
 interface DatabaseEncapsulation {
 
-    fun createUpdateBooking(id: Long?, data: DbBookingInputData): DbBooking?
+    fun createUpdateBooking(id: Long?, data: DbBookingInputData): DbBookingOutputData?
 
     fun deleteBooking(id: Long) : Boolean
 
     fun acceptBooking(id: Long) : Boolean
 
-    fun retrieveBookingsForKey(key: UniqueReservableKey, includeMinTimestamp: Long = Long.MIN_VALUE, excludeMaxTimestamp: Long = Long.MAX_VALUE, start: Long = 0, end: Long = Long.MAX_VALUE) : List<DbBooking>
+    fun retrieveBookingsForKey(key: UniqueReservableKey, includeMinTimestamp: DateTime = DateTime().withMillis(Long.MIN_VALUE), excludeMaxTimestamp: DateTime = DateTime().withMillis(Long.MAX_VALUE)) : List<DbBookingOutputData>
 
 }
 

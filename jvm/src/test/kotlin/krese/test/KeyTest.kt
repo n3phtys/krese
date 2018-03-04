@@ -5,7 +5,7 @@ import krese.data.isValidKey
 import org.junit.Test
 
 
-class CalculatorTest {
+class KeyTest {
 
     @Test
     fun reservablekeys_arefilteredright() {

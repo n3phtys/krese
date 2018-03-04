@@ -3,27 +3,17 @@ package krese.impl
 import com.github.salomonbrys.kodein.Kodein
 import com.github.salomonbrys.kodein.instance
 import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
-import krese.ApplicationConfiguration
 import krese.DatabaseConfiguration
 import krese.DatabaseEncapsulation
-import krese.data.Booking
 import krese.data.Email
-import krese.data.Timespan
 import krese.data.UniqueReservableKey
-import krese.impl.DbBlocks.dBBookingId
 import krese.utility.fromJson
 import org.jetbrains.exposed.dao.*
 import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.StdOutSqlLogger
-import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.SchemaUtils.create
-import org.jetbrains.exposed.dao.*
 import org.joda.time.DateTime
-
 
 
 class DatabaseEncapsulationImpl(private val kodein: Kodein) : DatabaseEncapsulation {
@@ -41,8 +31,71 @@ class DatabaseEncapsulationImpl(private val kodein: Kodein) : DatabaseEncapsulat
         }
     }
 
-    override fun createUpdateBooking(id: Long?, data: DbBookingInputData): DbBooking? {
-        TODO("Not yet implemented")
+
+    override fun createUpdateBooking(id: Long?, data: DbBookingInputData): DbBookingOutputData? {
+        Database.connect(databaseConfig.databaseJDBC, driver = databaseConfig.databaseDriver)
+        var dbb : DbBookingOutputData? = null
+        val ts = DateTime.now()
+        if (id != null) {
+            transaction {
+                val ele = DbBooking.findById(id)
+                if (ele != null) {
+                    DbBlocks.deleteWhere { DbBlocks.dBBookingId eq id }
+                    ele.accepted = data.accepted
+                    ele.commentOperator = data.commentOperator
+                    ele.commentUser = data.commentUser
+                    ele.createdTimestamp = data.createdTimestamp
+                    ele.email = data.email.address
+                    ele.endDateTime = data.endTime
+                    ele.modifiedTimestamp = ts
+                    ele.name = data.name
+                    ele.startDateTime = data.startTime
+                    ele.reservableKey = data.key.id
+                    ele.telephone = data.telephone
+
+                    data.blocks.forEach {
+                        DbBlock.new {
+                            usedNumber = it.usedNumber
+                            dBBooking = ele
+                            elementPath = Gson().toJson(it.elementPath)
+                        }
+                    }
+                    dbb = ele.toOutput()
+                }
+            }
+        } else {
+            transaction {
+                val ele = DbBooking.new {
+                    accepted = data.accepted
+                    commentOperator = data.commentOperator
+                    commentUser = data.commentUser
+                    createdTimestamp = data.createdTimestamp
+                    email = data.email.address
+                    endDateTime = data.endTime
+                    modifiedTimestamp = ts
+                    name = data.name
+                    startDateTime = data.startTime
+                    reservableKey = data.key.id
+                    telephone = data.telephone
+                }
+                data.blocks.forEach {
+                    DbBlock.new {
+                        usedNumber = it.usedNumber
+                        dBBooking = ele
+                        elementPath = Gson().toJson(it.elementPath)
+                    }
+                }
+                dbb = ele.toOutput()
+            }
+        }
+        return dbb
+    }
+
+    fun deleteBlocks(bookingId: Long) {
+        Database.connect(databaseConfig.databaseJDBC, driver = databaseConfig.databaseDriver)
+        transaction {
+            DbBlocks.deleteWhere { DbBlocks.dBBookingId eq bookingId }
+        }
     }
 
     override fun deleteBooking(id: Long) : Boolean {
@@ -50,26 +103,34 @@ class DatabaseEncapsulationImpl(private val kodein: Kodein) : DatabaseEncapsulat
         var exists : Boolean = false
         transaction {
             exists = DbBooking.findById(id) != null
-            DbBookings.deleteWhere { DbBookings.id eq id}
             DbBlocks.deleteWhere { DbBlocks.dBBookingId eq id }
+            DbBookings.deleteWhere { DbBookings.id eq id}
 
         }
         return exists
     }
 
     override fun acceptBooking(id: Long) : Boolean {
-        TODO("Not yet implemented")
+        Database.connect(databaseConfig.databaseJDBC, driver = databaseConfig.databaseDriver)
+        var found : Boolean = false
+        transaction {
+            val dbB = DbBooking.findById(id)
+            if (dbB != null) {
+                dbB.accepted = true
+                found = true
+            }
+        }
+        return found
     }
 
-    override fun retrieveBookingsForKey(key: UniqueReservableKey, includeMinTimestamp: Long, excludeMaxTimestamp: Long, start: Long, end: Long) : List<DbBooking> {
+    override fun retrieveBookingsForKey(key: UniqueReservableKey, includeMinTimestamp: DateTime, excludeMaxTimestamp: DateTime) : List<DbBookingOutputData> {
+        val myBookings = mutableListOf<DbBookingOutputData>()
+        val skey = key.id
 
-        val myBookings = mutableListOf<DbBooking>()
-
-        //TODO: add pagination
         Database.connect(databaseConfig.databaseJDBC, driver = databaseConfig.databaseDriver)
         transaction {
             myBookings.addAll(
-                    DbBooking.find { DbBookings.startDateTime less excludeMaxTimestamp or DbBookings.endDateTime.greaterEq(includeMinTimestamp)} .sortedByDescending { DbBookings.startDateTime }
+                    DbBooking.find { DbBookings.reservableKey eq skey and (DbBookings.startDateTime less excludeMaxTimestamp or DbBookings.endDateTime.greaterEq(includeMinTimestamp))} .sortedByDescending { DbBookings.startDateTime }.map { it.toOutput() }
             )
         }
         return myBookings
@@ -142,7 +203,9 @@ object DbBookings : LongIdTable("db_bookings", "id") {
     val accepted = bool("accepted")
 }
 
-data class DbBookingInputData(val key: UniqueReservableKey, val email: Email, val name: String, val telephone: String, val commentUser: String, val commentOperator: String, val startTime: DateTime, val endTime: DateTime, val createdTimestamp: DateTime, val accepted: Boolean)
+data class DbBookingInputData(val key: UniqueReservableKey, val email: Email, val name: String, val telephone: String, val commentUser: String, val commentOperator: String, val startTime: DateTime, val endTime: DateTime, val createdTimestamp: DateTime, val accepted: Boolean, val blocks: List<DbBlockInputData>)
+
+data class DbBlockInputData(val elementPath: List<Int>, val usedNumber: Int)
 
 class DbBooking(id: EntityID<Long>) : LongEntity(id) {
     companion object : LongEntityClass<DbBooking>(DbBookings)
@@ -164,9 +227,13 @@ class DbBooking(id: EntityID<Long>) : LongEntity(id) {
     fun getReservableKey() : UniqueReservableKey {
         return UniqueReservableKey(this.reservableKey)
     }
+
+
+    fun toOutput() : DbBookingOutputData = DbBookingOutputData(id.value, getReservableKey(), Email(email), name, telephone, commentUser, commentOperator, startDateTime, endDateTime, createdTimestamp, modifiedTimestamp, accepted, blocks.map { it.toOutput() })
 }
 
 
+data class DbBookingOutputData(val id : Long, val key: UniqueReservableKey, val email: Email, val name: String, val telephone: String, val commentUser: String, val commentOperator: String, val startTime: DateTime, val endTime: DateTime, val createdTimestamp: DateTime, val modifiedTimestamp: DateTime, val accepted: Boolean, val blocks: List<DbBlockOutputData>)
 
 
 
@@ -188,4 +255,10 @@ class DbBlock(id: EntityID<Long>) : LongEntity(id) {
     fun getElementPathSegments() : List<Int> {
         return Gson().fromJson<List<Int>>(this.elementPath)
     }
+
+
+    fun toOutput() : DbBlockOutputData = DbBlockOutputData(getElementPathSegments(), usedNumber)
 }
+
+
+data class DbBlockOutputData(val elementPath: List<Int>, val usedNumber: Int)
