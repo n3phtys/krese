@@ -4,6 +4,7 @@ import com.github.salomonbrys.kodein.Kodein
 import krese.BusinessLogic
 import krese.data.GetResponse
 import krese.UserProfile
+import krese.data.FullBooking
 import krese.data.PostResponse
 import krese.data.UniqueReservableKey
 

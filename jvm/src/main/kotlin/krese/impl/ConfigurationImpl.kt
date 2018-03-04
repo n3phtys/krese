@@ -4,6 +4,10 @@ import krese.ApplicationConfiguration
 import krese.DatabaseConfiguration
 
 class ConfigurationImpl : DatabaseConfiguration, ApplicationConfiguration {
+    override val databaseDriver: String
+        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
+    override val databaseJDBC: String
+        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
     override val databasePort: String
         get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
     override val databaseHost: String

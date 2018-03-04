@@ -1,7 +1,8 @@
 package krese
 
 import krese.data.*
-import krese.impl.FullBooking
+import krese.impl.DbBooking
+import krese.impl.DbBookingInputData
 import org.joda.time.DateTimeUtils.currentTimeMillis
 import java.nio.file.Path
 
@@ -12,7 +13,15 @@ interface FileSystemWrapper {
 } //also includes static files in subdirectory
 
 interface DatabaseEncapsulation {
-    fun getAllocatedTimeslotsToKey(key: String, includeMinTimestamp: Long, excludeMaxTimestamp: Long, start: Long, end: Long) : List<Booking>
+
+    fun createUpdateBooking(id: Long?, data: DbBookingInputData): DbBooking?
+
+    fun deleteBooking(id: Long) : Boolean
+
+    fun acceptBooking(id: Long) : Boolean
+
+    fun retrieveBookingsForKey(key: UniqueReservableKey, includeMinTimestamp: Long = Long.MIN_VALUE, excludeMaxTimestamp: Long = Long.MAX_VALUE, start: Long = 0, end: Long = Long.MAX_VALUE) : List<DbBooking>
+
 }
 
 interface JWTReceiver {
@@ -51,6 +60,8 @@ interface DatabaseConfiguration {
     val databaseName: String
     val databaseUsername: String
     val databasePassword: String
+    val databaseDriver: String
+    val databaseJDBC: String
 }
 
 interface ApplicationConfiguration {

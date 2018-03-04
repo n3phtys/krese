@@ -3,6 +3,8 @@ package krese
 import com.github.salomonbrys.kodein.Kodein
 import com.github.salomonbrys.kodein.bind
 import com.github.salomonbrys.kodein.singleton
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import krese.impl.*
 
 val kodein = Kodein {

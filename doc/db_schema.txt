@@ -1,0 +1,24 @@
+@startuml
+
+class DbBooking {
+   reservable_key: VARCHAR_127
+   id : Long
+   email: VARCHAR_255
+   name: VARCHAR_255   
+   telephone: VARCHAR_50
+   commentUser: VARCHAR_511
+   commentOperator: VARCHAR_511
+   startDateTime: DateTime
+   endDatetime: DateTime
+   createdTimestamp: DateTime
+   modifiedTimestamp: DateTime
+   accepted: Boolean
+}
+
+class DbBlock {
+   elementPath : VARCHAR_255
+   dBBookingId : Long
+   used_number: Integer
+}
+
+@enduml

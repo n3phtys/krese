@@ -10,7 +10,7 @@ data class ReservableElement(
 )
 
 data class BlockedElement (
-        val pathSegmentsById: List<Long>
+        val elementPathSegments: List<Long>
 )
 
 data class Reservation(
