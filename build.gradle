@@ -13,7 +13,7 @@ buildscript {
 
 defaultTasks ':jvm:run'
 
-subprojects {
+allprojects {
     group 'com.github.n3phtys'
     version '1.0-SNAPSHOT'
 
@@ -24,6 +24,7 @@ subprojects {
         maven { url 'https://dl.bintray.com/kotlin/kotlinx' }
         maven { url 'https://dl.bintray.com/kotlin/kotlinx.html' }
         maven { url "https://dl.bintray.com/kotlin/kotlin-js-wrappers" }
+        maven { url "https://dl.bintray.com/jetbrains/markdown" }
         mavenCentral()
     }
 }
@@ -133,6 +134,12 @@ configure(project(':jvm')) {
         // https://mvnrepository.com/artifact/org.mariadb.jdbc/mariadb-java-client
         compile group: 'org.mariadb.jdbc', name: 'mariadb-java-client', version: '2.2.0'
 
+        compile 'com.auth0:java-jwt:3.3.0'
+
+        // https://mvnrepository.com/artifact/javax.mail/javax.mail-api
+        compile group: 'javax.mail', name: 'javax.mail-api', version: '1.6.1'
+
+        compile 'org.jetbrains:markdown:0.1.28'
 
         // https://mvnrepository.com/artifact/com.google.code.gson/gson
         compile group: 'com.google.code.gson', name: 'gson', version: '2.8.2'
@@ -151,6 +158,13 @@ configure(project(':jvm')) {
         testCompile "org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version"
         testCompile "org.jetbrains.kotlin:kotlin-test:$kotlin_version"
         expectedBy project(':common')
+    }
+
+    jar {
+        manifest {
+            attributes 'Main-Class': 'krese.MainKt'
+        }
+        from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
     }
 
 
