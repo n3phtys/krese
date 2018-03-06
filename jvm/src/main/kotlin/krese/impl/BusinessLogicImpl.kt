@@ -29,10 +29,6 @@ class BusinessLogicImpl(private val kodein: Kodein): BusinessLogic {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
-    override fun incomingLoginAttempt(email: String): PostResponse {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
     override fun retrieveReservations(urk: UniqueReservableKey): GetResponse {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }

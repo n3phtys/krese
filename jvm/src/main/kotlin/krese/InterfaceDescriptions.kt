@@ -1,9 +1,7 @@
 package krese
 
 import krese.data.*
-import krese.impl.DbBooking
-import krese.impl.DbBookingInputData
-import krese.impl.DbBookingOutputData
+import krese.impl.*
 import org.jetbrains.exposed.dao.EntityID
 import org.joda.time.DateTime
 import org.joda.time.DateTimeUtils.currentTimeMillis
@@ -28,11 +26,11 @@ interface DatabaseEncapsulation {
 }
 
 interface JWTReceiver {
-    fun receiveJWT(jwt: String) : PostResponse
+    fun receiveJWTAction(jwtAction: String) : PostResponse
 
     fun loginStillValid(jwt: String) : Boolean
 
-    fun relogin(email: String) : Boolean
+    fun relogin(email: String)
 }
 
 enum class LinkActions {
@@ -43,6 +41,21 @@ enum class LinkActions {
 }
 
 data class JWTPayload(val action: LinkActions?, val params: List<String>, val userProfile: UserProfile)
+
+
+
+sealed class PostAction {}
+
+data class CreateAction(val key: UniqueReservableKey, val email: Email, val name: String, val telephone: String, val commentUser: String, val startTime: DateTime, val endTime: DateTime, val blocks: List<DbBlockData>) : PostAction()
+
+data class DeclineAction(val id: Long, val comment: String) : PostAction()
+
+data class WithdrawAction(val id: Long, val comment: String) : PostAction()
+
+data class AcceptAction(val id: Long, val comment: String) : PostAction()
+
+data class PostActionInput(val jwt: JWTPayload?, val action: PostAction)
+
 
 fun buildUserProfile(email: Email, validFrom: DateTime, validTo: DateTime) : UserProfile {
     return UserProfile(email, if (validFrom.millisOfSecond == 0) {validFrom.millis} else {validFrom.withMillisOfSecond(0).plusSeconds(1).millis},  validTo.withMillisOfSecond(0).millis)
@@ -65,12 +78,12 @@ interface AuthVerifier {
 }
 
 interface GetReceiver {
-    fun accept(key: UniqueReservableKey): GetResponse?
+    fun retrieve(key: UniqueReservableKey): GetResponse?
 }
 
 
 interface PostReceiver {
-    fun accept(reservation: Reservation): Boolean
+    fun submitForm(reservation: PostActionInput): PostResponse
 }
 
 interface DatabaseConfiguration {
@@ -87,6 +100,7 @@ interface ApplicationConfiguration {
     val reservablesDirectory: String
     val webDirectory: String
     val applicationHost: String
+    val applicationProtocol: String
     val applicationPort: Int
     val hashSecret : String
     val mailUsername: String
@@ -116,8 +130,6 @@ interface BusinessLogic {
     fun incomingDeleteByModerator(bookingId: Long, userProfile: UserProfile, comment: String?) : PostResponse
 
     fun incomingWithdrawByUser(bookingId: Long, userProfile: UserProfile, comment: String?) : PostResponse
-
-    fun incomingLoginAttempt(email: String) : PostResponse
 
     fun retrieveReservations(urk: UniqueReservableKey) : GetResponse
 }

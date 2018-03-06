@@ -15,6 +15,8 @@ import kotlin.test.assertSame
 class JWTTest {
 
 class ApplicationMockConfig(): ApplicationConfiguration {
+    override val applicationProtocol: String
+        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
     override val webDirectory: String
         get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
     override val mailUsername: String

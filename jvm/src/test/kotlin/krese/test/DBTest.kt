@@ -4,6 +4,7 @@ import com.github.salomonbrys.kodein.Kodein
 import com.github.salomonbrys.kodein.bind
 import com.github.salomonbrys.kodein.singleton
 import krese.*
+import krese.data.DbBlockData
 import krese.data.Email
 import krese.data.UniqueReservableKey
 import krese.impl.*
@@ -42,9 +43,9 @@ class DBTest {
 
         println("So far")
 
-        val first = db.createUpdateBooking(null, DbBookingInputData(firstkey, Email("some@email.com"), "name", "01245", "unchanged comment", "comment b", DateTime.now().plusDays(2), DateTime.now().plusDays(3), DateTime.now(), false, listOf(DbBlockInputData(listOf(1,2,3), 1))))
-        val second = db.createUpdateBooking(null, DbBookingInputData(secondkey, Email("some@email.com"), "name", "01245", "comment c", "comment d", DateTime.now().plusDays(2), DateTime.now().plusDays(3), DateTime.now(), false, listOf(DbBlockInputData(listOf(1,2,3), 1))))
-        db.createUpdateBooking(first?.id, DbBookingInputData(firstkey, Email("some@email.com"), "name", "01245", "comment a", "comment b", DateTime.now().plusDays(2), DateTime.now().plusDays(3), DateTime.now(), false, listOf(DbBlockInputData(listOf(1,2,3), 1))))
+        val first = db.createUpdateBooking(null, DbBookingInputData(firstkey, Email("some@email.com"), "name", "01245", "unchanged comment", "comment b", DateTime.now().plusDays(2), DateTime.now().plusDays(3), DateTime.now(), false, listOf(DbBlockData(listOf(1,2,3), 1))))
+        val second = db.createUpdateBooking(null, DbBookingInputData(secondkey, Email("some@email.com"), "name", "01245", "comment c", "comment d", DateTime.now().plusDays(2), DateTime.now().plusDays(3), DateTime.now(), false, listOf(DbBlockData(listOf(1,2,3), 1))))
+        db.createUpdateBooking(first?.id, DbBookingInputData(firstkey, Email("some@email.com"), "name", "01245", "comment a", "comment b", DateTime.now().plusDays(2), DateTime.now().plusDays(3), DateTime.now(), false, listOf(DbBlockData(listOf(1,2,3), 1))))
 
         if (first != null) {
             db.acceptBooking(first.id)

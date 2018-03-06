@@ -5,6 +5,7 @@ import com.github.salomonbrys.kodein.instance
 import com.google.gson.Gson
 import krese.DatabaseConfiguration
 import krese.DatabaseEncapsulation
+import krese.data.DbBlockData
 import krese.data.Email
 import krese.data.UniqueReservableKey
 import krese.utility.fromJson
@@ -203,9 +204,8 @@ object DbBookings : LongIdTable("db_bookings", "id") {
     val accepted = bool("accepted")
 }
 
-data class DbBookingInputData(val key: UniqueReservableKey, val email: Email, val name: String, val telephone: String, val commentUser: String, val commentOperator: String, val startTime: DateTime, val endTime: DateTime, val createdTimestamp: DateTime, val accepted: Boolean, val blocks: List<DbBlockInputData>)
+data class DbBookingInputData(val key: UniqueReservableKey, val email: Email, val name: String, val telephone: String, val commentUser: String, val commentOperator: String, val startTime: DateTime, val endTime: DateTime, val createdTimestamp: DateTime, val accepted: Boolean, val blocks: List<DbBlockData>)
 
-data class DbBlockInputData(val elementPath: List<Int>, val usedNumber: Int)
 
 class DbBooking(id: EntityID<Long>) : LongEntity(id) {
     companion object : LongEntityClass<DbBooking>(DbBookings)
@@ -233,7 +233,7 @@ class DbBooking(id: EntityID<Long>) : LongEntity(id) {
 }
 
 
-data class DbBookingOutputData(val id : Long, val key: UniqueReservableKey, val email: Email, val name: String, val telephone: String, val commentUser: String, val commentOperator: String, val startTime: DateTime, val endTime: DateTime, val createdTimestamp: DateTime, val modifiedTimestamp: DateTime, val accepted: Boolean, val blocks: List<DbBlockOutputData>)
+data class DbBookingOutputData(val id : Long, val key: UniqueReservableKey, val email: Email, val name: String, val telephone: String, val commentUser: String, val commentOperator: String, val startTime: DateTime, val endTime: DateTime, val createdTimestamp: DateTime, val modifiedTimestamp: DateTime, val accepted: Boolean, val blocks: List<DbBlockData>)
 
 
 
@@ -257,8 +257,6 @@ class DbBlock(id: EntityID<Long>) : LongEntity(id) {
     }
 
 
-    fun toOutput() : DbBlockOutputData = DbBlockOutputData(getElementPathSegments(), usedNumber)
+    fun toOutput() : DbBlockData = DbBlockData(getElementPathSegments(), usedNumber)
 }
 
-
-data class DbBlockOutputData(val elementPath: List<Int>, val usedNumber: Int)

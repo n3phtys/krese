@@ -33,7 +33,9 @@ enum class EnvKey {
 
     KRESE_APPLICATION_PORT,
 
-    KRESE_WEB_DIRECTORY
+    KRESE_WEB_DIRECTORY,
+
+    KRESE_APPLICATION_PROTOCOL
 }
 
 class ConfigurationImpl : DatabaseConfiguration, ApplicationConfiguration {
@@ -58,6 +60,7 @@ class ConfigurationImpl : DatabaseConfiguration, ApplicationConfiguration {
         EnvKey.KRESE_APPLICATION_HOST -> "localhost"
         EnvKey.KRESE_APPLICATION_PORT -> "8080"
         EnvKey.KRESE_WEB_DIRECTORY -> "web"
+        EnvKey.KRESE_APPLICATION_PROTOCOL -> "http"
     }
 
 
@@ -105,6 +108,8 @@ class ConfigurationImpl : DatabaseConfiguration, ApplicationConfiguration {
         get() = getVal(EnvKey.KRESE_RESERVABLES_DIRECTORY)
     override val applicationHost: String
         get() = getVal(EnvKey.KRESE_APPLICATION_HOST)
+    override val applicationProtocol: String
+        get() = getVal(EnvKey.KRESE_APPLICATION_PROTOCOL)
     override val applicationPort: Int
         get() = getVal(EnvKey.KRESE_APPLICATION_PORT).toInt()
     override val webDirectory: String
