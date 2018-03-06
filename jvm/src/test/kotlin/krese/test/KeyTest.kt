@@ -1,6 +1,6 @@
 package krese.test
 
-import junit.framework.Assert.assertEquals
+import junit.framework.TestCase.assertEquals
 import krese.data.isValidKey
 import org.junit.Test
 

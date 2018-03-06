@@ -88,10 +88,17 @@ interface ApplicationConfiguration {
     val applicationHost: String
     val applicationPort: String
     val hashSecret : String
+    val mailUsername: String
+    val mailPassword : String
+    val mailFrom: String
+    val mailHost: String
+    val mailPort: Int
+    val mailStarttls: Boolean
+    val mailAuth: Boolean
 }
 
 interface MailService {
-    fun sendEmail(receiver: String, body: String, text: String)
+    fun sendEmail(receivers: List<Email>, bodyHTML: String, subject: String)
 }
 
 interface MailTemplater {
