@@ -85,8 +85,9 @@ interface DatabaseConfiguration {
 
 interface ApplicationConfiguration {
     val reservablesDirectory: String
+    val webDirectory: String
     val applicationHost: String
-    val applicationPort: String
+    val applicationPort: Int
     val hashSecret : String
     val mailUsername: String
     val mailPassword : String
@@ -102,7 +103,6 @@ interface MailService {
 }
 
 interface MailTemplater {
-    fun buildLoginMail()
 }
 
 interface BusinessLogic {

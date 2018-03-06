@@ -12,21 +12,59 @@ enum class EnvKey {
     KRESE_MAIL_STARTTLS,
     KRESE_MAIL_USE_AUTH,
     KRESE_HASH_SECRET,
+
+    KRESE_DATABASE_DRIVER,
+
+    KRESE_DATABASE_JDBC,
+
+    KRESE_DATABASE_NAME,
+
+    KRESE_DATABASE_HOST,
+
+    KRESE_DATABASE_PORT,
+
+    KRESE_DATABASE_USERNAME,
+
+    KRESE_DATABASE_PASSWORD,
+
+    KRESE_RESERVABLES_DIRECTORY,
+
+    KRESE_APPLICATION_HOST,
+
+    KRESE_APPLICATION_PORT,
+
+    KRESE_WEB_DIRECTORY
 }
 
 class ConfigurationImpl : DatabaseConfiguration, ApplicationConfiguration {
 
+    fun defaultValue(key: EnvKey): String = when (key) {
+        EnvKey.KRESE_MAIL_USERNAME -> "emailusername"
+        EnvKey.KRESE_MAIL_PASSWORD -> "emailpassword"
+        EnvKey.KRESE_MAIL_FROM -> "sender@email.com"
+        EnvKey.KRESE_MAIL_HOST -> "email.com"
+        EnvKey.KRESE_MAIL_PORT -> "1234"
+        EnvKey.KRESE_MAIL_STARTTLS -> "false"
+        EnvKey.KRESE_MAIL_USE_AUTH -> "true"
+        EnvKey.KRESE_HASH_SECRET -> "myhashsecret1234567890"
+        EnvKey.KRESE_DATABASE_DRIVER -> "org.h2.Driver"
+        EnvKey.KRESE_DATABASE_JDBC -> "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1"
+        EnvKey.KRESE_DATABASE_NAME -> "test"
+        EnvKey.KRESE_DATABASE_HOST -> "localhost"
+        EnvKey.KRESE_DATABASE_PORT -> "5432"
+        EnvKey.KRESE_DATABASE_USERNAME -> "admin"
+        EnvKey.KRESE_DATABASE_PASSWORD -> "secret"
+        EnvKey.KRESE_RESERVABLES_DIRECTORY -> "./conf"
+        EnvKey.KRESE_APPLICATION_HOST -> "localhost"
+        EnvKey.KRESE_APPLICATION_PORT -> "8080"
+        EnvKey.KRESE_WEB_DIRECTORY -> "web"
+    }
 
 
-    val defaultValues: Map<EnvKey, String> = mapOf(
-            EnvKey.KRESE_MAIL_STARTTLS to "true",
-            EnvKey.KRESE_MAIL_USERNAME to "username"
-    )
-
-    fun getVal(key : EnvKey) : String {
+    fun getVal(key: EnvKey): String {
         val prop = System.getenv(key.toString())
         if (prop == null || prop.isBlank()) {
-            return defaultValues.get(key)!!
+            return defaultValue(key)
         } else {
             return prop
         }
@@ -50,24 +88,26 @@ class ConfigurationImpl : DatabaseConfiguration, ApplicationConfiguration {
     override val hashSecret: String
         get() = getVal(EnvKey.KRESE_HASH_SECRET)
     override val databaseDriver: String
-        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
+        get() = getVal(EnvKey.KRESE_DATABASE_DRIVER)
     override val databaseJDBC: String
-        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
+        get() = getVal(EnvKey.KRESE_DATABASE_JDBC)
     override val databasePort: String
-        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
+        get() = getVal(EnvKey.KRESE_DATABASE_PORT)
     override val databaseHost: String
-        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
+        get() = getVal(EnvKey.KRESE_DATABASE_HOST)
     override val databaseName: String
-        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
+        get() = getVal(EnvKey.KRESE_DATABASE_NAME)
     override val databaseUsername: String
-        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
+        get() = getVal(EnvKey.KRESE_DATABASE_USERNAME)
     override val databasePassword: String
-        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
+        get() = getVal(EnvKey.KRESE_DATABASE_PASSWORD)
     override val reservablesDirectory: String
-        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
+        get() = getVal(EnvKey.KRESE_RESERVABLES_DIRECTORY)
     override val applicationHost: String
-        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
-    override val applicationPort: String
-        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
+        get() = getVal(EnvKey.KRESE_APPLICATION_HOST)
+    override val applicationPort: Int
+        get() = getVal(EnvKey.KRESE_APPLICATION_PORT).toInt()
+    override val webDirectory: String
+        get() = getVal(EnvKey.KRESE_WEB_DIRECTORY)
 
 }

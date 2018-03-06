@@ -18,10 +18,6 @@ class MailServiceImpl(private val kodein: Kodein) : MailService, MailTemplater {
 
     private val appConfig: ApplicationConfiguration = kodein.instance()
 
-    override fun buildLoginMail() {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
     override fun sendEmail(receivers: List<Email>, bodyHTML: String, subject: String) {
         val from = appConfig.mailFrom
         val properties: Properties = Properties().let {

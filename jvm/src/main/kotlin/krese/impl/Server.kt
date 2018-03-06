@@ -22,17 +22,19 @@ import io.ktor.server.netty.Netty
 import krese.*
 
 class Server(private val kodein: Kodein) {
+
     private val appConfig: ApplicationConfiguration = kodein.instance()
     private val getReceiver: GetReceiver = kodein.instance()
     private val jwtReceiver: JWTReceiver = kodein.instance()
     private val postReceiver: PostReceiver = kodein.instance()
 
 
-    val server = embeddedServer(Netty, 8080) {
+    val server = embeddedServer(Netty, appConfig.applicationPort) {
+        println("appConfig.webDirectory = " + appConfig.webDirectory)
         routing {
             static("") {
-                resources("web")
-                defaultResource("web/index.html")
+                resources(appConfig.webDirectory)
+                defaultResource("${appConfig.webDirectory}/index.html")
             }
 
             get("/reservable/{endpoint...}") {

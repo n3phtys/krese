@@ -7,6 +7,5 @@ import krese.impl.*
 
 
 fun main(args: Array<String>) {
-    createInMemoryElements()
     Server(kodein).start()
 }

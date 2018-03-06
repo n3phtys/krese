@@ -15,6 +15,8 @@ import kotlin.test.assertSame
 class JWTTest {
 
 class ApplicationMockConfig(): ApplicationConfiguration {
+    override val webDirectory: String
+        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
     override val mailUsername: String
         get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
     override val mailPassword: String
@@ -33,7 +35,7 @@ class ApplicationMockConfig(): ApplicationConfiguration {
         get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
     override val applicationHost: String
         get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
-    override val applicationPort: String
+    override val applicationPort: Int
         get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
     override val hashSecret: String
         get() = "mysecret"
