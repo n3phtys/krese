@@ -35,15 +35,31 @@ interface JWTReceiver {
     fun relogin(email: String) : Boolean
 }
 
+enum class LinkActions {
+    CreateNewEntry,
+    AcceptEntry,
+    DeclineEntry,
+    DeleteEntry,
+}
 
-data class UserProfile(val email: Email, val validFrom: Long, val validTo: Long, val randomNumber: Long) {
+data class JWTPayload(val action: LinkActions?, val params: List<String>, val userProfile: UserProfile)
+
+fun buildUserProfile(email: Email, validFrom: DateTime, validTo: DateTime) : UserProfile {
+    return UserProfile(email, if (validFrom.millisOfSecond == 0) {validFrom.millis} else {validFrom.withMillisOfSecond(0).plusSeconds(1).millis},  validTo.withMillisOfSecond(0).millis)
+}
+
+data class UserProfile(val email: Email, val validFrom: Long, val validTo: Long) {
+    init {
+        assert(validFrom % 1000L == 0L)
+        assert(validTo % 1000L == 0L)
+    }
+
     fun isValid() = currentTimeMillis() >= validFrom && currentTimeMillis() <= validTo
 }
 
 interface AuthVerifier {
-    fun decodeJWT(jwt: String): UserProfile?
-    fun createNewPrivateKey() : Unit
-    fun encodeJWT(content: Any): String
+    fun decodeJWT(jwt: String): JWTPayload?
+    fun encodeJWT(content: JWTPayload): String?
     fun encodeBase64(plaintext: String): String
     fun decodeBase64(base64: String): String
 }
@@ -71,6 +87,7 @@ interface ApplicationConfiguration {
     val reservablesDirectory: String
     val applicationHost: String
     val applicationPort: String
+    val hashSecret : String
 }
 
 interface MailService {
