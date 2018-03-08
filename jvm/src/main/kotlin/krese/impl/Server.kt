@@ -29,6 +29,7 @@ import krese.utility.fromJson
 class Server(private val kodein: Kodein) {
 
     private val appConfig: ApplicationConfiguration = kodein.instance()
+    private val authVerifier: AuthVerifier = kodein.instance()
     private val getReceiver: GetReceiver = kodein.instance()
     private val jwtReceiver: JWTReceiver = kodein.instance()
     private val postReceiver: PostReceiver = kodein.instance()
@@ -42,11 +43,21 @@ class Server(private val kodein: Kodein) {
                 defaultResource("${appConfig.webDirectory}/index.html")
             }
 
+            get("reservable") {
+                val params = call.receive<Parameters>()
+                val jwt = params.get("jwt")
+                call.respondText(Gson().toJson(getReceiver.retrieveAll(if (jwt != null) authVerifier.decodeJWT(jwt)?.userProfile?.email else null)))
+            }
+
             route("/reservable/{endpoint...}") {
                 get {
                     val endpointSegments = call.parameters.getAll("endpoint")
                     val key = UniqueReservableKey(endpointSegments!!.joinToString("/"))
-                    call.respondText(Gson().toJson(getReceiver.retrieve(key)))
+
+                    val params = call.receive<Parameters>()
+                    val jwt = params.get("jwt")
+
+                    call.respondText(Gson().toJson(getReceiver.retrieve(key, if (jwt != null) authVerifier.decodeJWT(jwt)?.userProfile?.email else null)))
                 }
                 post {
                     val params = call.receive<Parameters>()

@@ -1,13 +1,18 @@
 package krese.impl
 
 import com.github.salomonbrys.kodein.Kodein
-import krese.BusinessLogic
+import com.github.salomonbrys.kodein.instance
+import krese.*
 import krese.data.*
+import java.io.File
 
 class BusinessLogicImpl(private val kodein: Kodein): BusinessLogic {
-    override fun incomingEmailUserAuthentication(reservation: FullBooking, userProfile: UserProfile?): PostResponse {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
+
+    private val authVerifier: AuthVerifier = kodein.instance()
+    private val appConfig: ApplicationConfiguration = kodein.instance()
+    private val mailService: MailService = kodein.instance()
+    private val fileSystemWrapper: FileSystemWrapper = kodein.instance()
+    private val databaseEncapsulation: DatabaseEncapsulation = kodein.instance()
 
     override fun incomingCreateUpdateReservation(reservation: FullBooking, userProfile: UserProfile?): PostResponse {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
@@ -25,7 +30,19 @@ class BusinessLogicImpl(private val kodein: Kodein): BusinessLogic {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
-    override fun retrieveReservations(urk: UniqueReservableKey): GetResponse {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    override fun retrieveReservations(urk: UniqueReservableKey, callerEmail: Email?): GetResponse? {
+        val res = fileSystemWrapper.getReservableToKey(urk)
+        if (res != null) {
+            return GetResponse(
+                    res,
+                    databaseEncapsulation.retrieveBookingsForKey(urk).map { it.toOutput(res.operatorEmails.contains(callerEmail?.address)) }
+            )
+        } else {
+            return null
+        }
+    }
+
+    override fun retrieveKeys(callerEmail: Email?): GetTotalResponse {
+        return GetTotalResponse(fileSystemWrapper.getKeysFromDirectory().keys.toList())
     }
 }

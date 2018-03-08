@@ -41,7 +41,8 @@ interface AuthVerifier {
 }
 
 interface GetReceiver {
-    fun retrieve(key: UniqueReservableKey): GetResponse?
+    fun retrieve(key: UniqueReservableKey, callerEmail: Email?): GetResponse?
+    fun retrieveAll(callerEmail: Email?): GetTotalResponse
 }
 
 
@@ -86,14 +87,14 @@ interface BusinessLogic {
 
     fun incomingCreateUpdateReservation(reservation: FullBooking, userProfile: UserProfile?) : PostResponse
 
-    fun incomingEmailUserAuthentication(reservation: FullBooking, userProfile: UserProfile?) : PostResponse
-
     fun incomingAcceptByModerator(bookingId: Long, userProfile: UserProfile, comment: String?) : PostResponse
 
     fun incomingDeleteByModerator(bookingId: Long, userProfile: UserProfile, comment: String?) : PostResponse
 
     fun incomingWithdrawByUser(bookingId: Long, userProfile: UserProfile, comment: String?) : PostResponse
 
-    fun retrieveReservations(urk: UniqueReservableKey) : GetResponse
+    fun retrieveReservations(urk: UniqueReservableKey, callerEmail: Email?) : GetResponse?
+
+    fun retrieveKeys(callerEmail: Email?) : GetTotalResponse
 }
 

@@ -7,6 +7,7 @@ import krese.DatabaseConfiguration
 import krese.DatabaseEncapsulation
 import krese.data.DbBlockData
 import krese.data.Email
+import krese.data.Reservation
 import krese.data.UniqueReservableKey
 import krese.utility.fromJson
 import org.jetbrains.exposed.dao.*
@@ -233,7 +234,11 @@ class DbBooking(id: EntityID<Long>) : LongEntity(id) {
 }
 
 
-data class DbBookingOutputData(val id : Long, val key: UniqueReservableKey, val email: Email, val name: String, val telephone: String, val commentUser: String, val commentOperator: String, val startTime: DateTime, val endTime: DateTime, val createdTimestamp: DateTime, val modifiedTimestamp: DateTime, val accepted: Boolean, val blocks: List<DbBlockData>)
+data class DbBookingOutputData(val id : Long, val key: UniqueReservableKey, val email: Email, val name: String, val telephone: String, val commentUser: String, val commentOperator: String, val startTime: DateTime, val endTime: DateTime, val createdTimestamp: DateTime, val modifiedTimestamp: DateTime, val accepted: Boolean, val blocks: List<DbBlockData>) {
+        fun toOutput(isOperator: Boolean) : Reservation {
+            return Reservation(id, key, if(isOperator) email else null, name, if(isOperator) telephone else null, commentUser, if(isOperator) commentOperator else null, startTime, endTime, createdTimestamp, if(isOperator) modifiedTimestamp else null, accepted, blocks)
+        }
+}
 
 
 
