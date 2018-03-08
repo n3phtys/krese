@@ -36,6 +36,7 @@ configure(project(':common')) {
         compile "org.jetbrains.kotlin:kotlin-stdlib-common:$kotlin_version"
         testCompile "org.jetbrains.kotlin:kotlin-test-annotations-common:$kotlin_version"
         testCompile "org.jetbrains.kotlin:kotlin-test-common:$kotlin_version"
+
     }
 }
 
@@ -46,6 +47,7 @@ configure(project(':js')) {
         compile "org.jetbrains.kotlin:kotlin-stdlib-js:$kotlin_version"
         testCompile "org.jetbrains.kotlin:kotlin-test-js:$kotlin_version"
         compile "org.jetbrains:kotlin-react:16.2.1-pre.11-kotlin-1.2.21"
+        compile 'org.jetbrains:markdown:0.1.28'
         expectedBy project(':common')
     }
 
@@ -139,11 +141,11 @@ configure(project(':jvm')) {
         // https://mvnrepository.com/artifact/javax.mail/javax.mail-api
         compile group: 'javax.mail', name: 'javax.mail-api', version: '1.6.1'
 
-        compile 'org.jetbrains:markdown:0.1.28'
 
         // https://mvnrepository.com/artifact/com.google.code.gson/gson
         compile group: 'com.google.code.gson', name: 'gson', version: '2.8.2'
 
+        compile 'org.jetbrains:markdown:0.1.28'
 
         compile 'ch.qos.logback:logback-classic:1.1.3'
         compile 'ch.qos.logback:logback-core:1.1.3'

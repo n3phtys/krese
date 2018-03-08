@@ -5,6 +5,9 @@ import com.github.salomonbrys.kodein.bind
 import com.github.salomonbrys.kodein.singleton
 import krese.*
 import krese.data.Email
+import krese.data.JWTPayload
+import krese.data.LinkActions
+import krese.data.buildUserProfile
 import krese.impl.AuthVerifierImpl
 import org.joda.time.DateTime
 import org.junit.Test

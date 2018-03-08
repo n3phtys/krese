@@ -2,11 +2,7 @@ package krese.impl
 
 import com.github.salomonbrys.kodein.Kodein
 import krese.BusinessLogic
-import krese.data.GetResponse
-import krese.UserProfile
-import krese.data.FullBooking
-import krese.data.PostResponse
-import krese.data.UniqueReservableKey
+import krese.data.*
 
 class BusinessLogicImpl(private val kodein: Kodein): BusinessLogic {
     override fun incomingEmailUserAuthentication(reservation: FullBooking, userProfile: UserProfile?): PostResponse {

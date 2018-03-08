@@ -3,8 +3,7 @@ package krese.impl
 import com.github.salomonbrys.kodein.Kodein
 import com.github.salomonbrys.kodein.instance
 import krese.*
-import krese.data.Email
-import krese.data.PostResponse
+import krese.data.*
 import org.joda.time.DateTime
 
 class JWTReceiverImpl(private val kodein: Kodein): JWTReceiver {
@@ -12,9 +11,16 @@ class JWTReceiverImpl(private val kodein: Kodein): JWTReceiver {
     private val authVerifier: AuthVerifier = kodein.instance()
     private val appConfig: ApplicationConfiguration = kodein.instance()
     private val mailService: MailService = kodein.instance()
+    private val postReceiver: PostReceiver = kodein.instance()
 
     override fun receiveJWTAction(jwtAction: String): PostResponse {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        val action: JWTPayload? = authVerifier.decodeJWT(jwtAction)
+        val postAction: PostAction? = action?.extractAction()
+        if (postAction != null) {
+            return postReceiver.submitForm(PostActionInput(action, postAction))
+        } else {
+            return PostResponse(false, false, "could not parse action in jwt")
+        }
     }
 
     override fun loginStillValid(jwt: String): Boolean {

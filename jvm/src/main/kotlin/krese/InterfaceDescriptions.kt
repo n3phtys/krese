@@ -33,43 +33,6 @@ interface JWTReceiver {
     fun relogin(email: String)
 }
 
-enum class LinkActions {
-    CreateNewEntry,
-    AcceptEntry,
-    DeclineEntry,
-    DeleteEntry,
-}
-
-data class JWTPayload(val action: LinkActions?, val params: List<String>, val userProfile: UserProfile)
-
-
-
-sealed class PostAction {}
-
-data class CreateAction(val key: UniqueReservableKey, val email: Email, val name: String, val telephone: String, val commentUser: String, val startTime: DateTime, val endTime: DateTime, val blocks: List<DbBlockData>) : PostAction()
-
-data class DeclineAction(val id: Long, val comment: String) : PostAction()
-
-data class WithdrawAction(val id: Long, val comment: String) : PostAction()
-
-data class AcceptAction(val id: Long, val comment: String) : PostAction()
-
-data class PostActionInput(val jwt: JWTPayload?, val action: PostAction)
-
-
-fun buildUserProfile(email: Email, validFrom: DateTime, validTo: DateTime) : UserProfile {
-    return UserProfile(email, if (validFrom.millisOfSecond == 0) {validFrom.millis} else {validFrom.withMillisOfSecond(0).plusSeconds(1).millis},  validTo.withMillisOfSecond(0).millis)
-}
-
-data class UserProfile(val email: Email, val validFrom: Long, val validTo: Long) {
-    init {
-        assert(validFrom % 1000L == 0L)
-        assert(validTo % 1000L == 0L)
-    }
-
-    fun isValid() = currentTimeMillis() >= validFrom && currentTimeMillis() <= validTo
-}
-
 interface AuthVerifier {
     fun decodeJWT(jwt: String): JWTPayload?
     fun encodeJWT(content: JWTPayload): String?

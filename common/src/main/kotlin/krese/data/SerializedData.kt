@@ -1,5 +1,6 @@
 package krese.data
 
+
 /*
 Gästezimmer KA (2 Betten)
 Gästezimmer Berlin laut Mail (multi hierarchy)

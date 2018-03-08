@@ -9,6 +9,9 @@ import com.github.salomonbrys.kodein.instance
 import com.google.gson.Gson
 import krese.*
 import krese.data.Email
+import krese.data.JWTPayload
+import krese.data.LinkActions
+import krese.data.UserProfile
 import java.io.UnsupportedEncodingException
 import java.util.*
 
