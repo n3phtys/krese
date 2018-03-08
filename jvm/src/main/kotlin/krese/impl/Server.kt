@@ -2,6 +2,7 @@ package krese.impl
 
 import com.github.salomonbrys.kodein.Kodein
 import com.github.salomonbrys.kodein.instance
+import com.google.gson.Gson
 import io.ktor.application.call
 import io.ktor.content.defaultResource
 import io.ktor.content.resources
@@ -20,6 +21,10 @@ import io.ktor.routing.routing
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import krese.*
+import krese.data.PostAction
+import krese.data.PostActionInput
+import krese.data.UniqueReservableKey
+import krese.utility.fromJson
 
 class Server(private val kodein: Kodein) {
 
@@ -37,33 +42,50 @@ class Server(private val kodein: Kodein) {
                 defaultResource("${appConfig.webDirectory}/index.html")
             }
 
-            get("/reservable/{endpoint...}") {
-                val endpointSegments = call.parameters.getAll("endpoint")
-                println("reservable received: " + endpointSegments)
+            route("/reservable/{endpoint...}") {
+                get {
+                    val endpointSegments = call.parameters.getAll("endpoint")
+                    val key = UniqueReservableKey(endpointSegments!!.joinToString("/"))
+                    call.respondText(Gson().toJson(getReceiver.retrieve(key)))
+                }
+                post {
+                    val params = call.receive<Parameters>()
+                    val postStr = params.get("action")
+                    if (postStr != null) {
+                        val postAction: PostActionInput = Gson().fromJson(postStr)
+                        call.respondText(Gson().toJson(postReceiver.submitForm(postAction)))
+                    } else {
+                        call.respond(HttpStatusCode.BadRequest, "could not read action param")
+                    }
+                }
             }
 
             route("/util") {
-                route("valid/credentials") {
-                    post {
-                        //println(parametersOf().get("jwt"))
-                        val params = call.receive<Parameters>()
-
-                        val jwt = params.get("jwt")
-                        println("jwt:")
-                        if (jwt != null) {
-                            println(jwt)
-                        call.respondText(jwtReceiver.loginStillValid(jwt).toString())} else {
-                            println(jwt)
-                            call.respond(HttpStatusCode.BadRequest, "could not read jwt")
-                        }
+                post("valid/credentials") {
+                    val params = call.receive<Parameters>()
+                    val jwt = params.get("jwt")
+                    if (jwt != null) {
+                        call.respondText(jwtReceiver.loginStillValid(jwt).toString())
+                    } else {
+                        call.respond(HttpStatusCode.BadRequest, "could not read jwt param")
                     }
 
                 }
-                route("login") {
+                post("login") {
+                    val params = call.receive<Parameters>()
+                    val email = params.get("email")
+                    if (email != null) {
+                        jwtReceiver.relogin(email)
+                        call.respondText("true")
+                    } else {
+                        call.respond(HttpStatusCode.BadRequest, "could not read email param")
+                    }
 
                 }
-                route("jwtaction") {
-
+                post("jwtaction") {
+                    val params = call.receive<Parameters>()
+                    val jwtaction = params.get("action")
+                    jwtReceiver.receiveJWTAction(jwtaction!!)
                 }
             }
         }
@@ -73,33 +95,4 @@ class Server(private val kodein: Kodein) {
         server.start(wait = true)
     }
 
-    /*embeddedServer(Netty, config.port) {
-routing {
-    static("") {
-        resources("web")
-        defaultResource("web/index.html")
-    }
-    route("api") {
-        route("events") {
-            get("{eventchain}/{from?}/{to?}") {
-                val eventchain = call.parameters["eventchain"]
-                val fromStr = call.parameters.get("from")
-                val toStr = call.parameters.get("to")
-                val from = fromStr!!.toLong()
-                val to = toStr!!.toLong()
-
-                call.respondText("eventchain = $eventchain", ContentType.parse("application/json"))
-            }
-            post("{eventchain}") {
-                val jsonStr = call.receiveText()
-                call.respondText("posted to event chain, json = $jsonStr")
-            }
-            get("actionlink/{jwt}") {
-                val jwt = call.parameters["jwt"]
-
-                call.respondText("JWT received: $jwt")
-            }
-        }
-}
-    }*/
 }

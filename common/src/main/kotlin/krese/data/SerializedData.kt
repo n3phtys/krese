@@ -103,4 +103,6 @@ data class PostResponse(
         val successful: Boolean,
         val finished: Boolean,
         val message: String
-)
+) {
+
+}
