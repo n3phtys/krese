@@ -15,10 +15,10 @@ class PostReceiverImpl(private val kodein: Kodein) : PostReceiver {
         val ts = DateTime().millis
 
         return when (reservation.action) {
-            is CreateAction -> businessLogic.incomingCreateUpdateReservation(reservation = FullBooking(booking = Booking(timestamp_created = ts, timestamp_edited = ts, publicUser = PublicUser(reservation.action.name), timespan = Timespan(reservation.action.startTime.millis, reservation.action.endTime.millis), selectedResources = reservation.action.blocks, comment = reservation.action.commentUser, state = BookingState.Pending), fullUser = FullUser(PublicUser(reservation.action.name), reservation.action.email, reservation.action.telephone)), userProfile = reservation.jwt?.userProfile)
-            is DeclineAction -> businessLogic.incomingDeleteByModerator(reservation.action.id, reservation.jwt?.userProfile!!, reservation.action.comment)
-            is WithdrawAction -> businessLogic.incomingWithdrawByUser(reservation.action.id, reservation.jwt?.userProfile!!, reservation.action.comment)
-            is AcceptAction -> businessLogic.incomingAcceptByModerator(reservation.action.id, reservation.jwt?.userProfile!!, reservation.action.comment)
+            is CreateAction -> businessLogic.incomingCreateUpdateReservation(reservation = FullBooking(booking = Booking(timestamp_created = ts, timestamp_edited = ts, publicUser = PublicUser((reservation.action as CreateAction).name), timespan = Timespan((reservation.action as CreateAction).startTime, (reservation.action as CreateAction).endTime), selectedResources = (reservation.action as CreateAction).blocks, comment = (reservation.action as CreateAction).commentUser, state = BookingState.Pending), fullUser = FullUser(PublicUser((reservation.action as CreateAction).name), (reservation.action as CreateAction).email, (reservation.action as CreateAction).telephone)), userProfile = reservation.jwt?.userProfile)
+            is DeclineAction -> businessLogic.incomingDeleteByModerator((reservation.action as DeclineAction).id, reservation.jwt?.userProfile!!, (reservation.action as DeclineAction).comment)
+            is WithdrawAction -> businessLogic.incomingWithdrawByUser((reservation.action as WithdrawAction).id, reservation.jwt?.userProfile!!, (reservation.action as WithdrawAction).comment)
+            is AcceptAction -> businessLogic.incomingAcceptByModerator((reservation.action as AcceptAction).id, reservation.jwt?.userProfile!!, (reservation.action as AcceptAction).comment)
         }
 
     }

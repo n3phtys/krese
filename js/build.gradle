@@ -1,0 +1,57 @@
+buildscript {
+    ext.kotlin_version = '1.2.30'
+
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
+}
+
+apply plugin: 'kotlin-platform-js'
+apply plugin: 'kotlinx-serialization'
+
+repositories {
+    //maven { url 'http://dl.bintray.com/kotlin/kotlin-eap-1.2' }
+    maven { url 'https://dl.bintray.com/kotlin/exposed' }
+    maven { url 'https://dl.bintray.com/kotlin/ktor' }
+    maven { url 'https://dl.bintray.com/kotlin/kotlinx' }
+    maven { url 'https://dl.bintray.com/kotlin/kotlinx.html' }
+    maven { url "https://dl.bintray.com/kotlin/kotlin-js-wrappers" }
+    maven { url "https://dl.bintray.com/jetbrains/markdown" }
+    mavenCentral()
+}
+
+dependencies {
+    compile "org.jetbrains.kotlin:kotlin-stdlib-js:$kotlin_version"
+    testCompile "org.jetbrains.kotlin:kotlin-test-js:$kotlin_version"
+    compile "org.jetbrains:kotlin-react:16.2.1-pre.11-kotlin-1.2.21"
+    compile 'org.jetbrains:markdown:0.1.28'
+    compile "org.jetbrains.kotlinx:kotlinx-serialization-runtime-js:$serialization_version"
+    expectedBy project(':common')
+}
+
+task assembleWeb(type: Sync) {
+    configurations.compile.each { File file ->
+        from(zipTree(file.absolutePath), {
+            includeEmptyDirs = false
+            include { fileTreeElement ->
+                def path = fileTreeElement.path
+                path.endsWith(".js") && (path.startsWith("META-INF/resources/") ||
+                        !path.startsWith("META-INF/"))
+            }
+        })
+    }
+    from compileKotlin2Js.destinationDir
+    into "${projectDir}/../web"
+
+    copy {
+        from "${projectDir}/index.html"
+        into "${projectDir}/../web"
+    }
+
+    dependsOn classes
+}
+
+assemble.dependsOn assembleWeb

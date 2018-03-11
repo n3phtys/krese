@@ -1,174 +1,21 @@
 buildscript {
     ext.kotlin_version = '1.2.30'
+    ext.serialization_version = '0.4.2'
 
     repositories {
         maven {     url 'http://dl.bintray.com/kotlin/kotlin-eap-1.2' }
         mavenCentral()
+        jcenter()
+        maven { url "https://kotlin.bintray.com/kotlinx" }
     }
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         //classpath 'org.junit.platform:junit-platform-gradle-plugin:1.1.0'
+        classpath "org.jetbrains.kotlinx:kotlinx-gradle-serialization-plugin:$serialization_version"
     }
 }
-
-defaultTasks ':jvm:run'
 
 allprojects {
     group 'com.github.n3phtys'
     version '1.0-SNAPSHOT'
-
-    repositories {
-        //maven { url 'http://dl.bintray.com/kotlin/kotlin-eap-1.2' }
-        maven { url 'https://dl.bintray.com/kotlin/exposed' }
-        maven { url 'https://dl.bintray.com/kotlin/ktor' }
-        maven { url 'https://dl.bintray.com/kotlin/kotlinx' }
-        maven { url 'https://dl.bintray.com/kotlin/kotlinx.html' }
-        maven { url "https://dl.bintray.com/kotlin/kotlin-js-wrappers" }
-        maven { url "https://dl.bintray.com/jetbrains/markdown" }
-        mavenCentral()
-    }
-}
-
-configure(project(':common')) {
-    apply plugin: 'kotlin-platform-common'
-
-    dependencies {
-        compile "org.jetbrains.kotlin:kotlin-stdlib-common:$kotlin_version"
-        testCompile "org.jetbrains.kotlin:kotlin-test-annotations-common:$kotlin_version"
-        testCompile "org.jetbrains.kotlin:kotlin-test-common:$kotlin_version"
-
-    }
-}
-
-configure(project(':js')) {
-    apply plugin: 'kotlin-platform-js'
-
-    dependencies {
-        compile "org.jetbrains.kotlin:kotlin-stdlib-js:$kotlin_version"
-        testCompile "org.jetbrains.kotlin:kotlin-test-js:$kotlin_version"
-        compile "org.jetbrains:kotlin-react:16.2.1-pre.11-kotlin-1.2.21"
-        compile 'org.jetbrains:markdown:0.1.28'
-        expectedBy project(':common')
-    }
-
-
-    task assembleWeb(type: Sync) {
-        configurations.compile.each { File file ->
-            from(zipTree(file.absolutePath), {
-                includeEmptyDirs = false
-                include { fileTreeElement ->
-                    def path = fileTreeElement.path
-                    path.endsWith(".js") && (path.startsWith("META-INF/resources/") ||
-                            !path.startsWith("META-INF/"))
-                }
-            })
-        }
-        from compileKotlin2Js.destinationDir
-        into "${projectDir}/../web"
-
-        copy {
-            from "${projectDir}/index.html"
-            into "${projectDir}/../web"
-        }
-
-        dependsOn classes
-    }
-
-    assemble.dependsOn assembleWeb
-}
-
-configure(project(':jvm')) {
-    apply plugin: 'kotlin-platform-jvm'
-    apply plugin: 'idea'
-    apply plugin: 'application'
-
-    ext.ktor_version = '0.9.1'
-
-    configurations {
-        provided
-    }
-
-    kotlin {
-        experimental.coroutines = org.jetbrains.kotlin.gradle.dsl.Coroutines.ENABLE
-    }
-
-    sourceSets {
-        main.resources {
-            srcDirs += ["../js/static"]
-        }
-
-        test {
-            java {
-                srcDirs = ["${projectDir}/test/kotlin"]
-            }
-        }
-
-        main.compileClasspath += configurations.provided
-        test.compileClasspath += configurations.provided
-        test.runtimeClasspath += configurations.provided
-
-        test {
-            java {
-                srcDirs = ["test/model"]  // Note @Peter's comment below
-            }
-        }
-    }
-
-    test {
-        beforeTest { descriptor ->
-            logger.lifecycle("Running test: ${descriptor}")
-        }
-    }
-
-
-    compileKotlin.kotlinOptions.jvmTarget = "1.8"
-    compileTestKotlin.kotlinOptions.jvmTarget = "1.8"
-
-    dependencies {
-        compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
-        // https://mvnrepository.com/artifact/commons-validator/commons-validator
-        compile group: 'commons-validator', name: 'commons-validator', version: '1.6'
-
-        compile 'org.jetbrains.exposed:exposed:0.9.1'
-        // https://mvnrepository.com/artifact/com.h2database/h2
-        compile group: 'com.h2database', name: 'h2', version: '1.4.196'
-
-        // https://mvnrepository.com/artifact/org.mariadb.jdbc/mariadb-java-client
-        compile group: 'org.mariadb.jdbc', name: 'mariadb-java-client', version: '2.2.0'
-
-        compile 'com.auth0:java-jwt:3.3.0'
-
-        // https://mvnrepository.com/artifact/javax.mail/javax.mail-api
-        compile group: 'javax.mail', name: 'javax.mail-api', version: '1.6.1'
-
-
-        // https://mvnrepository.com/artifact/com.google.code.gson/gson
-        compile group: 'com.google.code.gson', name: 'gson', version: '2.8.2'
-
-        compile 'org.jetbrains:markdown:0.1.28'
-
-        compile 'ch.qos.logback:logback-classic:1.1.3'
-        compile 'ch.qos.logback:logback-core:1.1.3'
-
-
-        compile 'com.github.salomonbrys.kodein:kodein:4.1.0'
-        compile "io.ktor:ktor-server-netty:$ktor_version"
-
-
-
-        testCompile "junit:junit:4.12"
-        testCompile "org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version"
-        testCompile "org.jetbrains.kotlin:kotlin-test:$kotlin_version"
-        expectedBy project(':common')
-    }
-
-    jar {
-        manifest {
-            attributes 'Main-Class': 'krese.MainKt'
-        }
-        from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
-    }
-
-
-    mainClassName = 'krese.MainKt'
 }
