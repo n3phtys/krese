@@ -4,9 +4,7 @@ import com.github.salomonbrys.kodein.Kodein
 import com.github.salomonbrys.kodein.instance
 import com.google.gson.Gson
 import io.ktor.application.call
-import io.ktor.content.defaultResource
-import io.ktor.content.resources
-import io.ktor.content.static
+import io.ktor.content.*
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.Parameters
 import io.ktor.http.parametersOf
@@ -38,9 +36,8 @@ class Server(private val kodein: Kodein) {
     val server = embeddedServer(Netty, appConfig.applicationPort) {
         println("appConfig.webDirectory = " + appConfig.webDirectory)
         routing {
-            static("") {
-                resources(appConfig.webDirectory)
-                defaultResource("${appConfig.webDirectory}/index.html")
+            get("hello") {
+                call.respondText("Hello World")
             }
 
             get("reservable") {
@@ -98,6 +95,10 @@ class Server(private val kodein: Kodein) {
                     val jwtaction = params.get("action")
                     jwtReceiver.receiveJWTAction(jwtaction!!)
                 }
+            }
+            static("") {
+                files(appConfig.webDirectory)
+                default("${appConfig.webDirectory}/index.html")
             }
         }
     }

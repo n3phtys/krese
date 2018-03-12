@@ -59,7 +59,7 @@ class ConfigurationImpl : DatabaseConfiguration, ApplicationConfiguration {
         EnvKey.KRESE_RESERVABLES_DIRECTORY -> "./conf"
         EnvKey.KRESE_APPLICATION_HOST -> "localhost"
         EnvKey.KRESE_APPLICATION_PORT -> "8080"
-        EnvKey.KRESE_WEB_DIRECTORY -> "web"
+        EnvKey.KRESE_WEB_DIRECTORY -> "../web"
         EnvKey.KRESE_APPLICATION_PROTOCOL -> "http"
     }
 
