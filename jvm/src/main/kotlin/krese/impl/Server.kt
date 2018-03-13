@@ -10,6 +10,7 @@ import io.ktor.http.Parameters
 import io.ktor.http.parametersOf
 import io.ktor.request.receive
 import io.ktor.request.receiveMultipart
+import io.ktor.request.receiveOrNull
 import io.ktor.response.respond
 import io.ktor.response.respondText
 import io.ktor.routing.get
@@ -21,8 +22,10 @@ import io.ktor.server.netty.Netty
 import krese.*
 import krese.data.PostAction
 import krese.data.PostActionInput
+import krese.data.Routes
 import krese.data.UniqueReservableKey
 import krese.utility.fromJson
+import java.io.File
 
 class Server(private val kodein: Kodein) {
 
@@ -34,19 +37,20 @@ class Server(private val kodein: Kodein) {
 
 
     val server = embeddedServer(Netty, appConfig.applicationPort) {
-        println("appConfig.webDirectory = " + appConfig.webDirectory)
+        println("appConfig.webDirectory = " + File(appConfig.webDirectory).absolutePath)
+        println("get entries = /" + Routes.GET_ENTRIES_TO_RESERVABLE.path)
         routing {
             get("hello") {
                 call.respondText("Hello World")
             }
 
-            get("reservable") {
-                val params = call.receive<Parameters>()
-                val jwt = params.get("jwt")
+            get("/" + Routes.GET_RESERVABLES.path) {
+                val params = call.receiveOrNull<Parameters>()
+                val jwt = params?.get("jwt")
                 call.respondText(Gson().toJson(getReceiver.retrieveAll(if (jwt != null) authVerifier.decodeJWT(jwt)?.userProfile?.email else null)))
             }
 
-            route("/reservable/{endpoint...}") {
+            route("/" + Routes.GET_ENTRIES_TO_RESERVABLE.path +"{endpoint...}") {
                 get {
                     val endpointSegments = call.parameters.getAll("endpoint")
                     val key = UniqueReservableKey(endpointSegments!!.joinToString("/"))
@@ -97,7 +101,7 @@ class Server(private val kodein: Kodein) {
                 }
             }
             static("") {
-                files(appConfig.webDirectory)
+                files(File(appConfig.webDirectory))
                 default("${appConfig.webDirectory}/index.html")
             }
         }

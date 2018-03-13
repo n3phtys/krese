@@ -24,7 +24,11 @@ repositories {
 }
 
 dependencies {
+    def kotlinx_html_version = "0.6.9"
+
+
     compile "org.jetbrains.kotlin:kotlin-stdlib-js:$kotlin_version"
+    compile "org.jetbrains.kotlinx:kotlinx-html-js:${kotlinx_html_version}"
     testCompile "org.jetbrains.kotlin:kotlin-test-js:$kotlin_version"
     compile "org.jetbrains:kotlin-react:16.2.1-pre.11-kotlin-1.2.21"
     compile 'org.jetbrains:markdown:0.1.28'
@@ -33,6 +37,18 @@ dependencies {
 }
 
 task assembleWeb(type: Sync) {
+
+    copy {
+        from "${projectDir}/index.html"
+        into "${projectDir}/../web"
+    }
+
+    copy {
+        from "${projectDir}/favicon.ico"
+        into "${projectDir}/../web"
+    }
+
+
     configurations.compile.each { File file ->
         from(zipTree(file.absolutePath), {
             includeEmptyDirs = false
@@ -45,11 +61,6 @@ task assembleWeb(type: Sync) {
     }
     from compileKotlin2Js.destinationDir
     into "${projectDir}/../web"
-
-    copy {
-        from "${projectDir}/index.html"
-        into "${projectDir}/../web"
-    }
 
     dependsOn classes
 }

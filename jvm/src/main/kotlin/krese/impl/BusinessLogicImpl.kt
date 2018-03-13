@@ -4,7 +4,6 @@ import com.github.salomonbrys.kodein.Kodein
 import com.github.salomonbrys.kodein.instance
 import krese.*
 import krese.data.*
-import java.io.File
 
 class BusinessLogicImpl(private val kodein: Kodein): BusinessLogic {
 
@@ -30,6 +29,7 @@ class BusinessLogicImpl(private val kodein: Kodein): BusinessLogic {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
+    //TODO: from and to
     override fun retrieveReservations(urk: UniqueReservableKey, callerEmail: Email?): GetResponse? {
         val res = fileSystemWrapper.getReservableToKey(urk)
         if (res != null) {

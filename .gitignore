@@ -16,4 +16,5 @@ doc/plantuml.jar
 web/*.js
 web/index.html
 js/static/web/index.html
+web/favicon.ico
 *.kjsm

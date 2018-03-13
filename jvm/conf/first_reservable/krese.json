@@ -1,0 +1,13 @@
+{
+  "uniqueId" : "first/key",
+  "prologueMarkdown" : "# Hello World from first!",
+  "epilogueMarkdown" : "\n* just another entry",
+  "staticFiles" : [],
+  "elements" : {
+    "id" : 13,
+    "name" : "myelement",
+    "description" : null,
+    "subElements" : []
+  },
+  "operatorEmails" : ["christopher.kaag@gmail.com"]
+}

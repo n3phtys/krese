@@ -6,27 +6,16 @@
     <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
 </head>
 <body>
-<script type="text/javascript" src="kotlin.js"></script>
-<script type="text/javascript" src="js.js"></script>
-
-<div id="app">My Kotlin JS Index.html Entry Page</div>
-
-
-
-
 
 <div class="w3-container">
-    <h2>Tabs</h2>
-    <p>Tabs are perfect for single page web applications, or for web pages capable of displaying different subjects. Click on the links below.</p>
+    <h2>Krese Reservables</h2>
 </div>
 
-<div class="w3-bar w3-black">
-    <button class="w3-bar-item w3-button" onclick="openCity('London')">London</button>
-    <button class="w3-bar-item w3-button" onclick="openCity('Paris')">Paris</button>
-    <button class="w3-bar-item w3-button" onclick="openCity('Tokyo')">Tokyo</button>
+<div id="key-tab-nav-bar" class="w3-bar w3-black">
 </div>
 
-<div id="London" class="w3-container city">
+<div id="key-tab-container" >
+<div id="London" class="w3-container city" style="display:none">
     <h2>London</h2>
     <p>London is the capital city of England.</p>
 </div>
@@ -40,6 +29,7 @@
     <h2>Tokyo</h2>
     <p>Tokyo is the capital of Japan.</p>
 </div>
+</div>
 
 <script>
     function openCity(cityName) {
@@ -52,5 +42,12 @@
     }
 </script>
 
+
+
+<script type="text/javascript" src="kotlin.js"></script>
+<!--script type="text/javascript" src="kotlin-extensions.js"></script-->
+<script type="text/javascript" src="kotlinx-html-js.js"></script>
+<script type="text/javascript" src="kotlinx-serialization-runtime-js.js"></script>
+<script type="text/javascript" src="js.js"></script>
 </body>
 </html>

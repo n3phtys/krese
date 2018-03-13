@@ -171,4 +171,3 @@ data class UserProfile(val email: Email, val validFrom: Long, val validTo: Long)
     fun isValid() = currentTimeMillis() >= validFrom && currentTimeMillis() <= validTo
 
 }
-
