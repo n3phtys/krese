@@ -37,34 +37,51 @@ dependencies {
     expectedBy project(':common')
 }
 
+
 compileKotlin2Js.kotlinOptions.moduleKind = "umd"
 
 
 task assembleWeb(type: Sync) {
 
-    copy {
-        from "${projectDir}/index.html"
-        into "${projectDir}/../web"
-    }
 
-    copy {
-        from "${projectDir}/favicon.ico"
-        into "${projectDir}/../web"
+    sourceSets {
+        main {
+            resources {
+                include 'src/main/resources'
+            }
+        }
     }
-
 
     configurations.compile.each { File file ->
         from(zipTree(file.absolutePath), {
             includeEmptyDirs = false
             include { fileTreeElement ->
                 def path = fileTreeElement.path
-                path.endsWith(".js") && (path.startsWith("META-INF/resources/") ||
+                (path.endsWith(".js") || path.endsWith("index.html") || path.endsWith("favicon.ico")) && (path.startsWith("META-INF/resources/") ||
                         !path.startsWith("META-INF/"))
             }
         })
     }
+
+
+
+
+    copy {
+        from "${projectDir}/index.html"
+        into compileKotlin2Js.destinationDir
+    }
+
+    copy {
+        from "${projectDir}/favicon.ico"
+        into compileKotlin2Js.destinationDir
+    }
+
     from compileKotlin2Js.destinationDir
     into "${projectDir}/../web"
+
+
+
+
 
     dependsOn classes
 }

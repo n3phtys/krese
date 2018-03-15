@@ -7,6 +7,7 @@ js/static/web/js.meta.js
 js/static/web/kotlin.js
 js/static/web/kotlin.meta.js
 js/static/web/*.js
+web/*js.map
 build/
 common/build/
 js/build/
