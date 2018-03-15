@@ -2,7 +2,6 @@ package krese.impl
 
 import com.github.salomonbrys.kodein.Kodein
 import com.github.salomonbrys.kodein.instance
-import com.google.gson.Gson
 import io.ktor.application.call
 import io.ktor.content.*
 import io.ktor.http.HttpStatusCode
@@ -19,11 +18,9 @@ import io.ktor.routing.route
 import io.ktor.routing.routing
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
+import kotlinx.serialization.json.JSON
 import krese.*
-import krese.data.PostAction
-import krese.data.PostActionInput
-import krese.data.Routes
-import krese.data.UniqueReservableKey
+import krese.data.*
 import krese.utility.fromJson
 import java.io.File
 
@@ -47,7 +44,7 @@ class Server(private val kodein: Kodein) {
             get("/" + Routes.GET_RESERVABLES.path) {
                 val params = call.receiveOrNull<Parameters>()
                 val jwt = params?.get("jwt")
-                call.respondText(Gson().toJson(getReceiver.retrieveAll(if (jwt != null) authVerifier.decodeJWT(jwt)?.userProfile?.email else null)))
+                call.respondText(JSON.Companion.stringify(getReceiver.retrieveAll(if (jwt != null) authVerifier.decodeJWT(jwt)?.userProfile?.email else null)))
             }
 
             route("/" + Routes.GET_ENTRIES_TO_RESERVABLE.path +"{endpoint...}") {
@@ -55,17 +52,22 @@ class Server(private val kodein: Kodein) {
                     val endpointSegments = call.parameters.getAll("endpoint")
                     val key = UniqueReservableKey(endpointSegments!!.joinToString("/"))
 
-                    val params = call.receive<Parameters>()
-                    val jwt = params.get("jwt")
 
-                    call.respondText(Gson().toJson(getReceiver.retrieve(key, if (jwt != null) authVerifier.decodeJWT(jwt)?.userProfile?.email else null)))
+                    val params = call.receiveOrNull<Parameters>()
+                    val jwt: String? = params?.get("jwt")
+
+                    val ele : GetResponse? = getReceiver.retrieve(key, jwt?.let { it1 -> authVerifier.decodeJWT(it1)?.userProfile?.email })
+                    val json = if (ele != null) JSON.stringify(ele) else "null"
+
+                        call.respondText(json)
+
                 }
                 post {
                     val params = call.receive<Parameters>()
                     val postStr = params.get("action")
                     if (postStr != null) {
-                        val postAction: PostActionInput = Gson().fromJson(postStr)
-                        call.respondText(Gson().toJson(postReceiver.submitForm(postAction)))
+                        val postAction: PostActionInput = JSON.parse(postStr)
+                        call.respondText(JSON.stringify(postReceiver.submitForm(postAction)))
                     } else {
                         call.respond(HttpStatusCode.BadRequest, "could not read action param")
                     }
