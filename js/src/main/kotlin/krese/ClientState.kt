@@ -1,5 +1,7 @@
 package krese
 
+import jquery.jq
+import kotlinext.js.asJsObject
 import kotlinx.html.dom.create
 import kotlinx.serialization.json.JSON
 import krese.data.GetResponse
@@ -165,16 +167,34 @@ class ClientState {
     }
 
     fun setEntriesToKey(uniqueReservableKey: UniqueReservableKey) {
-        println("setting all entries to key ${uniqueReservableKey.id}")
         document.getElementById("pro_" + uniqueReservableKey.id)!!.innerHTML = entries.get(uniqueReservableKey)!!.reservable.prologueMarkdown
         document.getElementById("epi_" + uniqueReservableKey.id)!!.innerHTML = entries.get(uniqueReservableKey)!!.reservable.epilogueMarkdown
-        document.getElementById("lis_" + uniqueReservableKey.id)!!.innerHTML = (entries.get(uniqueReservableKey)!!.existingReservations).toString()
         addFormular(document.getElementById("for_" + uniqueReservableKey.id)!!, uniqueReservableKey)
-
+        setReservationList(document.getElementById("lis_" + uniqueReservableKey.id)!!, uniqueReservableKey)
+        setReservationCalendar(document.getElementById("cal_" + uniqueReservableKey.id)!!, uniqueReservableKey)
     }
+
+    fun setReservationList(listDiv: Element, uniqueReservableKey: UniqueReservableKey) {
+        val el = document.create.ol {
+            entries.get(uniqueReservableKey)!!.existingReservations.map { document.create.li {
+                +("Name: ${it.name} From: ${it.startTime} To: ${it.endTime} for blocks: ${it.blocks.map { it.elementPath.map{it.toString() }.joinToString("-") + " (${it.usedNumber} times)"}}")
+            } }
+        }
+        listDiv.appendChild(el)
+    }
+
+    fun setReservationCalendar(calDiv: Element, uniqueReservableKey: UniqueReservableKey) {
+        val config = entries.get(uniqueReservableKey)!!.toCalendarConfig()
+        val configJson = JSON.stringify(config)
+        calDiv.innerHTML = ""
+        jq( "#${calDiv.id}").asDynamic().fullCalendar(js("JSON.parse(configJson)"))
+    }
+
+
 
     fun addFormular(formDiv: Element, uniqueReservableKey: UniqueReservableKey) {
         formDiv.innerHTML = ""
+        //TODO: add fields based on Reservable definition
         formDiv.appendChild(
 
                 document.create.form(action = null, encType = null,
