@@ -13,6 +13,10 @@ class BusinessLogicImpl(private val kodein: Kodein): BusinessLogic {
     private val fileSystemWrapper: FileSystemWrapper = kodein.instance()
     private val databaseEncapsulation: DatabaseEncapsulation = kodein.instance()
 
+    init {
+        //mailService.sendEmail(listOf(Email(appConfig.mailTestTarget)), "krese works body", "Krese was just started")
+    }
+
     override fun incomingCreateUpdateReservation(reservation: FullBooking, userProfile: UserProfile?): PostResponse {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }

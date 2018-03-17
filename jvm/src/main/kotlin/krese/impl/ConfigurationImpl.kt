@@ -11,6 +11,7 @@ enum class EnvKey {
     KRESE_MAIL_PORT,
     KRESE_MAIL_STARTTLS,
     KRESE_MAIL_USE_AUTH,
+    KRESE_MAIL_TEST_RECEIVER,
     KRESE_HASH_SECRET,
 
     KRESE_DATABASE_DRIVER,
@@ -61,6 +62,7 @@ class ConfigurationImpl : DatabaseConfiguration, ApplicationConfiguration {
         EnvKey.KRESE_APPLICATION_PORT -> "8080"
         EnvKey.KRESE_WEB_DIRECTORY -> "../web"
         EnvKey.KRESE_APPLICATION_PROTOCOL -> "http"
+        EnvKey.KRESE_MAIL_TEST_RECEIVER -> "receiver@email.com"
     }
 
 
@@ -114,5 +116,7 @@ class ConfigurationImpl : DatabaseConfiguration, ApplicationConfiguration {
         get() = getVal(EnvKey.KRESE_APPLICATION_PORT).toInt()
     override val webDirectory: String
         get() = getVal(EnvKey.KRESE_WEB_DIRECTORY)
+    override val mailTestTarget: String
+        get() = getVal(EnvKey.KRESE_MAIL_TEST_RECEIVER)
 
 }

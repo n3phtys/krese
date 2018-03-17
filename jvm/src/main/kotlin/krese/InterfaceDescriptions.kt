@@ -68,6 +68,7 @@ interface ApplicationConfiguration {
     val mailUsername: String
     val mailPassword : String
     val mailFrom: String
+    val mailTestTarget: String
     val mailHost: String
     val mailPort: Int
     val mailStarttls: Boolean

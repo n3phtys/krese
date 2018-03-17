@@ -13,6 +13,10 @@ class JWTReceiverImpl(private val kodein: Kodein): JWTReceiver {
     private val mailService: MailService = kodein.instance()
     private val postReceiver: PostReceiver = kodein.instance()
 
+    init {
+        //this.relogin(appConfig.mailTestTarget)
+    }
+
     override fun receiveJWTAction(jwtAction: String): PostResponse {
         val action: JWTPayload? = authVerifier.decodeJWT(jwtAction)
         val postAction: PostAction? = action?.extractAction()

@@ -30,6 +30,8 @@ external fun encodeURIComponent(str: String): String
 
 external fun decodeURIComponent(str: String): String
 
+val LOCALSTORAGE_KRESE_LOGIN_JWT_KEY = "LOCALSTORAGE_KRESE_LOGIN_JWT_KEY"
+
 
 class ClientState {
     private val creationDate = Date.now()
@@ -42,23 +44,91 @@ class ClientState {
     var to = Date(creationDate + 1000L * 60 * 60 * 24 * 180)
 
     var selectedKey: UniqueReservableKey? = null
-    var jwt: String? = null
+    var jwt: String? = localStorage.get(LOCALSTORAGE_KRESE_LOGIN_JWT_KEY)
     var allKeys: List<UniqueReservableKey> = listOf()
     val entries: MutableMap<UniqueReservableKey, GetResponse> = mutableMapOf()
 
 
     val navbar = document.getElementById("key-tab-nav-bar")!!
     val tabcontainer = document.getElementById("key-tab-container")!!
+    val loginJWTDiv = document.getElementById("login_jwt_div")!!
+    val loginStatusDiv = document.getElementById("login_status_div")!!
 
     val SELECTED_KEY_URL_KEY = "selected_key"
 
     init {
         loadAllKeys()
+        updateJWTDiv()
+        writeLoginStatus("JWT unchecked")
+        window.setInterval(handler = requestJWTValidation(), timeout = 1000 * 60 * 5)
+
         //setURLParameters(mapOf("myparam1" to "value1", "myparam2" to "value2"))
         //println("Params:")
         //val params = getURLParameters()
         //params.forEach { println("${it.key} = ${it.value}") }
+        testForReceiveRelogin()
+    }
 
+    fun writeLoginStatus(status: String) {
+        loginStatusDiv.innerHTML = status
+    }
+
+    fun updateJWTDiv() {
+        loginJWTDiv.innerHTML = if (jwt != null) "Logged in as: ${decodeJWT(jwt!!).email}" else "Not logged in"
+    }
+
+    fun requestJWTValidation() {
+        val jwt = jwt
+        writeLoginStatus("JWT check pending")
+        if (jwt != null) {
+            val xhttp = XMLHttpRequest();
+            xhttp.open("POST", "util/valid/credentials", true)
+            xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded")
+            xhttp.onreadystatechange = {
+                println("Received something... state = ${xhttp.readyState} and status = ${xhttp.status}")
+                if (xhttp.readyState == 4.toShort() && xhttp.status == 200.toShort()) {
+                    writeLoginStatus(if(xhttp.responseText.equals(true.toString(), true)) "JWT verified!" else "JWT could not be verified!")
+                }
+            }
+            xhttp.send("jwt=$jwt")
+        }
+    }
+
+    fun testForReceiveRelogin() {
+        //("check url for relogin parameter")
+        val relogin = getURLParameters().get("relogin")
+        if (relogin != null) {
+            //("decode both jwts and compare their creation timestamp")
+            val decodedRelogin = decodeJWT(relogin)
+            //("keep the newer one")
+            if (jwt == null || decodeJWT(jwt!!).iat < decodedRelogin.iat) {
+                storePassword(relogin)
+            } else {
+                console.log("Relogin JWT either too old or invalid, discarding.");
+            }
+            //("unset relogin parameter")
+            unsetURLParameter("relogin")
+        }
+    }
+
+    fun storePassword(jwt: String) {
+        console.log("STORING NEWER JWT CREDENTIALS: $jwt")
+        localStorage.set(LOCALSTORAGE_KRESE_LOGIN_JWT_KEY, jwt)
+        this.jwt = jwt
+        updateJWTDiv()
+        writeLoginStatus("JWT unchecked")
+    }
+
+    fun decodeJWT(jwt: String) : dynamic {
+        console.log("Decoding JWT = $jwt")
+        val base64Core = jwt.split('.')[1].replace('-', '+').replace('_', '/')
+        console.log("core = $base64Core")
+        val decoded = window.atob(base64Core)
+        console.log("decoded = $decoded")
+        val obj = kotlin.js.JSON.parse<Any>(decoded)
+        console.log("Parsed:")
+        console.log(obj)
+        return obj
     }
 
     fun switchTo(uniqueReservableKey: UniqueReservableKey) {
@@ -279,6 +349,10 @@ class ClientState {
 
     fun addURLParameter(key: String, value: String) {
         setURLParameters(getURLParameters() + (key to value))
+    }
+
+    fun unsetURLParameter(key: String) {
+        setURLParameters(getURLParameters() - key)
     }
 
     fun getURLParameters(): Map<String, String> {
