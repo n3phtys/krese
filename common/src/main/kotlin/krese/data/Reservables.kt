@@ -1,15 +1,16 @@
 package krese.data
 
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Optional
 
 
 @Serializable
 data class ReservableElement(
         val id: Long,
         val name: String,
-        val description: String?,
-        val units: Int?,
-        val subElements: List<ReservableElement>
+        @Optional val description: String = "",
+        @Optional val units: Int = 0,
+        @Optional val subElements: List<ReservableElement> = listOf()
 )
 
 @Serializable
@@ -31,10 +32,11 @@ data class GetTotalResponse(
 @Serializable
 data class Reservable(
         val uniqueId : String,
-        val prologueMarkdown: String,
-        val epilogueMarkdown: String,
-        val staticFiles: List<String>,
+        @Optional val prologue: String = "", //on jvm either filepath to markdown file (check) or inline markdown, or hardcoded path, translated to HTML without sanitation for frontend
+        @Optional val epilogue: String = "",
+        @Optional val staticFiles: List<String> = listOf(),
         val elements: ReservableElement,
+        @Optional val checkBoxes: List<String> = listOf(),
         val operatorEmails: List<String>
 ) {
     fun key(): UniqueReservableKey {

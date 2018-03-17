@@ -2,14 +2,17 @@ package krese.impl
 
 import com.github.salomonbrys.kodein.Kodein
 import com.github.salomonbrys.kodein.instance
-import com.google.gson.Gson
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.internal.IntSerializer
+import kotlinx.serialization.internal.StringSerializer
+import kotlinx.serialization.json.JSON
+import kotlinx.serialization.list
 import krese.DatabaseConfiguration
 import krese.DatabaseEncapsulation
 import krese.data.DbBlockData
 import krese.data.Email
 import krese.data.Reservation
 import krese.data.UniqueReservableKey
-import krese.utility.fromJson
 import org.jetbrains.exposed.dao.*
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -59,7 +62,7 @@ class DatabaseEncapsulationImpl(private val kodein: Kodein) : DatabaseEncapsulat
                         DbBlock.new {
                             usedNumber = it.usedNumber
                             dBBooking = ele
-                            elementPath = Gson().toJson(it.elementPath)
+                            elementPath = JSON.Companion.stringify(IntSerializer.list, it.elementPath)
                         }
                     }
                     dbb = ele.toOutput()
@@ -84,7 +87,7 @@ class DatabaseEncapsulationImpl(private val kodein: Kodein) : DatabaseEncapsulat
                     DbBlock.new {
                         usedNumber = it.usedNumber
                         dBBooking = ele
-                        elementPath = Gson().toJson(it.elementPath)
+                        elementPath = JSON.stringify(IntSerializer.list, it.elementPath)
                     }
                 }
                 dbb = ele.toOutput()
@@ -126,6 +129,9 @@ class DatabaseEncapsulationImpl(private val kodein: Kodein) : DatabaseEncapsulat
     }
 
     override fun retrieveBookingsForKey(key: UniqueReservableKey, includeMinTimestamp: DateTime, excludeMaxTimestamp: DateTime) : List<DbBookingOutputData> {
+        //TODO: sanitize outgoing HTML / text code
+
+
         val myBookings = mutableListOf<DbBookingOutputData>()
         val skey = key.id
 
@@ -189,6 +195,7 @@ fun createInMemoryElements() {
         println("Accepted Bookings: ${DbBooking.find { DbBookings.accepted eq true}.joinToString {it.name}}")
     }
 }
+
 
 
 object DbBookings : LongIdTable("db_bookings", "id") {
@@ -258,7 +265,7 @@ class DbBlock(id: EntityID<Long>) : LongEntity(id) {
     var dBBooking by DbBooking referencedOn DbBlocks.dBBookingId
 
     fun getElementPathSegments() : List<Int> {
-        return Gson().fromJson<List<Int>>(this.elementPath)
+        return JSON.parse(IntSerializer.list, this.elementPath)
     }
 
 

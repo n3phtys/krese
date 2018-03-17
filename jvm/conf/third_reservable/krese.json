@@ -1,12 +1,11 @@
 {
-  "uniqueId" : "third/of/all/keys",
-  "prologueMarkdown" : "# Hello World from third!",
-  "epilogueMarkdown" : "\n* just another entry",
+  "uniqueId" : "third_of_all_keys",
+  "prologue" : "# Hello World from third!",
+  "epilogue" : "\n* just another entry",
   "staticFiles" : [],
   "elements" : {
     "id" : 13,
     "name" : "myelement",
-    "description" : null,
     "subElements" : []
   },
   "operatorEmails" : ["christopher.kaag@gmail.com"]

@@ -6,7 +6,6 @@ import com.auth0.jwt.exceptions.JWTCreationException
 import com.auth0.jwt.exceptions.JWTVerificationException
 import com.github.salomonbrys.kodein.Kodein
 import com.github.salomonbrys.kodein.instance
-import com.google.gson.Gson
 import krese.*
 import krese.data.Email
 import krese.data.JWTPayload
@@ -28,13 +27,13 @@ class AuthVerifierImpl(private val kodein: Kodein) : AuthVerifier {
             val claimssame = JWT.create()
                     .withIssuer(issuer)
                     .withClaim(key_email, content.userProfile.email.address)
-                    .withClaim(key_action, Gson().toJson(content.action))
+                    .withClaim(key_action, content.action.toString())
                     .withArrayClaim(key_params, content.params.toTypedArray())
                     .withIssuedAt(Date())
                     .withExpiresAt(Date(content.userProfile.validTo))
                     .withNotBefore(Date(content.userProfile.validFrom))
             val claims = if (content.action != null) {
-                claimssame.withClaim(key_action, Gson().toJson(content.action))
+                claimssame.withClaim(key_action, content.action.toString())
             } else {
                 claimssame
             }
@@ -63,7 +62,14 @@ class AuthVerifierImpl(private val kodein: Kodein) : AuthVerifier {
         try {
             val decoded = JWT.require(algorithm).withIssuer(issuer).build().verify(jwt)
             val actionStr = decoded.claims.get(key_action)
-            val action : LinkActions? = if (actionStr != null) {Gson().fromJson<LinkActions>(actionStr.asString(), LinkActions::class.java)} else {null}
+            var action : LinkActions? = null
+            try {
+                action = LinkActions.valueOf(actionStr!!.asString())
+            } catch (ignored: NullPointerException) {
+
+            } catch (ignored: IllegalArgumentException) {
+
+            }
             return JWTPayload(action, decoded.getClaim(key_params).asList(String::class.java), UserProfile(Email(decoded.getClaim(key_email).asString()), decoded.notBefore.time, decoded.expiresAt.time))
         } catch (e: UnsupportedEncodingException) {
             return null

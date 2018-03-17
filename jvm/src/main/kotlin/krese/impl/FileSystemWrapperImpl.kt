@@ -2,7 +2,7 @@ package krese.impl
 
 import com.github.salomonbrys.kodein.Kodein
 import com.github.salomonbrys.kodein.instance
-import com.google.gson.Gson
+import kotlinx.serialization.json.JSON
 import krese.ApplicationConfiguration
 import krese.FileSystemWrapper
 import krese.data.Reservable
@@ -15,12 +15,19 @@ import java.nio.file.Paths
 class FileSystemWrapperImpl(private val kodein: Kodein): FileSystemWrapper {
     private val appConfig: ApplicationConfiguration = kodein.instance()
 
+
     /*
     We have one main directory, given by the configuration (env variable)
     We have a multitude of sub directories
     In each such subdirectory we scan for a krese.json, which we can parse to "Reservable"
     In this json we find the key
      */
+
+
+    init {
+        this.getKeysFromDirectory().forEach{this.getReservableToKey(it.key)}
+    }
+
 
     override fun getKeysFromDirectory(): Map<UniqueReservableKey, Path> {
         val folder = File(appConfig.reservablesDirectory)
@@ -33,7 +40,7 @@ class FileSystemWrapperImpl(private val kodein: Kodein): FileSystemWrapper {
                 val jf = p.toFile()
                 if (jf.canRead()) {
                     val txt = jf.readText()
-                    val output = Gson().fromJson<Reservable>(txt, Reservable::class.java)
+                    val output = JSON.parse<Reservable>(txt)
                     res.put(output.key(), p)
                 }
             }
@@ -47,7 +54,7 @@ class FileSystemWrapperImpl(private val kodein: Kodein): FileSystemWrapper {
     override fun getReservableToKey(key: UniqueReservableKey): Reservable? {
         val str = this.getKeysFromDirectory().get(key)?.toFile()?.readText()
         if (str != null) {
-            return Gson().fromJson(str, Reservable::class.java)
+            return JSON.parse<Reservable>(str)
         } else {
             return null
         }

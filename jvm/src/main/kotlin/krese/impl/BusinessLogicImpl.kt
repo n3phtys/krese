@@ -39,7 +39,7 @@ class BusinessLogicImpl(private val kodein: Kodein): BusinessLogic {
         if (res != null) {
             return GetResponse(
                     res,
-                    databaseEncapsulation.retrieveBookingsForKey(urk).map { it.toOutput(res.operatorEmails.contains(callerEmail?.address)) }
+                    databaseEncapsulation.retrieveBookingsForKey(urk).map { it.toOutput(res.operatorEmails.contains(callerEmail?.address)) } + Reservation(12345, UniqueReservableKey("first_key"), Email(appConfig.mailTestTarget), "test account", "+123456789", "no comment", null, System.currentTimeMillis() + 1000L * 60 * 60 * 24 * 5, System.currentTimeMillis() + 1000L * 60 * 60 * 24 * 7, 2131, 2131, true, listOf(DbBlockData(listOf(13), 1)))
             )
         } else {
             return null

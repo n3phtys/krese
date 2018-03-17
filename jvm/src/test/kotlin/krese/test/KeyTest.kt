@@ -9,13 +9,13 @@ class KeyTest {
 
     @Test
     fun reservablekeys_arefilteredright() {
-        assertEquals(true, isValidKey("my/key215"))
-        assertEquals(false, isValidKey("/my/key215"))
-        assertEquals(false, isValidKey("my/key215/"))
+        assertEquals(true, isValidKey("my_key215"))
+        assertEquals(false, isValidKey("_my_key215"))
+        assertEquals(false, isValidKey("my_key215_"))
         assertEquals(false, isValidKey(""))
-        assertEquals(false, isValidKey("/"))
-        assertEquals(true, isValidKey("my/key215"))
+        assertEquals(false, isValidKey("_"))
+        assertEquals(true, isValidKey("my_key215"))
         assertEquals(true, isValidKey("mykey215"))
-        assertEquals(false, isValidKey("aa//aa"))
+        assertEquals(false, isValidKey("aa__aa"))
     }
 }

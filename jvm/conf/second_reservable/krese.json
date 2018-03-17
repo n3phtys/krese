@@ -1,12 +1,11 @@
 {
   "uniqueId" : "secondkey",
-  "prologueMarkdown" : "# Hello World from second!",
-  "epilogueMarkdown" : "\n* just another entry",
+  "prologue" : "# Hello World from second!",
+  "epilogue" : "\n* just another entry",
   "staticFiles" : [],
   "elements" : {
     "id" : 13,
     "name" : "myelement",
-    "description" : null,
     "subElements" : []
   },
   "operatorEmails" : ["christopher.kaag@gmail.com"]

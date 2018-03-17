@@ -4,10 +4,6 @@ import jquery.jq
 import kotlinext.js.asJsObject
 import kotlinx.html.dom.create
 import kotlinx.serialization.json.JSON
-import krese.data.GetResponse
-import krese.data.GetTotalResponse
-import krese.data.Routes
-import krese.data.UniqueReservableKey
 import org.w3c.xhr.XMLHttpRequest
 import kotlinx.html.*
 import kotlinx.html.js.onClickFunction
@@ -20,6 +16,7 @@ import org.w3c.dom.*
 import kotlin.browser.*
 import kotlin.dom.*
 import kotlinx.html.*
+import krese.data.*
 import org.w3c.dom.*
 import org.w3c.dom.events.Event
 import kotlin.browser.document
@@ -237,8 +234,9 @@ class ClientState {
     }
 
     fun setEntriesToKey(uniqueReservableKey: UniqueReservableKey) {
-        document.getElementById("pro_" + uniqueReservableKey.id)!!.innerHTML = entries.get(uniqueReservableKey)!!.reservable.prologueMarkdown
-        document.getElementById("epi_" + uniqueReservableKey.id)!!.innerHTML = entries.get(uniqueReservableKey)!!.reservable.epilogueMarkdown
+        document.getElementById("pro_" + uniqueReservableKey.id)!!.innerHTML = entries.get(uniqueReservableKey)!!.reservable.prologue
+        val epilogue = entries.get(uniqueReservableKey)!!.reservable.epilogue
+        document.getElementById("epi_" + uniqueReservableKey.id)!!.innerHTML = epilogue
         addFormular(document.getElementById("for_" + uniqueReservableKey.id)!!, uniqueReservableKey)
         setReservationList(document.getElementById("lis_" + uniqueReservableKey.id)!!, uniqueReservableKey)
         setReservationCalendar(document.getElementById("cal_" + uniqueReservableKey.id)!!, uniqueReservableKey)
@@ -246,8 +244,9 @@ class ClientState {
 
     fun setReservationList(listDiv: Element, uniqueReservableKey: UniqueReservableKey) {
         val el = document.create.ol {
-            entries.get(uniqueReservableKey)!!.existingReservations.map { document.create.li {
-                +("Name: ${it.name} From: ${it.startTime} To: ${it.endTime} for blocks: ${it.blocks.map { it.elementPath.map{it.toString() }.joinToString("-") + " (${it.usedNumber} times)"}}")
+            for (reservation in entries.get(uniqueReservableKey)!!.existingReservations) {
+                li {
+                +("Name: ${reservation.name} From: ${reservation.startTime} To: ${reservation.endTime} for blocks: ${reservation.blocks.map { it.elementPath.map{it.toString() }.joinToString("-") + " (${it.usedNumber} times)"}}")
             } }
         }
         listDiv.appendChild(el)
@@ -257,14 +256,66 @@ class ClientState {
         val config = entries.get(uniqueReservableKey)!!.toCalendarConfig()
         val configJson = JSON.stringify(config)
         calDiv.innerHTML = ""
-        jq( "#${calDiv.id}").asDynamic().fullCalendar(js("JSON.parse(configJson)"))
+        val id = "#" + calDiv.id
+        jq( id).asDynamic().fullCalendar(js("JSON.parse(configJson)"))
     }
 
+    fun ReservableElement.toFormularInputDiv(key: UniqueReservableKey, prefix : String) : HTMLDivElement {
+        val r = this
 
+        //TODO: buggy, does not really work
+
+        return document.create.div {
+            label { +"${r.name}: ${r.description}"}
+            if (r.units != 0) {
+                label {
+                    +"Number:"
+                }
+                input {
+                    type = InputType.number
+                    name = "count_input_${key.id}_${prefix}"
+                    step = 1.toString()
+                    min = 1.toString()
+                    max = r.units.toString()
+                }
+            } else {
+                input {
+                    type = InputType.checkBox
+                    name = "check_input_${key.id}_${prefix}"
+                }
+                label {+"Reserve this element"}
+            }
+            for (element in r.subElements) {
+                element.toFormularInputDiv(key, prefix + "_" + r.id)
+            }
+
+        }
+    }
 
     fun addFormular(formDiv: Element, uniqueReservableKey: UniqueReservableKey) {
         formDiv.innerHTML = ""
-        //TODO: add fields based on Reservable definition
+        //TODO: add automatic disabling of submit button when intersect happens
+
+        //TODO: store name + email + phone in localStorage and extract in this method as default value
+
+
+        //name
+        //email
+        //phone
+        //from
+        //to
+
+        //ReservableElement -> form (may contain multiple, id required for prefixing data)
+
+
+        //comment
+        //checkboxes
+        //submit button
+
+        //onsubmit abort immediate post and instead build CreateAction object
+
+        val r = entries.get(uniqueReservableKey)!!.reservable
+
         formDiv.appendChild(
 
                 document.create.form(action = null, encType = null,
@@ -277,12 +328,29 @@ class ClientState {
                         it.preventDefault()
                         it.stopPropagation()
                     }
-                    input(type = InputType.text, name = "field1")
-                    br()
-                    input(type = InputType.text, name = "field2")
-                    br()
-                    input(type = InputType.checkBox, name = "field3")
-                    br()
+                    input(type = InputType.text, name = "name")
+
+                    input(type = InputType.email, name = "email")
+
+                    input(type = InputType.tel, name = "telephone")
+
+                    input(type = InputType.date, name = "from")
+
+                    input(type = InputType.date, name = "to")
+
+
+                    r.elements.toFormularInputDiv(uniqueReservableKey, "ROOT")
+
+                    label {+"Comment"}
+                    textArea { name = "comment_${uniqueReservableKey.id}" }
+
+                    div {
+                        if (r.checkBoxes.isNotEmpty())
+                        r.checkBoxes.map { div {
+                            input(type = InputType.checkBox, name = "checkbox_${uniqueReservableKey.id}_${it.hashCode()}")
+                            label {+it}
+                        } }
+                    }
 
                     submitInput { }
                 }
@@ -371,5 +439,10 @@ class ClientState {
         }.toMap()
     }
 
+
+
+    fun parseFormularToData(key: UniqueReservableKey) : CreateAction {
+        TODO("not yet implemented")
+    }
 
 }
