@@ -13,6 +13,8 @@ import krese.data.DbBlockData
 import krese.data.Email
 import krese.data.Reservation
 import krese.data.UniqueReservableKey
+import krese.migration.migrationFileLoaded
+import krese.migration.migrationFileLocation
 import org.jetbrains.exposed.dao.*
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -27,6 +29,10 @@ class DatabaseEncapsulationImpl(private val kodein: Kodein) : DatabaseEncapsulat
 
     init {
         createSchemaIfNotExists()
+        val importedData = migrationFileLoaded
+        if (importedData != null) {
+            importedData.toDBElements().forEach {this.createUpdateBooking(null, it) }
+        }
     }
 
     fun createSchemaIfNotExists(): Unit {

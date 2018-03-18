@@ -39,7 +39,7 @@ interface AuthVerifier {
 }
 
 interface GetReceiver {
-    fun retrieve(key: UniqueReservableKey, callerEmail: Email?): GetResponse?
+    fun retrieve(key: UniqueReservableKey, from : DateTime, to : DateTime, callerEmail: Email?): GetResponse?
     fun retrieveAll(callerEmail: Email?): GetTotalResponse
 }
 
@@ -92,7 +92,7 @@ interface BusinessLogic {
 
     fun incomingWithdrawByUser(bookingId: Long, userProfile: UserProfile, comment: String?) : PostResponse
 
-    fun retrieveReservations(urk: UniqueReservableKey, callerEmail: Email?) : GetResponse?
+    fun retrieveReservations(urk: UniqueReservableKey, from : DateTime, to : DateTime, callerEmail: Email?) : GetResponse?
 
     fun retrieveKeys(callerEmail: Email?) : GetTotalResponse
 }

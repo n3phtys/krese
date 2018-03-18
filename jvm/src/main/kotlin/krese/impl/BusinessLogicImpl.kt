@@ -4,6 +4,8 @@ import com.github.salomonbrys.kodein.Kodein
 import com.github.salomonbrys.kodein.instance
 import krese.*
 import krese.data.*
+import org.joda.time.DateTime
+import java.util.*
 
 class BusinessLogicImpl(private val kodein: Kodein): BusinessLogic {
 
@@ -34,12 +36,12 @@ class BusinessLogicImpl(private val kodein: Kodein): BusinessLogic {
     }
 
     //TODO: from and to
-    override fun retrieveReservations(urk: UniqueReservableKey, callerEmail: Email?): GetResponse? {
+    override fun retrieveReservations(urk: UniqueReservableKey, from : DateTime, to : DateTime, callerEmail: Email?): GetResponse? {
         val res = fileSystemWrapper.getReservableToKey(urk)
         if (res != null) {
             return GetResponse(
                     res,
-                    databaseEncapsulation.retrieveBookingsForKey(urk).map { it.toOutput(res.operatorEmails.contains(callerEmail?.address)) } + Reservation(12345, UniqueReservableKey("first_key"), Email(appConfig.mailTestTarget), "test account", "+123456789", "no comment", null, System.currentTimeMillis() + 1000L * 60 * 60 * 24 * 5, System.currentTimeMillis() + 1000L * 60 * 60 * 24 * 7, 2131, 2131, true, listOf(DbBlockData(listOf(13), 1)))
+                    databaseEncapsulation.retrieveBookingsForKey(urk).map { it.toOutput(res.operatorEmails.contains(callerEmail?.address)) }
             )
         } else {
             return null

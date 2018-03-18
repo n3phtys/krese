@@ -21,6 +21,8 @@ import io.ktor.server.netty.Netty
 import kotlinx.serialization.json.JSON
 import krese.*
 import krese.data.*
+import org.joda.time.DateTime
+import org.joda.time.DateTimeZone
 import java.io.File
 
 class Server(private val kodein: Kodein) {
@@ -34,44 +36,46 @@ class Server(private val kodein: Kodein) {
 
     val server = embeddedServer(Netty, appConfig.applicationPort) {
         println("appConfig.webDirectory = " + File(appConfig.webDirectory).absolutePath)
-        println("get entries = /" + Routes.GET_ENTRIES_TO_RESERVABLE.path)
+        println("get entries = /" + Routes.GET_RESERVABLES.path)
         routing {
             get("hello") {
                 call.respondText("Hello World")
             }
 
             get("/" + Routes.GET_RESERVABLES.path) {
-                val params = call.receiveOrNull<Parameters>()
-                val jwt = params?.get("jwt")
-                call.respondText(JSON.Companion.stringify(getReceiver.retrieveAll(if (jwt != null) authVerifier.decodeJWT(jwt)?.userProfile?.email else null)))
-            }
+                val params = call.parameters
 
-            route("/" + Routes.GET_ENTRIES_TO_RESERVABLE.path +"{endpoint...}") {
-                get {
-                    val endpointSegments = call.parameters.getAll("endpoint")
-                    val key = UniqueReservableKey(endpointSegments!!.joinToString("/"))
+                val jwt = params.get("jwt")
+                val fromStr = params.get("from")
+                val toStr = params.get("to")
+
+                println("params:")
+                println(params)
+                val key: UniqueReservableKey? = params.get("key").let { if (it != null) UniqueReservableKey(it) else null }
 
 
-                    val params = call.receiveOrNull<Parameters>()
-                    val jwt: String? = params?.get("jwt")
+                val from: DateTime = if (fromStr != null) DateTime(fromStr.toLong(), DateTimeZone.UTC)  else DateTime(Long.MIN_VALUE)
+                val to: DateTime = if (toStr != null) DateTime(toStr.toLong(), DateTimeZone.UTC)  else DateTime(Long.MAX_VALUE)
 
-                    val ele : GetResponse? = getReceiver.retrieve(key, jwt?.let { it1 -> authVerifier.decodeJWT(it1)?.userProfile?.email })
+                if (key != null) {
+                    val ele : GetResponse? = getReceiver.retrieve(key, from, to, jwt?.let { it1 -> authVerifier.decodeJWT(it1)?.userProfile?.email })
                     val json = if (ele != null) JSON.stringify(ele) else "null"
-
-                        call.respondText(json)
-
-                }
-                post {
-                    val params = call.receive<Parameters>()
-                    val postStr = params.get("action")
-                    if (postStr != null) {
-                        val postAction: PostActionInput = JSON.parse(postStr)
-                        call.respondText(JSON.stringify(postReceiver.submitForm(postAction)))
-                    } else {
-                        call.respond(HttpStatusCode.BadRequest, "could not read action param")
-                    }
+                    call.respondText(json)
+                } else {
+                    call.respondText(JSON.Companion.stringify(getReceiver.retrieveAll(if (jwt != null) authVerifier.decodeJWT(jwt)?.userProfile?.email else null)))
                 }
             }
+            post ("/" + Routes.GET_RESERVABLES.path) {
+                val params = call.receive<Parameters>()
+                val postStr = params.get("action")
+                if (postStr != null) {
+                    val postAction: PostActionInput = JSON.parse(postStr)
+                    call.respondText(JSON.stringify(postReceiver.submitForm(postAction)))
+                } else {
+                    call.respond(HttpStatusCode.BadRequest, "could not read action param")
+                }
+            }
+
 
             route("/util") {
                 post("valid/credentials") {

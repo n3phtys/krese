@@ -144,7 +144,7 @@ class ClientState {
 
     private fun loadAllKeys() {
         val xhttp = XMLHttpRequest();
-        xhttp.open("GET", Routes.GET_RESERVABLES.path, true)
+        xhttp.open("GET", Routes.GET_RESERVABLES.path + if (jwt != null) "?jwt=$jwt" else "", true)
         xhttp.onreadystatechange = {
             if (xhttp.readyState == 4.toShort() && xhttp.status == 200.toShort()) {
                 allKeys = JSON.parse<GetTotalResponse>(xhttp.responseText).keys
@@ -223,7 +223,7 @@ class ClientState {
 
     fun loadEntriesToKey(uniqueReservableKey: UniqueReservableKey, from: Date, to: Date) {
         val xhttp = XMLHttpRequest();
-        xhttp.open("GET", Routes.GET_ENTRIES_TO_RESERVABLE.path + uniqueReservableKey.id, true)
+        xhttp.open("GET", Routes.GET_RESERVABLES.path + "?key=${uniqueReservableKey.id}&from=${from.getTime()}&to=${to.getTime()}${if (jwt != null) "&jwt=$jwt" else ""}", true)
         xhttp.onreadystatechange = {
             if (xhttp.readyState == 4.toShort() && xhttp.status == 200.toShort()) {
                 entries.put(uniqueReservableKey, JSON.parse<GetResponse>(xhttp.responseText))

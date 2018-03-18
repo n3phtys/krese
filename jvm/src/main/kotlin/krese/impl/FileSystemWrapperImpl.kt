@@ -7,6 +7,7 @@ import krese.ApplicationConfiguration
 import krese.FileSystemWrapper
 import krese.data.Reservable
 import krese.data.UniqueReservableKey
+import krese.migration.migrationFileLoaded
 import java.io.File
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -26,7 +27,22 @@ class FileSystemWrapperImpl(private val kodein: Kodein): FileSystemWrapper {
 
     init {
         this.getKeysFromDirectory().forEach{this.getReservableToKey(it.key)}
-    }
+
+
+        val importedData = migrationFileLoaded
+        if (importedData != null) {
+            appConfig.reservablesDirectory
+            importedData.toJsonConfigs().forEach {
+                val parentDir = appConfig.reservablesDirectory + "/" + it.uniqueId
+                File(parentDir).mkdir()
+                val json: String = JSON.stringify(it)
+                val f = File(parentDir + "/krese.json")
+                if (!f.exists()) {
+                    File(parentDir + "/krese.json").writeText(json, Charsets.UTF_8)
+                }
+            }
+        }
+        }
 
 
     override fun getKeysFromDirectory(): Map<UniqueReservableKey, Path> {
