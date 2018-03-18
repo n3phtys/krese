@@ -26,7 +26,6 @@ import javax.swing.text.html.HTML
 
 
 class DatabaseEncapsulationImpl(private val kodein: Kodein) : DatabaseEncapsulation {
-
     private val databaseConfig: DatabaseConfiguration = kodein.instance()
     private val sanitizer: HTMLSanitizer = kodein.instance()
 
@@ -42,6 +41,23 @@ class DatabaseEncapsulationImpl(private val kodein: Kodein) : DatabaseEncapsulat
         Database.connect(databaseConfig.databaseJDBC, driver = databaseConfig.databaseDriver)
         transaction {
             create(DbBookings, DbBlocks)
+        }
+    }
+
+    override fun get(id: Long?): DbBookingOutputData? {
+        if (id != null) {
+            Database.connect(databaseConfig.databaseJDBC, driver = databaseConfig.databaseDriver)
+
+            var myBooking: DbBookingOutputData? = null
+
+            transaction {
+                myBooking = DbBooking.find {
+                    DbBookings.id eq id
+                }.firstOrNull()?.toOutput()
+            }
+            return myBooking
+        } else {
+            return null
         }
     }
 

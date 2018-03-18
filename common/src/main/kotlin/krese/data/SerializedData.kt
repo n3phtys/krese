@@ -130,10 +130,12 @@ enum class LinkActions {
 
 
 @Serializable
-sealed class PostAction {}
+sealed class PostAction {
+}
 
 @Serializable
-data class CreateAction(val key: UniqueReservableKey, val email: Email, val name: String, val telephone: String, val commentUser: String, val startTime: Long, val endTime: Long, val blocks: List<DbBlockData>) : PostAction()
+data class CreateAction(val key: UniqueReservableKey, val email: Email, val name: String, val telephone: String, val commentUser: String, val startTime: Long, val endTime: Long, val blocks: List<DbBlockData>) : PostAction() {
+}
 
 @Serializable
 data class DeclineAction(val id: Long, val comment: String) : PostAction()
@@ -145,7 +147,7 @@ data class WithdrawAction(val id: Long, val comment: String) : PostAction()
 data class AcceptAction(val id: Long, val comment: String) : PostAction()
 
 @Serializable
-data class PostActionInput(val jwt: JWTPayload?, val action: PostAction)
+data class PostActionInput(val jwt: String?, val payload: JWTPayload?, val action: PostAction)
 
 
 @Serializable

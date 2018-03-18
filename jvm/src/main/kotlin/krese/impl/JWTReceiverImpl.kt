@@ -21,7 +21,7 @@ class JWTReceiverImpl(private val kodein: Kodein): JWTReceiver {
         val action: JWTPayload? = authVerifier.decodeJWT(jwtAction)
         val postAction: PostAction? = action?.extractAction()
         if (postAction != null) {
-            return postReceiver.submitForm(PostActionInput(action, postAction))
+            return postReceiver.submitForm(PostActionInput(jwtAction, action, postAction))
         } else {
             return PostResponse(false, false, "could not parse action in jwt")
         }

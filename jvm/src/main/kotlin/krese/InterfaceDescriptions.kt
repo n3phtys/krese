@@ -17,6 +17,8 @@ interface DatabaseEncapsulation {
 
     fun deleteBooking(id: Long) : Boolean
 
+    fun get(id: Long?) : DbBookingOutputData?
+
     fun acceptBooking(id: Long) : Boolean
 
     fun retrieveBookingsForKey(key: UniqueReservableKey, includeMinTimestamp: DateTime = DateTime().withMillis(Long.MIN_VALUE), excludeMaxTimestamp: DateTime = DateTime().withMillis(Long.MAX_VALUE)) : List<DbBookingOutputData>
@@ -33,6 +35,7 @@ interface JWTReceiver {
 
 interface AuthVerifier {
     fun decodeJWT(jwt: String): JWTPayload?
+    fun extractEmailWithoutVerfication(jwt: String): Email?
     fun encodeJWT(content: JWTPayload): String?
     fun encodeBase64(plaintext: String): String
     fun decodeBase64(base64: String): String
@@ -88,13 +91,7 @@ interface MailTemplater {
 
 interface BusinessLogic {
 
-    fun incomingCreateUpdateReservation(reservation: FullBooking, userProfile: UserProfile?) : PostResponse
-
-    fun incomingAcceptByModerator(bookingId: Long, userProfile: UserProfile, comment: String?) : PostResponse
-
-    fun incomingDeleteByModerator(bookingId: Long, userProfile: UserProfile, comment: String?) : PostResponse
-
-    fun incomingWithdrawByUser(bookingId: Long, userProfile: UserProfile, comment: String?) : PostResponse
+    fun process(action: PostAction, verification: Email?, verificationValid: Boolean) : PostResponse
 
     fun retrieveReservations(urk: UniqueReservableKey, from : DateTime, to : DateTime, callerEmail: Email?) : GetResponse?
 

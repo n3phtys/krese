@@ -16,7 +16,6 @@ import java.util.*
 
 class AuthVerifierImpl(private val kodein: Kodein) : AuthVerifier {
 
-
     private val issuer = "krese"
     private val key_email = "email"
     private val key_params = "params"
@@ -55,6 +54,15 @@ class AuthVerifierImpl(private val kodein: Kodein) : AuthVerifier {
     override fun encodeBase64(plaintext: String): String = String(Base64.getEncoder().encode(plaintext.toByteArray(Charsets.UTF_8)),Charsets.UTF_8)
 
     override fun decodeBase64(base64: String): String = String(Base64.getDecoder().decode(base64), Charsets.UTF_8)
+
+
+    override fun extractEmailWithoutVerfication(jwt: String): Email? {
+        try {
+            return Email(JWT.decode(jwt).getClaim(key_email).asString())
+        } catch (e : Exception) {
+            return null
+        }
+    }
 
 
 

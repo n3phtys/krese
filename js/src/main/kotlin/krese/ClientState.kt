@@ -558,9 +558,11 @@ class ClientState {
     }
 
 
-
+    //used to build a CreateAction, which can be posted afterwards
     fun parseFormularToData(key: UniqueReservableKey) : CreateAction {
         TODO("not yet implemented")
     }
+
+    //TODO: add small buttons for withdraw/accept/decline, with confirm for each
 
 }
