@@ -30,61 +30,152 @@ external fun decodeURIComponent(str: String): String
 val LOCALSTORAGE_KRESE_LOGIN_JWT_KEY = "LOCALSTORAGE_KRESE_LOGIN_JWT_KEY"
 
 
+
+
+//TODO: - finish form generation
+//TODO: - make bootstrap forms
+
+//TODO: - collapse list of entries per default
+//TODO: - format List as responsive table
+
+//TODO: - add internationalization with override possibility
+//TODO: - set next day to the day after as default form timespan
+
+//TODO: - action commands via client sided indirection (get from url, show confirm dialog for action, and send to post endpoint on server)
+//TODO: - form post submit
+//TODO: - action submit
+
+
+
+
 class ClientState {
     private val creationDate = Date.now()
+    var jwt: String? = localStorage.get(LOCALSTORAGE_KRESE_LOGIN_JWT_KEY)
 
     init {
         println("creationDate =" + Date(creationDate))
+        if (localStorage.get(LOCALSTORAGE_KRESE_MY_EMAIL) == null && jwt != null) {
+            localStorage.set(LOCALSTORAGE_KRESE_MY_EMAIL, decodeJWT(jwt!!).email)
+        }
     }
 
     var from = Date(creationDate - 1000L * 60 * 60 * 24 * 180)
     var to = Date(creationDate + 1000L * 60 * 60 * 24 * 180)
 
     var selectedKey: UniqueReservableKey? = null
-    var jwt: String? = localStorage.get(LOCALSTORAGE_KRESE_LOGIN_JWT_KEY)
+
+    var jwtState: JWTStatus = JWTStatus.UNCHECKED
+
     var allKeys: List<UniqueReservableKey> = listOf()
     val entries: MutableMap<UniqueReservableKey, GetResponse> = mutableMapOf()
 
 
     val navbar = document.getElementById("key-tab-nav-bar")!!
     val tabcontainer = document.getElementById("key-tab-container")!!
-    val loginJWTDiv = document.getElementById("login_jwt_div")!!
+
     val loginStatusDiv = document.getElementById("login_status_div")!!
 
     val SELECTED_KEY_URL_KEY = "selected_key"
 
     init {
+        testForReceiveRelogin()
         loadAllKeys()
-        updateJWTDiv()
-        writeLoginStatus("JWT unchecked")
+
+        writeLoginStatus(if (jwt != null && jwt!!.isNotBlank()) JWTStatus.PENDING else JWTStatus.UNCHECKED)
         window.setInterval(handler = requestJWTValidation(), timeout = 1000 * 60 * 5)
 
-        //setURLParameters(mapOf("myparam1" to "value1", "myparam2" to "value2"))
-        //println("Params:")
-        //val params = getURLParameters()
-        //params.forEach { println("${it.key} = ${it.value}") }
-        testForReceiveRelogin()
     }
 
-    fun writeLoginStatus(status: String) {
-        loginStatusDiv.innerHTML = status
+    fun writeLoginStatus(status: JWTStatus) {
+        jwtState = status
+        updateJWTButton()
     }
 
-    fun updateJWTDiv() {
-        loginJWTDiv.innerHTML = if (jwt != null) "Logged in as: ${decodeJWT(jwt!!).email}" else "Not logged in"
+    fun updateJWTButton() {
+        loginStatusDiv.innerHTML = ""
+        loginStatusDiv.append {
+            when (jwtState) {
+                JWTStatus.UNCHECKED -> button {
+                    classes = setOf("btn", jwtState.buttonStyle)
+                    onClickFunction = {relogin()}
+                    span {
+                        classes = jwtState.glyphname.split(" ").toSet()
+                        style = "padding:5px;"
+                    }
+                        +"Login via Email ${localStorage.get(LOCALSTORAGE_KRESE_MY_EMAIL)}"
+                }
+                JWTStatus.PENDING -> button {
+                    classes = setOf("btn", jwtState.buttonStyle)
+                    onClickFunction = {logout()}
+                    span {
+                        classes = jwtState.glyphname.split(" ").toSet()
+                        style = "padding:5px;"
+                    }
+                    +"Logged in as ${localStorage.get(LOCALSTORAGE_KRESE_MY_EMAIL)} | Pending verification..."
+                }
+                JWTStatus.VALID -> button {
+                    classes = setOf("btn", jwtState.buttonStyle)
+                    onClickFunction = {logout()}
+                    span {
+                        classes = jwtState.glyphname.split(" ").toSet()
+                        style = "padding:5px;"
+                    }
+                    +"Successfully logged in as ${localStorage.get(LOCALSTORAGE_KRESE_MY_EMAIL)} | click to logout"
+                }
+                JWTStatus.INVALID -> button {
+                    classes = setOf("btn", jwtState.buttonStyle)
+                    onClickFunction = {logout()}
+                    span {
+                        classes = jwtState.glyphname.split(" ").toSet()
+                        style = "padding:5px;"
+                    }
+                    +"Invalid Credentials for ${localStorage.get(LOCALSTORAGE_KRESE_MY_EMAIL)}, please logout"
+                }
+            }
+        }
     }
+
+    fun relogin() {
+        val oldemail = localStorage.get(LOCALSTORAGE_KRESE_MY_EMAIL)
+        val result = if (oldemail != null) {
+            window.prompt("Enter your email address to proceed", oldemail)
+        } else {
+            window.prompt("Enter your email address to proceed")
+        }
+
+        if (result != null && result.isNotBlank()) {
+
+            val xhttp = XMLHttpRequest();
+            xhttp.open("POST", Routes.POST_RELOGIN.path, true)
+            xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded")
+            xhttp.onreadystatechange = {
+                println("Received something... state = ${xhttp.readyState} and status = ${xhttp.status}")
+                if (xhttp.readyState == 4.toShort() && xhttp.status == 200.toShort()) {
+                    window.alert("We have sent you an email. Please open it and follow the link to log in. You should close this Tab now.")
+                }
+            }
+            xhttp.send("email=$result")
+        }
+    }
+
+    fun logout() {
+        this.storePassword(null)
+        updateJWTButton()
+    }
+
+
 
     fun requestJWTValidation() {
         val jwt = jwt
-        writeLoginStatus("JWT check pending")
         if (jwt != null) {
+            writeLoginStatus(JWTStatus.PENDING)
             val xhttp = XMLHttpRequest();
             xhttp.open("POST", "util/valid/credentials", true)
             xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded")
             xhttp.onreadystatechange = {
                 println("Received something... state = ${xhttp.readyState} and status = ${xhttp.status}")
                 if (xhttp.readyState == 4.toShort() && xhttp.status == 200.toShort()) {
-                    writeLoginStatus(if(xhttp.responseText.equals(true.toString(), true)) "JWT verified!" else "JWT could not be verified!")
+                    writeLoginStatus(if(xhttp.responseText.equals(true.toString(), true)) JWTStatus.VALID else JWTStatus.INVALID)
                 }
             }
             xhttp.send("jwt=$jwt")
@@ -108,12 +199,16 @@ class ClientState {
         }
     }
 
-    fun storePassword(jwt: String) {
-        console.log("STORING NEWER JWT CREDENTIALS: $jwt")
-        localStorage.set(LOCALSTORAGE_KRESE_LOGIN_JWT_KEY, jwt)
+    fun storePassword(jwt: String?) {
+        if (jwt != null) {
+            console.log("STORING NEWER JWT CREDENTIALS: $jwt")
+            localStorage.set(LOCALSTORAGE_KRESE_LOGIN_JWT_KEY, jwt)
+        } else {
+            localStorage.removeItem(LOCALSTORAGE_KRESE_LOGIN_JWT_KEY)
+        }
         this.jwt = jwt
-        updateJWTDiv()
-        writeLoginStatus("JWT unchecked")
+
+        writeLoginStatus(JWTStatus.UNCHECKED)
     }
 
     fun decodeJWT(jwt: String) : dynamic {
@@ -163,7 +258,7 @@ class ClientState {
                 addURLParameter(SELECTED_KEY_URL_KEY, key.id)
                 switchTo(key)
             }
-            +"Button for ${key.id}"
+            +key.id
         }
     }
 
@@ -183,6 +278,9 @@ class ClientState {
             id = "div_" + key.id
             style = "display:none"
             classes = setOf("w3-container", "city")
+
+            h2 { +key.id }
+
             div {
                 id = "pro_" + key.id
                 +"Prologue for = ${key.id}"
@@ -243,12 +341,32 @@ class ClientState {
     }
 
     fun setReservationList(listDiv: Element, uniqueReservableKey: UniqueReservableKey) {
+
+        /*
+        <div class="panel-group">
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <h4 class="panel-title">
+        <a data-toggle="collapse" href="#collapse1">Collapsible panel</a>
+      </h4>
+    </div>
+    <div id="collapse1" class="panel-collapse collapse">
+      <div class="panel-body">Panel Body</div>
+      <div class="panel-footer">Panel Footer</div>
+    </div>
+  </div>
+</div>
+         */
+
+
+
         val el = document.create.ol {
             for (reservation in entries.get(uniqueReservableKey)!!.existingReservations) {
                 li {
                 +("Name: ${reservation.name} From: ${reservation.startTime} To: ${reservation.endTime} for blocks: ${reservation.blocks.map { it.elementPath.map{it.toString() }.joinToString("-") + " (${it.usedNumber} times)"}}")
             } }
         }
+        listDiv.innerHTML = ""
         listDiv.appendChild(el)
     }
 

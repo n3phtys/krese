@@ -48,6 +48,10 @@ interface PostReceiver {
     fun submitForm(reservation: PostActionInput): PostResponse
 }
 
+interface HTMLSanitizer {
+    fun sanitize(html:String): String
+}
+
 interface DatabaseConfiguration {
     val databasePort: String
     val databaseHost: String

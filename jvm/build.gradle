@@ -102,6 +102,7 @@ dependencies {
     compile 'com.github.salomonbrys.kodein:kodein:4.1.0'
     compile "io.ktor:ktor-server-netty:$ktor_version"
 
+    compile 'com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20180219.1'
 
 
     testCompile "junit:junit:4.12"

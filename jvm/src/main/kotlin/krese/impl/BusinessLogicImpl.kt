@@ -35,13 +35,13 @@ class BusinessLogicImpl(private val kodein: Kodein): BusinessLogic {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
-    //TODO: from and to
+
     override fun retrieveReservations(urk: UniqueReservableKey, from : DateTime, to : DateTime, callerEmail: Email?): GetResponse? {
         val res = fileSystemWrapper.getReservableToKey(urk)
         if (res != null) {
             return GetResponse(
                     res,
-                    databaseEncapsulation.retrieveBookingsForKey(urk).map { it.toOutput(res.operatorEmails.contains(callerEmail?.address)) }
+                    databaseEncapsulation.retrieveBookingsForKey(urk, from, to).map { it.toOutput(res.operatorEmails.contains(callerEmail?.address)) }
             )
         } else {
             return null

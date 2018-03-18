@@ -17,4 +17,5 @@ val kodein = Kodein {
     bind<DatabaseEncapsulation>() with singleton {  DatabaseEncapsulationImpl(kodein) }
     bind<MailService>() with singleton {  MailServiceImpl(kodein) }
     bind<MailTemplater>() with singleton {  MailServiceImpl(kodein) }
+    bind<HTMLSanitizer>() with singleton {  HTMLSanitizerImpl(kodein) }
 }

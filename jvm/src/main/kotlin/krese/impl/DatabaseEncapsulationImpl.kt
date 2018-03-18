@@ -9,6 +9,7 @@ import kotlinx.serialization.json.JSON
 import kotlinx.serialization.list
 import krese.DatabaseConfiguration
 import krese.DatabaseEncapsulation
+import krese.HTMLSanitizer
 import krese.data.DbBlockData
 import krese.data.Email
 import krese.data.Reservation
@@ -21,11 +22,13 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SchemaUtils.create
 import org.joda.time.DateTime
+import javax.swing.text.html.HTML
 
 
 class DatabaseEncapsulationImpl(private val kodein: Kodein) : DatabaseEncapsulation {
 
     private val databaseConfig: DatabaseConfiguration = kodein.instance()
+    private val sanitizer: HTMLSanitizer = kodein.instance()
 
     init {
         createSchemaIfNotExists()
@@ -135,8 +138,6 @@ class DatabaseEncapsulationImpl(private val kodein: Kodein) : DatabaseEncapsulat
     }
 
     override fun retrieveBookingsForKey(key: UniqueReservableKey, includeMinTimestamp: DateTime, excludeMaxTimestamp: DateTime) : List<DbBookingOutputData> {
-        //TODO: sanitize outgoing HTML / text code
-
 
         val myBookings = mutableListOf<DbBookingOutputData>()
         val skey = key.id
@@ -147,7 +148,7 @@ class DatabaseEncapsulationImpl(private val kodein: Kodein) : DatabaseEncapsulat
                     DbBooking.find { DbBookings.reservableKey eq skey and (DbBookings.startDateTime less excludeMaxTimestamp or DbBookings.endDateTime.greaterEq(includeMinTimestamp))} .sortedByDescending { DbBookings.startDateTime }.map { it.toOutput() }
             )
         }
-        return myBookings
+        return myBookings.map { it.copy(name = sanitizer.sanitize(it.name), telephone = sanitizer.sanitize(it.telephone), commentOperator = sanitizer.sanitize(it.commentOperator), commentUser = sanitizer.sanitize(it.commentUser), email = Email(sanitizer.sanitize(it.email.address)), key = UniqueReservableKey(sanitizer.sanitize(it.key.id))) }
     }
 
 }

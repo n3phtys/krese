@@ -38,9 +38,6 @@ class Server(private val kodein: Kodein) {
         println("appConfig.webDirectory = " + File(appConfig.webDirectory).absolutePath)
         println("get entries = /" + Routes.GET_RESERVABLES.path)
         routing {
-            get("hello") {
-                call.respondText("Hello World")
-            }
 
             get("/" + Routes.GET_RESERVABLES.path) {
                 val params = call.parameters
@@ -98,11 +95,6 @@ class Server(private val kodein: Kodein) {
                         call.respond(HttpStatusCode.BadRequest, "could not read email param")
                     }
 
-                }
-                post("jwtaction") {
-                    val params = call.receive<Parameters>()
-                    val jwtaction = params.get("action")
-                    jwtReceiver.receiveJWTAction(jwtaction!!)
                 }
             }
             static("") {

@@ -13,7 +13,6 @@ data class OldMigrationData(
 		val skihuette: List<OldReservation>
 ) {
 	fun toJsonConfigs() : List<Reservable> {
-		//TODO: only create once
 		return listOf(
 				Reservable(uniqueId = "gaestezimmer_ka", elements = ReservableElement(1, "Betten", "", 2), operatorEmails = listOf("operator1@email.com")),
 				Reservable(uniqueId = "saal_ka", elements = ReservableElement(1, "Saal", "", 1), operatorEmails = listOf("operator2@email.com")),

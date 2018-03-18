@@ -30,6 +30,7 @@ class DBTest {
 
     val kodein = Kodein {
         bind<DatabaseConfiguration>() with singleton {  DBMockConfig() }
+        bind<HTMLSanitizer>() with singleton { HTMLSanitizerImpl(kodein) }
     }
 
     @Test

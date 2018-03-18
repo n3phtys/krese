@@ -32,13 +32,16 @@ class JWTReceiverImpl(private val kodein: Kodein): JWTReceiver {
     }
 
     override fun relogin(email: String) {
+        //TODO: also add selected key to link, to keep the right state for the user
+
         //check if email is legal & create jwt for user
         val recipient = Email(email)
         val from = DateTime.now()
         val to = DateTime.now().plusDays(2)
         val jwt = authVerifier.encodeJWT(JWTPayload(null, listOf(), buildUserProfile(recipient, from, to)))
         //build link that can be parsed by client (by checking params)
-        val link = "${appConfig.applicationProtocol}://${appConfig.applicationHost}:${appConfig.applicationPort}/index.html?relogin=$jwt" //TODO: deal with reverse proxy by making this configurable
+        //TODO: deal with reverse proxy by making this configurable
+        val link = "${appConfig.applicationProtocol}://${appConfig.applicationHost}:${appConfig.applicationPort}/index.html?relogin=$jwt"
         //send link to given email adress
         val mailBody = "To login into Krese, follow this link: <a href=\"$link\">$link</a>"
         val mailSubject = "Krese Login Request"
