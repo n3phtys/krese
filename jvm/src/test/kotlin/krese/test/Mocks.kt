@@ -20,7 +20,9 @@ fun List<String>.emailBody() = this.last()
 
 class MailerMock(val sentMails: MutableList<List<String>> = mutableListOf()) : MailService {
     override fun sendEmail(receivers: List<Email>, bodyHTML: String, subject: String) {
-        sentMails.add(listOf(subject) + receivers.map { it.address } + listOf(bodyHTML))
+        assert(receivers.size >= 1)
+        println("MOCK-SENDING MAIL WITH SUBJECT = $subject")
+        sentMails.add(listOf(subject) + receivers.map {it.address} + bodyHTML)
     }
 }
 
@@ -40,7 +42,7 @@ class ConfigMock(val uniqueNumber: Int) : DatabaseConfiguration, ApplicationConf
     override val databaseDriver: String
         get() = "org.h2.Driver"
     override val databaseJDBC: String
-        get() = "jdbc:h2:mem:test$uniqueNumber"
+        get() = "jdbc:h2:mem:test$uniqueNumber;DB_CLOSE_DELAY=5"
     override val reservablesDirectory: String
         get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
     override val webDirectory: String

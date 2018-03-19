@@ -10,10 +10,7 @@ import kotlinx.serialization.list
 import krese.DatabaseConfiguration
 import krese.DatabaseEncapsulation
 import krese.HTMLSanitizer
-import krese.data.DbBlockData
-import krese.data.Email
-import krese.data.Reservation
-import krese.data.UniqueReservableKey
+import krese.data.*
 import krese.migration.migrationFileLoaded
 import krese.migration.migrationFileLocation
 import org.jetbrains.exposed.dao.*
@@ -26,6 +23,7 @@ import javax.swing.text.html.HTML
 
 
 class DatabaseEncapsulationImpl(private val kodein: Kodein) : DatabaseEncapsulation {
+
     private val databaseConfig: DatabaseConfiguration = kodein.instance()
     private val sanitizer: HTMLSanitizer = kodein.instance()
 
@@ -44,6 +42,12 @@ class DatabaseEncapsulationImpl(private val kodein: Kodein) : DatabaseEncapsulat
         transaction {
             create(DbBookings, DbBlocks)
         }
+    }
+
+
+    override fun isFree(key: UniqueReservableKey, blocks: List<DbBlockData>, startMillis: Long, endMillis: Long, reservableElement: ReservableElement): Boolean {
+        //TODO: improve performance
+        return reservableElement.allows(blocks + this.retrieveBookingsForKey(key).filter { !(it.endTime.millis <= startMillis || it.startTime.millis > endMillis) }.flatMap { it.blocks } )
     }
 
     override fun get(id: Long?): DbBookingOutputData? {
@@ -270,6 +274,7 @@ data class DbBookingOutputData(val id : Long, val key: UniqueReservableKey, val 
         fun toOutput(isOperator: Boolean) : Reservation {
             return Reservation(id, key, if (isOperator) email else null, name, if (isOperator) telephone else null, commentUser, if (isOperator) commentOperator else null, startTime.millis, endTime.millis, createdTimestamp.millis, if (isOperator) modifiedTimestamp.millis else null, accepted, blocks)
         }
+
 }
 
 

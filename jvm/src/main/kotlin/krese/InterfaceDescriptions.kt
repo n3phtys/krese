@@ -9,7 +9,7 @@ import java.nio.file.Path
 interface FileSystemWrapper {
     fun getKeysFromDirectory() : Map<UniqueReservableKey, Path>
     fun getReservableToKey(key: UniqueReservableKey) : Reservable?
-} //also includes static files in subdirectory
+} //TODO: also includes static files in subdirectory
 
 interface DatabaseEncapsulation {
 
@@ -23,6 +23,7 @@ interface DatabaseEncapsulation {
 
     fun retrieveBookingsForKey(key: UniqueReservableKey, includeMinTimestamp: DateTime = DateTime().withMillis(Long.MIN_VALUE), excludeMaxTimestamp: DateTime = DateTime().withMillis(Long.MAX_VALUE)) : List<DbBookingOutputData>
 
+    fun isFree(key: UniqueReservableKey, blocks: List<DbBlockData>, startMillis: Long, endMillis: Long, reservableElement: ReservableElement): Boolean
 }
 
 interface JWTReceiver {
@@ -85,9 +86,17 @@ interface ApplicationConfiguration {
 
 interface MailService {
     fun sendEmail(receivers: List<Email>, bodyHTML: String, subject: String)
+    fun sendEmail(receivers: List<Email>, content: MailTemplate) = this.sendEmail(receivers, content.body, content.subject)
 }
 
+data class MailTemplate(val body: String, val subject: String)
+
 interface MailTemplater {
+    fun emailVerificationRequest(sender: Email, action: PostAction): MailTemplate
+    fun emailNotifyCreationToCreator(action: PostAction): MailTemplate
+    fun emailNotifyCreationToModerator(action: PostAction): MailTemplate
+    fun emailNotifyAcceptanceToModerator(action: AcceptAction): MailTemplate
+    fun emailNotifyAcceptanceToCreator(action: AcceptAction): MailTemplate
 }
 
 interface BusinessLogic {

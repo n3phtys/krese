@@ -2,12 +2,10 @@ package krese.test
 
 import com.github.salomonbrys.kodein.instance
 import krese.BusinessLogic
+import krese.DatabaseEncapsulation
 import krese.FileSystemWrapper
 import krese.MailService
-import krese.data.CreateAction
-import krese.data.DbBlockData
-import krese.data.Email
-import krese.data.PostResponse
+import krese.data.*
 import org.junit.Test
 import kotlin.test.assertEquals
 
@@ -21,6 +19,7 @@ class BusinessLogicTest {
 
     val fileMock = fileSystemRaw as FileSytemMock
     val mailMock = mailerRaw as MailerMock
+    val databaseEncapsulation : DatabaseEncapsulation = kodein.instance()
 
 
     val creator = Email("sender@mock.com")
@@ -36,9 +35,8 @@ class BusinessLogicTest {
 
     @Test
     fun businesslogic_createwithoutverification() {
-        //TODO("implement test")
-        val response : PostResponse = businessLogic.process(createAction,null, false
-        )
+        mailMock.sentMails.clear()
+        val response : PostResponse = businessLogic.process(createAction,null, false )
         assertEquals(response.finished, false)
         assertEquals(response.successful, true)
         assertEquals(mailMock.sentMails.last().emailReceivers().get(0), creator.address)
@@ -46,23 +44,52 @@ class BusinessLogicTest {
         assertEquals(mailMock.sentMails.last().emailBody(), "body of confirmation")
     }
 
-//    @Test
-//    fun businesslogic_createwithverification() {
-//        TODO("implement test")
-//    }
-//
-//
-//
-//    @Test
-//    fun businesslogic_acceptwithoutverification() {
-//        TODO("implement test")
-//    }
-//
-//    @Test
-//    fun businesslogic_acceptwithverification() {
-//        TODO("implement test")
-//    }
-//
+    @Test
+    fun businesslogic_createwithverification() {
+        mailMock.sentMails.clear()
+        val response : PostResponse = businessLogic.process(createAction, creator, true )
+        assertEquals(response.finished, true)
+        assertEquals(response.successful, true)
+        assertEquals(mailMock.sentMails.last().emailReceivers().get(0), creator.address)
+        assertEquals(mailMock.sentMails.last().emailSubject(), "Successfully created reservation")
+        assertEquals(mailMock.sentMails.last().emailBody(), "body of success to creator")
+        assertEquals(mailMock.sentMails.get(mailMock.sentMails.size - 2).emailReceivers().get(0), moderator.address)
+        assertEquals(mailMock.sentMails.get(mailMock.sentMails.size - 2).emailSubject(), "New Reservation created")
+        assertEquals(mailMock.sentMails.get(mailMock.sentMails.size - 2).emailBody(), "body of success to moderator")
+    }
+
+
+
+    @Test
+    fun businesslogic_acceptwithoutverification() {
+        businessLogic.process(createAction, creator, true )
+        mailMock.sentMails.clear()
+        val acceptAction = AcceptAction(databaseEncapsulation.retrieveBookingsForKey(createAction.key).filter { !it.accepted }.first().id, "")
+        val response = businessLogic.process(acceptAction, null, false )
+        assertEquals(response.finished, false)
+        assertEquals(response.successful, false)
+        assertEquals(mailMock.sentMails.size, 0)
+    }
+
+    @Test
+    fun businesslogic_acceptwithverification() {
+        assertEquals(moderator.address, "receiver@fake.com")
+
+        businessLogic.process(createAction, creator, true )
+        mailMock.sentMails.clear()
+        val acceptAction = AcceptAction(databaseEncapsulation.retrieveBookingsForKey(createAction.key).filter { !it.accepted }.first().id, "")
+        val response = businessLogic.process(acceptAction, moderator, true )
+        assertEquals(response.finished, true)
+        assertEquals(response.successful, true)
+        assertEquals(mailMock.sentMails.size, 2)
+        assertEquals(mailMock.sentMails.last().emailReceivers().get(0), creator.address)
+        assertEquals(mailMock.sentMails.last().emailSubject(), "Reservation was acccepted")
+        assertEquals(mailMock.sentMails.last().emailBody(), "body of success to creator")
+        assertEquals(mailMock.sentMails.get(mailMock.sentMails.size - 2).emailReceivers().get(0), moderator.address)
+        assertEquals(mailMock.sentMails.get(mailMock.sentMails.size - 2).emailSubject(), "Reservation was acccepted")
+        assertEquals(mailMock.sentMails.get(mailMock.sentMails.size - 2).emailBody(), "body of success to moderator")
+    }
+
 //    @Test
 //    fun businesslogic_declinewithverification() {
 //        TODO("implement test")

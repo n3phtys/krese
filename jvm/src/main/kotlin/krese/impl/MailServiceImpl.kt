@@ -5,8 +5,11 @@ import com.github.salomonbrys.kodein.instance
 import kotlinx.serialization.json.JSON
 import krese.ApplicationConfiguration
 import krese.MailService
+import krese.MailTemplate
 import krese.MailTemplater
+import krese.data.AcceptAction
 import krese.data.Email
+import krese.data.PostAction
 import org.jetbrains.exposed.sql.exposedLogger
 import java.util.*
 import javax.activation.MimeType
@@ -16,8 +19,6 @@ import javax.mail.internet.MimeMessage
 import javax.mail.internet.MimeMultipart
 
 class MailServiceImpl(private val kodein: Kodein) : MailService, MailTemplater {
-
-
     private val appConfig: ApplicationConfiguration = kodein.instance()
 
     override fun sendEmail(receivers: List<Email>, bodyHTML: String, subject: String) {
@@ -63,5 +64,34 @@ class MailServiceImpl(private val kodein: Kodein) : MailService, MailTemplater {
         }
 
     }
+
+
+    override fun emailVerificationRequest(sender: Email, action: PostAction): MailTemplate {
+        //TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        return MailTemplate("body of confirmation", "Confirmation of Request required")
+    }
+
+
+    override fun emailNotifyCreationToCreator(action: PostAction): MailTemplate {
+        //TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        return MailTemplate("body of success to creator", "Successfully created reservation")
+    }
+
+    override fun emailNotifyCreationToModerator(action: PostAction): MailTemplate {
+        //TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        return MailTemplate("body of success to moderator", "New Reservation created")
+    }
+
+
+    override fun emailNotifyAcceptanceToModerator(action: AcceptAction): MailTemplate {
+        //TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        return MailTemplate("body of success to moderator", "Reservation was acccepted")
+    }
+
+    override fun emailNotifyAcceptanceToCreator(action: AcceptAction): MailTemplate {
+        //TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        return MailTemplate("body of success to creator", "Reservation was acccepted")
+    }
+
 
 }

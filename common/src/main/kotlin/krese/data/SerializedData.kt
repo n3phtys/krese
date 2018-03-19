@@ -94,7 +94,8 @@ enum class BookingState {
 data class Booking(val timestamp_created: Long, val timestamp_edited: Long, val publicUser: PublicUser, val timespan: Timespan, val selectedResources: List<DbBlockData>, val comment: String, val state: BookingState)
 
 @Serializable
-data class DbBlockData(val elementPath: List<Int>, val usedNumber: Int)
+data class DbBlockData(val elementPath: List<Int>, val usedNumber: Int) {
+    }
 
 @Serializable
 data class FullBooking(val booking: Booking, val fullUser: FullUser)

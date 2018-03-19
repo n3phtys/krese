@@ -1,5 +1,7 @@
 package krese.utility
 
+import krese.ApplicationConfiguration
+import krese.AuthVerifier
 import krese.data.*
 
 fun PostAction.getId() : Long? {
@@ -10,4 +12,8 @@ fun PostAction.getId() : Long? {
         is WithdrawAction -> this.id
         is AcceptAction -> this.id
     }
+}
+
+fun PostAction.toActionLink(appConfig: ApplicationConfiguration, authVerifier: AuthVerifier) : String {
+    TODO("not yet implemented")
 }
