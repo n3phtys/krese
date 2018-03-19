@@ -40,6 +40,8 @@ enum class EnvKey {
 }
 
 class ConfigurationImpl : DatabaseConfiguration, ApplicationConfiguration {
+    override val loadMigrationData: Boolean
+        get() = true
 
     fun defaultValue(key: EnvKey): String = when (key) {
         EnvKey.KRESE_MAIL_USERNAME -> "emailusername"

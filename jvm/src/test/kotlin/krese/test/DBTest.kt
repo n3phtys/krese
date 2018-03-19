@@ -16,6 +16,8 @@ import kotlin.test.assertTrue
 class DBTest {
 
     data class DBMockConfig(override val databaseDriver: String = "org.h2.Driver", override val databaseJDBC: String = "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1") : DatabaseConfiguration {
+        override val loadMigrationData: Boolean
+            get() = false
         override val databasePort: String
             get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
         override val databaseHost: String

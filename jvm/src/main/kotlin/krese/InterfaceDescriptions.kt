@@ -63,6 +63,7 @@ interface DatabaseConfiguration {
     val databasePassword: String
     val databaseDriver: String
     val databaseJDBC: String
+    val loadMigrationData: Boolean
 }
 
 interface ApplicationConfiguration {

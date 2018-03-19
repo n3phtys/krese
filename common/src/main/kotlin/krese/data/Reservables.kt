@@ -9,7 +9,7 @@ data class ReservableElement(
         val id: Long,
         val name: String,
         @Optional val description: String = "",
-        @Optional val units: Int = 0,
+        @Optional val units: Int = 1,
         @Optional val subElements: List<ReservableElement> = listOf()
 )
 

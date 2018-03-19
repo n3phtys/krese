@@ -31,9 +31,11 @@ class DatabaseEncapsulationImpl(private val kodein: Kodein) : DatabaseEncapsulat
 
     init {
         createSchemaIfNotExists()
-        val importedData = migrationFileLoaded
-        if (importedData != null) {
-            importedData.toDBElements().forEach {this.createUpdateBooking(null, it) }
+        if (databaseConfig.loadMigrationData) {
+            val importedData = migrationFileLoaded
+            if (importedData != null) {
+                importedData.toDBElements().forEach { this.createUpdateBooking(null, it) }
+            }
         }
     }
 
