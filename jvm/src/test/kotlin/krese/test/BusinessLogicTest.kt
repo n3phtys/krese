@@ -90,20 +90,50 @@ class BusinessLogicTest {
         assertEquals(mailMock.sentMails.get(mailMock.sentMails.size - 2).emailBody(), "body of success to moderator")
     }
 
-//    @Test
-//    fun businesslogic_declinewithverification() {
-//        TODO("implement test")
-//    }
-//
-//
-//    @Test
-//    fun businesslogic_withdrawwithverification() {
-//        TODO("implement test")
-//    }
-//
-//
-//    @Test
-//    fun businesslogic_withdrawwithoutverification() {
-//        TODO("implement test")
-//    }
+    @Test
+    fun businesslogic_declinewithverification() {
+        businessLogic.process(createAction, creator, true )
+        mailMock.sentMails.clear()
+        val acceptAction = DeclineAction(databaseEncapsulation.retrieveBookingsForKey(createAction.key).filter { !it.accepted }.first().id, "")
+        val response = businessLogic.process(acceptAction, moderator, true )
+        assertEquals(response.finished, true)
+        assertEquals(response.successful, true)
+        assertEquals(mailMock.sentMails.size, 2)
+        assertEquals(mailMock.sentMails.last().emailReceivers().get(0), creator.address)
+        assertEquals(mailMock.sentMails.last().emailSubject(), "Reservation was declined")
+        assertEquals(mailMock.sentMails.last().emailBody(), "body of success to creator")
+        assertEquals(mailMock.sentMails.get(mailMock.sentMails.size - 2).emailReceivers().get(0), moderator.address)
+        assertEquals(mailMock.sentMails.get(mailMock.sentMails.size - 2).emailSubject(), "Reservation was declined")
+        assertEquals(mailMock.sentMails.get(mailMock.sentMails.size - 2).emailBody(), "body of success to moderator")
+    }
+
+
+    @Test
+    fun businesslogic_withdrawwithverification() {
+        businessLogic.process(createAction, creator, true )
+        mailMock.sentMails.clear()
+        val acceptAction = WithdrawAction(databaseEncapsulation.retrieveBookingsForKey(createAction.key).filter { !it.accepted }.first().id, "")
+        val response = businessLogic.process(acceptAction, creator, true )
+        assertEquals(response.finished, true)
+        assertEquals(response.successful, true)
+        assertEquals(mailMock.sentMails.size, 2)
+        assertEquals(mailMock.sentMails.last().emailReceivers().get(0), creator.address)
+        assertEquals(mailMock.sentMails.last().emailSubject(), "Reservation was withdrawn")
+        assertEquals(mailMock.sentMails.last().emailBody(), "body of success to creator")
+        assertEquals(mailMock.sentMails.get(mailMock.sentMails.size - 2).emailReceivers().get(0), moderator.address)
+        assertEquals(mailMock.sentMails.get(mailMock.sentMails.size - 2).emailSubject(), "Reservation was withdrawn")
+        assertEquals(mailMock.sentMails.get(mailMock.sentMails.size - 2).emailBody(), "body of success to moderator")
+    }
+
+
+    @Test
+    fun businesslogic_withdrawwithoutverification() {
+        businessLogic.process(createAction, creator, true )
+        mailMock.sentMails.clear()
+        val acceptAction = AcceptAction(databaseEncapsulation.retrieveBookingsForKey(createAction.key).filter { !it.accepted }.first().id, "")
+        val response = businessLogic.process(acceptAction, null, false )
+        assertEquals(response.finished, false)
+        assertEquals(response.successful, false)
+        assertEquals(mailMock.sentMails.size, 0)
+    }
 }

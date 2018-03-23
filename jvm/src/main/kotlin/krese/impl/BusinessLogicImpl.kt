@@ -159,8 +159,8 @@ class BusinessLogicImpl(private val kodein: Kodein): BusinessLogic {
                         action.key, action.email, action.name, action.telephone, action.commentUser, "", DateTime(action.startTime), DateTime(action.endTime), DateTime.now(), false, action.blocks
                 ))
             }
-            is DeclineAction -> TODO()
-            is WithdrawAction -> TODO()
+            is DeclineAction -> databaseEncapsulation.deleteBooking(action.id)
+            is WithdrawAction -> databaseEncapsulation.deleteBooking(action.id)
             is AcceptAction -> databaseEncapsulation.acceptBooking(action.id)
         }
         //("actually write data to database")
@@ -170,8 +170,8 @@ class BusinessLogicImpl(private val kodein: Kodein): BusinessLogic {
         mailService.sendEmail(creators, when(action) {
 
             is CreateAction -> mailTemplater.emailNotifyCreationToCreator(action)
-            is DeclineAction -> TODO()
-            is WithdrawAction -> TODO()
+            is DeclineAction -> mailTemplater.emailNotifiyDeclineToCreator(action)
+            is WithdrawAction -> mailTemplater.emailNotifyWithdrawToCreator(action)
             is AcceptAction -> mailTemplater.emailNotifyAcceptanceToCreator(action)
         })
 
@@ -180,8 +180,8 @@ class BusinessLogicImpl(private val kodein: Kodein): BusinessLogic {
     fun notifyModerator(action: PostAction, moderator: List<Email>) {
         mailService.sendEmail(moderator, when(action) {
             is CreateAction -> mailTemplater.emailNotifyCreationToModerator(action)
-            is DeclineAction -> TODO()
-            is WithdrawAction -> TODO()
+            is DeclineAction -> mailTemplater.emailNotifiyDeclineToModerator(action)
+            is WithdrawAction -> mailTemplater.emailNotifiyWithdrawToModerator(action)
             is AcceptAction -> mailTemplater.emailNotifyAcceptanceToModerator(action)
         })
 
@@ -202,7 +202,6 @@ class BusinessLogicImpl(private val kodein: Kodein): BusinessLogic {
                 return PostResponse(true, false, "verification request send to user email address")
             } else {
                 if (isLegalWithGivenVerification(action, actioneer))  {
-                    executeAction(action)
                     val mods = getModerator(action)
                     assert(mods != null)
                     notifyModerator(action, mods!!)
@@ -212,6 +211,7 @@ class BusinessLogicImpl(private val kodein: Kodein): BusinessLogic {
                     }
                     assert(creator != null)
                     notifyCreator(action, listOf(creator!!))
+                    executeAction(action)
                     return PostResponse(true, true, "post request processed successfully")
                 } else {
                     return PostResponse(false, false, "user is not authorized")

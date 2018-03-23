@@ -97,6 +97,10 @@ interface MailTemplater {
     fun emailNotifyCreationToModerator(action: PostAction): MailTemplate
     fun emailNotifyAcceptanceToModerator(action: AcceptAction): MailTemplate
     fun emailNotifyAcceptanceToCreator(action: AcceptAction): MailTemplate
+    fun emailNotifiyDeclineToModerator(action: DeclineAction): MailTemplate
+    fun emailNotifiyDeclineToCreator(action: DeclineAction): MailTemplate
+    fun emailNotifiyWithdrawToModerator(action: WithdrawAction): MailTemplate
+    fun emailNotifyWithdrawToCreator(action: WithdrawAction): MailTemplate
 }
 
 interface BusinessLogic {

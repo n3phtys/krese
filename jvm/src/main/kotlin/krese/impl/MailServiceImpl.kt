@@ -7,9 +7,7 @@ import krese.ApplicationConfiguration
 import krese.MailService
 import krese.MailTemplate
 import krese.MailTemplater
-import krese.data.AcceptAction
-import krese.data.Email
-import krese.data.PostAction
+import krese.data.*
 import org.jetbrains.exposed.sql.exposedLogger
 import java.util.*
 import javax.activation.MimeType
@@ -91,6 +89,28 @@ class MailServiceImpl(private val kodein: Kodein) : MailService, MailTemplater {
     override fun emailNotifyAcceptanceToCreator(action: AcceptAction): MailTemplate {
         //TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
         return MailTemplate("body of success to creator", "Reservation was acccepted")
+    }
+
+
+
+    override fun emailNotifiyDeclineToModerator(action: DeclineAction): MailTemplate {
+        //TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        return MailTemplate("body of success to moderator", "Reservation was declined")
+    }
+
+    override fun emailNotifiyDeclineToCreator(action: DeclineAction): MailTemplate {
+        //TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        return MailTemplate("body of success to creator", "Reservation was declined")
+    }
+
+    override fun emailNotifiyWithdrawToModerator(action: WithdrawAction): MailTemplate {
+        //TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        return MailTemplate("body of success to moderator", "Reservation was withdrawn")
+    }
+
+    override fun emailNotifyWithdrawToCreator(action: WithdrawAction): MailTemplate {
+        //TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        return MailTemplate("body of success to creator", "Reservation was withdrawn")
     }
 
 
