@@ -145,7 +145,7 @@ class ClientState {
 
         if (result != null && result.isNotBlank()) {
 
-            val xhttp = XMLHttpRequest();
+            val xhttp = XMLHttpRequest()
             xhttp.open("POST", Routes.POST_RELOGIN.path, true)
             xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded")
             xhttp.onreadystatechange = {
@@ -560,8 +560,11 @@ class ClientState {
 
     //used to build a CreateAction, which can be posted afterwards
     fun parseFormularToData(key: UniqueReservableKey) : CreateAction {
-        TODO("not yet implemented")
+        TODO("collect all form data, post as action, and process result in callback")
     }
+
+    //TODO: withdraw accept decline only shown if jwt is set, valid, and is possible (compare email vs moderator and vs creator)
+
 
     //TODO: add small buttons for withdraw/accept/decline, with confirm for each
 
