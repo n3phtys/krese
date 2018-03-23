@@ -559,13 +559,30 @@ class ClientState {
 
 
     //used to build a CreateAction, which can be posted afterwards
-    fun parseFormularToData(key: UniqueReservableKey) : CreateAction {
+    fun parseFormularToData(uniqueReservableKey: UniqueReservableKey) : CreateAction {
+        val id = "#submitform_${uniqueReservableKey.id}"
+        val formURLString: String = jq( id).asDynamic().serialize()
+        val fields = formURLString.toNamedMap()
         TODO("collect all form data, post as action, and process result in callback")
     }
+
+
 
     //TODO: withdraw accept decline only shown if jwt is set, valid, and is possible (compare email vs moderator and vs creator)
 
 
     //TODO: add small buttons for withdraw/accept/decline, with confirm for each
 
+}
+
+
+fun String.toNamedMap(): Map<String, String> {
+    return this.split("&").map {
+        val arr = it.split("=")
+        decodeURIComponent(arr.get(0)) to decodeURIComponent(arr.get(1))
+    }.toMap()
+}
+
+fun Map<String, String>.toCreateAction(key: UniqueReservableKey) :  CreateAction {
+    TODO("implement transformation")
 }
