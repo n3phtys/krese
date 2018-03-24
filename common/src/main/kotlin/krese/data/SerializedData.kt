@@ -133,9 +133,11 @@ enum class LinkActions {
 @Serializable
 sealed class PostAction {
 }
+//TODO: PostAction hierarchy is currently not serialized or deseralized correctly
 
 @Serializable
 data class CreateAction(val key: UniqueReservableKey, val email: Email, val name: String, val telephone: String, val commentUser: String, val startTime: Long, val endTime: Long, val blocks: List<DbBlockData>) : PostAction() {
+    fun isValid(): Boolean = true
 }
 
 @Serializable

@@ -1,12 +1,11 @@
 package krese
 
 import kotlinx.serialization.json.JSON
-import krese.data.PostAction
-import krese.data.PostResponse
-import krese.data.Routes
+import krese.data.*
 import org.w3c.xhr.XMLHttpRequest
 
 class ServerPost(val action: PostAction, val jwt: String?) {
+
     fun asyncCall(func: (PostResponse) -> Unit) {
         val xhttp = XMLHttpRequest()
         xhttp.open("POST", Routes.POST_ENTRIES_TO_RESERVABLE.path, true)
@@ -18,8 +17,14 @@ class ServerPost(val action: PostAction, val jwt: String?) {
                 func.invoke(res)
             }
         }
-        val json = encodeURIComponent(JSON.stringify(action))
+        val json = (when(action) {
+            is CreateAction -> JSON.stringify(PostActionInput(jwt, null, action))
+            is DeclineAction -> TODO()
+            is WithdrawAction -> TODO()
+            is AcceptAction -> TODO()
+        })
+        println("Posting action with json = $json")
 
-        xhttp.send("action=$json" + if (jwt != null) "&jwt=$jwt" else "")
+        xhttp.send("action=${encodeURIComponent(json)}")
     }
 }

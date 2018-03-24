@@ -32,3 +32,13 @@ fun GetResponse.toCalendarConfig(acceptedColor: String  ="green" , pendingColor:
     console.log(x)
     return x
 }
+
+
+enum class FormFieldNames {
+    Name,
+    Email,
+    Telephone,
+    From,
+    To,
+    Comment
+}

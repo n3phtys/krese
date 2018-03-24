@@ -21,6 +21,7 @@ import org.w3c.dom.*
 import org.w3c.dom.events.Event
 import kotlin.browser.document
 import kotlin.js.Date
+import kotlin.math.roundToLong
 
 
 external fun encodeURIComponent(str: String): String
@@ -28,8 +29,6 @@ external fun encodeURIComponent(str: String): String
 external fun decodeURIComponent(str: String): String
 
 val LOCALSTORAGE_KRESE_LOGIN_JWT_KEY = "LOCALSTORAGE_KRESE_LOGIN_JWT_KEY"
-
-
 
 
 //TODO: - finish form generation
@@ -44,8 +43,6 @@ val LOCALSTORAGE_KRESE_LOGIN_JWT_KEY = "LOCALSTORAGE_KRESE_LOGIN_JWT_KEY"
 //TODO: - action commands via client sided indirection (get from url, show confirm dialog for action, and send to post endpoint on server)
 //TODO: - form post submit
 //TODO: - action submit
-
-
 
 
 class ClientState {
@@ -97,16 +94,16 @@ class ClientState {
             when (jwtState) {
                 JWTStatus.UNCHECKED -> button {
                     classes = setOf("btn", jwtState.buttonStyle)
-                    onClickFunction = {relogin()}
+                    onClickFunction = { relogin() }
                     span {
                         classes = jwtState.glyphname.split(" ").toSet()
                         style = "padding:5px;"
                     }
-                        +"Login via Email ${localStorage.get(LOCALSTORAGE_KRESE_MY_EMAIL)}"
+                    +"Login via Email ${localStorage.get(LOCALSTORAGE_KRESE_MY_EMAIL)}"
                 }
                 JWTStatus.PENDING -> button {
                     classes = setOf("btn", jwtState.buttonStyle)
-                    onClickFunction = {logout()}
+                    onClickFunction = { logout() }
                     span {
                         classes = jwtState.glyphname.split(" ").toSet()
                         style = "padding:5px;"
@@ -115,7 +112,7 @@ class ClientState {
                 }
                 JWTStatus.VALID -> button {
                     classes = setOf("btn", jwtState.buttonStyle)
-                    onClickFunction = {logout()}
+                    onClickFunction = { logout() }
                     span {
                         classes = jwtState.glyphname.split(" ").toSet()
                         style = "padding:5px;"
@@ -124,7 +121,7 @@ class ClientState {
                 }
                 JWTStatus.INVALID -> button {
                     classes = setOf("btn", jwtState.buttonStyle)
-                    onClickFunction = {logout()}
+                    onClickFunction = { logout() }
                     span {
                         classes = jwtState.glyphname.split(" ").toSet()
                         style = "padding:5px;"
@@ -164,7 +161,6 @@ class ClientState {
     }
 
 
-
     fun requestJWTValidation() {
         val jwt = jwt
         if (jwt != null) {
@@ -175,7 +171,7 @@ class ClientState {
             xhttp.onreadystatechange = {
                 println("Received something... state = ${xhttp.readyState} and status = ${xhttp.status}")
                 if (xhttp.readyState == 4.toShort() && xhttp.status == 200.toShort()) {
-                    writeLoginStatus(if(xhttp.responseText.equals(true.toString(), true)) JWTStatus.VALID else JWTStatus.INVALID)
+                    writeLoginStatus(if (xhttp.responseText.equals(true.toString(), true)) JWTStatus.VALID else JWTStatus.INVALID)
                 }
             }
             xhttp.send("jwt=$jwt")
@@ -211,7 +207,7 @@ class ClientState {
         writeLoginStatus(JWTStatus.UNCHECKED)
     }
 
-    fun decodeJWT(jwt: String) : dynamic {
+    fun decodeJWT(jwt: String): dynamic {
         console.log("Decoding JWT = $jwt")
         val base64Core = jwt.split('.')[1].replace('-', '+').replace('_', '/')
         console.log("core = $base64Core")
@@ -279,7 +275,10 @@ class ClientState {
             style = "display:none"
             classes = setOf("w3-container", "city")
 
-            h2 { +key.id }
+            h2 {
+                id = "title_header_${key.id}"
+                +key.id
+            }
 
             div {
                 id = "pro_" + key.id
@@ -332,6 +331,7 @@ class ClientState {
     }
 
     fun setEntriesToKey(uniqueReservableKey: UniqueReservableKey) {
+        document.getElementById("title_header_${uniqueReservableKey.id}")!!.innerHTML = entries.get(uniqueReservableKey)!!.reservable.title
         document.getElementById("pro_" + uniqueReservableKey.id)!!.innerHTML = entries.get(uniqueReservableKey)!!.reservable.prologue
         val epilogue = entries.get(uniqueReservableKey)!!.reservable.epilogue
         document.getElementById("epi_" + uniqueReservableKey.id)!!.innerHTML = epilogue
@@ -359,12 +359,12 @@ class ClientState {
          */
 
 
-
         val el = document.create.ol {
             for (reservation in entries.get(uniqueReservableKey)!!.existingReservations) {
                 li {
-                +("Name: ${reservation.name} From: ${reservation.startTime} To: ${reservation.endTime} for blocks: ${reservation.blocks.map { it.elementPath.map{it.toString() }.joinToString("-") + " (${it.usedNumber} times)"}}")
-            } }
+                    +("Name: ${reservation.name} From: ${reservation.startTime} To: ${reservation.endTime} for blocks: ${reservation.blocks.map { it.elementPath.map { it.toString() }.joinToString("-") + " (${it.usedNumber} times)" }}")
+                }
+            }
         }
         listDiv.innerHTML = ""
         listDiv.appendChild(el)
@@ -375,39 +375,49 @@ class ClientState {
         val configJson = JSON.stringify(config)
         calDiv.innerHTML = ""
         val id = "#" + calDiv.id
-        jq( id).asDynamic().fullCalendar(js("JSON.parse(configJson)"))
+        jq(id).asDynamic().fullCalendar(js("JSON.parse(configJson)"))
     }
 
-    fun ReservableElement.toFormularInputDiv(key: UniqueReservableKey, prefix : String) : HTMLDivElement {
-        val r = this
+    fun DIV.toFormularInputDiv(element: ReservableElement, key: UniqueReservableKey, prefix: String): Unit {
+        val r = element
 
         //TODO: buggy, does not really work
 
-        return document.create.div {
-            label { +"${r.name}: ${r.description}"}
-            if (r.units != 0) {
+        console.log("creating $this with $key and $prefix")
+
+
+            label { +"${r.name}: ${r.description}" }
+        if (r.units != 0) {
+            if (r.units != 1) {
                 label {
                     +"Number:"
                 }
                 input {
+                    classes = setOf("form-control")
                     type = InputType.number
                     name = "count_input_${key.id}_${prefix}"
                     step = 1.toString()
                     min = 1.toString()
                     max = r.units.toString()
+                    value = 1.toString()
                 }
             } else {
                 input {
+                    classes = setOf("form-control")
                     type = InputType.checkBox
                     name = "check_input_${key.id}_${prefix}"
+                    checked = prefix.equals("ROOT") && r.subElements.isEmpty()
+                    disabled = prefix.equals("ROOT") && r.subElements.isEmpty()
                 }
-                label {+"Reserve this element"}
+                label { +"Reserve this element" }
             }
-            for (element in r.subElements) {
-                element.toFormularInputDiv(key, prefix + "_" + r.id)
-            }
-
         }
+            div {
+                classes = setOf("form-group col-lg-6")
+                for (@Suppress("NAME_SHADOWING") element in r.subElements) {
+                    this.toFormularInputDiv(element, key, prefix + "_" + r.id)
+                }
+            }
     }
 
     fun addFormular(formDiv: Element, uniqueReservableKey: UniqueReservableKey) {
@@ -446,39 +456,94 @@ class ClientState {
                         it.preventDefault()
                         it.stopPropagation()
                     }
-                    input(type = InputType.text, name = "name")
-
-                    input(type = InputType.email, name = "email")
-
-                    input(type = InputType.tel, name = "telephone")
-
-                    input(type = InputType.date, name = "from")
-
-                    input(type = InputType.date, name = "to")
+                    div {
+                        classes = setOf("form-group col-lg-6")
+                        label {
+                            +"Name"
+                        }
+                        input(type = InputType.text, name = FormFieldNames.Name.name, classes = "form-control")
+                    }
 
 
-                    r.elements.toFormularInputDiv(uniqueReservableKey, "ROOT")
+                    div {
+                        classes = setOf("form-group col-lg-6")
+                        label {
+                            +"Email"
+                        }
+                        input(type = InputType.email, name = FormFieldNames.Email.name, classes = "form-control")
+                    }
 
-                    label {+"Comment"}
-                    textArea { name = "comment_${uniqueReservableKey.id}" }
+
+                    div {
+                        classes = setOf("form-group col-lg-6")
+                        label {
+                            +"Phone"
+                        }
+                        input(type = InputType.tel, name = FormFieldNames.Telephone.name, classes = "form-control")
+                    }
+
+                    div {
+                        classes = setOf("form-group col-lg-6")
+                        label {
+                            +"From"
+                        }
+                        input(type = InputType.date, name = FormFieldNames.From.name, classes = "form-control") {
+                            value = Date(creationDate).nextFullDay().toDateShort()
+                        }
+                    }
+
+                    div {
+                        classes = setOf("form-group col-lg-6")
+                        label {
+                            +"To"
+                        }
+                        input(type = InputType.date, name = FormFieldNames.To.name, classes = "form-control") {
+                            value = Date(creationDate).nextFullDay().nextFullDay().toDateShort()
+                        }
+                    }
+
+
+                    div {
+                        classes = setOf("form-group col-lg-6")
+                        label {
+                            +"Reserved Elements"
+                        }
+                        div {
+                            classes = setOf("form-group col-lg-6")
+                            toFormularInputDiv(r.elements, uniqueReservableKey, "ROOT")
+                        }
+                    }
+
+                    div {
+                        classes = setOf("form-group col-lg-6")
+                        label { +"Comment" }
+                        textArea {
+                            name = FormFieldNames.Comment.name
+                            classes = setOf("form-control")
+                        }
+                    }
 
                     div {
                         if (r.checkBoxes.isNotEmpty())
-                        r.checkBoxes.map { div {
-                            input(type = InputType.checkBox, name = "checkbox_${uniqueReservableKey.id}_${it.hashCode()}")
-                            label {+it}
-                        } }
+                            r.checkBoxes.map {
+                                div {
+                                    input(type = InputType.checkBox, name = "checkbox_${it.hashCode()}")
+                                    label { +it }
+                                }
+                            }
                     }
-
-                    submitInput { }
+                    div {
+                        submitInput { }
+                    }
                 }
         )
     }
 
-    fun formSubmit(key: UniqueReservableKey, formEvent: Event): Boolean {
-        println("formSubmit is checked: ")
-        console.log(formEvent)
-        return true //TODO: implement checking of form data, and AJAX post if successful
+    fun formSubmit(uniqueReservableKey: UniqueReservableKey, formEvent: Event): Boolean {
+        formEvent.preventDefault()
+        formEvent.stopPropagation()
+        parseFormularToData(uniqueReservableKey)
+        return true
     }
 
     fun addDatePickers(formDiv: Element) {
@@ -559,13 +624,25 @@ class ClientState {
 
 
     //used to build a CreateAction, which can be posted afterwards
-    fun parseFormularToData(uniqueReservableKey: UniqueReservableKey) : CreateAction {
+    fun parseFormularToData(uniqueReservableKey: UniqueReservableKey) {
+        //collect all form data
         val id = "#submitform_${uniqueReservableKey.id}"
-        val formURLString: String = jq( id).asDynamic().serialize()
+        val formURLString: String = jq(id).asDynamic().serialize()
         val fields = formURLString.toNamedMap()
-        TODO("collect all form data, post as action, and process result in callback")
+        //post as action
+        ServerPost(fields.toCreateAction(uniqueReservableKey), jwt).asyncCall {
+            //process result in callback
+            if (it.successful) {
+                if (it.finished) {
+                    window.alert("Successfully created reservation, message from server = '${it.message}', please wait for confirmation by the acting moderator")
+                } else {
+                    window.alert("Reservation was posted but not finished. Please check your email. Message from server = '${it.message}'")
+                }
+            } else {
+                window.alert("Error while trying to post new reservation, message from server: '${it.message}'")
+            }
+        }
     }
-
 
 
     //TODO: withdraw accept decline only shown if jwt is set, valid, and is possible (compare email vs moderator and vs creator)
@@ -573,6 +650,13 @@ class ClientState {
 
     //TODO: add small buttons for withdraw/accept/decline, with confirm for each
 
+}
+
+private fun Date.nextFullDay(): Date {
+    val d : Date = Date(this.getTime() + (1000L * 60 * 60 * 24))
+    val r = Date(d.getFullYear(), d.getMonth(), d.getDate(), 12, 0)
+    println("NextFullDate from ${this.toISOString()} to ${d.toISOString()} and ${r.toISOString()}")
+    return r
 }
 
 
@@ -583,6 +667,23 @@ fun String.toNamedMap(): Map<String, String> {
     }.toMap()
 }
 
-fun Map<String, String>.toCreateAction(key: UniqueReservableKey) :  CreateAction {
-    TODO("implement transformation")
+fun Map<String, String>.toCreateAction(uniqueReservableKey: UniqueReservableKey): CreateAction {
+    console.log("Building CreateAction:")
+    console.log(uniqueReservableKey)
+    this.forEach {
+        println("${it.key} = ${it.value}")
+    }
+    val email = Email(this.get(FormFieldNames.Email.name)!!)
+    val name = this.get(FormFieldNames.Name.name)!!
+    val phone = this.get(FormFieldNames.Telephone.name)!!
+    val from = this.get(FormFieldNames.From.name)!!.dateStringToMillis()
+    val to = this.get(FormFieldNames.To.name)!!.dateStringToMillis()
+    val comment = this.get(FormFieldNames.Email.name)!!
+    val blocks =  listOf<DbBlockData>() //TODO("implement extracting the blocks")
+    val ca =  CreateAction(uniqueReservableKey, email, name, phone, comment, from, to, blocks)
+    console.log("CreateAction:")
+    console.log(ca)
+    return ca
 }
+
+fun String.dateStringToMillis() : Long = Date(Date.parse(this)).getTime().roundToLong()

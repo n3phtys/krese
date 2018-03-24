@@ -65,6 +65,7 @@ class Server(private val kodein: Kodein) {
             post ("/" + Routes.GET_RESERVABLES.path) {
                 val params = call.receive<Parameters>()
                 val postStr = params.get("action")
+                println("INPUT: postStr= $postStr ")
                 if (postStr != null) {
                     val postAction: PostActionInput = JSON.parse(postStr)
                     call.respondText(JSON.stringify(postReceiver.submitForm(postAction)))
@@ -74,8 +75,7 @@ class Server(private val kodein: Kodein) {
             }
 
 
-            route("/util") {
-                post("valid/credentials") {
+                post("/" + Routes.POST_CREDENTIALS_VALID.path) {
                     val params = call.receive<Parameters>()
                     val jwt = params.get("jwt")
                     if (jwt != null) {
@@ -85,7 +85,7 @@ class Server(private val kodein: Kodein) {
                     }
 
                 }
-                post("login") {
+                post("/" + Routes.POST_RELOGIN) {
                     val params = call.receive<Parameters>()
                     val email = params.get("email")
                     if (email != null) {
@@ -96,7 +96,7 @@ class Server(private val kodein: Kodein) {
                     }
 
                 }
-            }
+
             static("") {
                 files(File(appConfig.webDirectory))
                 default("${appConfig.webDirectory}/index.html")
