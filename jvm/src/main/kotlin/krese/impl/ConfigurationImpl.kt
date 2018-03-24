@@ -36,10 +36,13 @@ enum class EnvKey {
 
     KRESE_WEB_DIRECTORY,
 
-    KRESE_APPLICATION_PROTOCOL
+    KRESE_APPLICATION_PROTOCOL,
+
+    KRESE_MAILTEMPLATE_GLOBAL_DIRECTORY
 }
 
 class ConfigurationImpl : DatabaseConfiguration, ApplicationConfiguration {
+
     override val loadMigrationData: Boolean
         get() = true
 
@@ -65,6 +68,7 @@ class ConfigurationImpl : DatabaseConfiguration, ApplicationConfiguration {
         EnvKey.KRESE_WEB_DIRECTORY -> "../web"
         EnvKey.KRESE_APPLICATION_PROTOCOL -> "http"
         EnvKey.KRESE_MAIL_TEST_RECEIVER -> "receiver@email.com"
+        EnvKey.KRESE_MAILTEMPLATE_GLOBAL_DIRECTORY -> defaultValue(EnvKey.KRESE_RESERVABLES_DIRECTORY) + "/mailtemplates"
     }
 
 
@@ -121,4 +125,5 @@ class ConfigurationImpl : DatabaseConfiguration, ApplicationConfiguration {
     override val mailTestTarget: String
         get() = getVal(EnvKey.KRESE_MAIL_TEST_RECEIVER)
 
+    override fun globalMailDir(): String? = getVal(EnvKey.KRESE_MAILTEMPLATE_GLOBAL_DIRECTORY)
 }

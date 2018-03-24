@@ -4,10 +4,7 @@ import com.github.salomonbrys.kodein.Kodein
 import com.github.salomonbrys.kodein.bind
 import com.github.salomonbrys.kodein.singleton
 import krese.*
-import krese.data.Email
-import krese.data.Reservable
-import krese.data.ReservableElement
-import krese.data.UniqueReservableKey
+import krese.data.*
 import krese.impl.*
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -72,10 +69,13 @@ class ConfigMock(val uniqueNumber: Int) : DatabaseConfiguration, ApplicationConf
     override val mailAuth: Boolean
         get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
 
+    override fun globalMailDir(): String? {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
 }
 
 class FileSytemMock() : FileSystemWrapper {
-
     val reservable = Reservable(
             uniqueId = "mykey",
             elements = ReservableElement(1, "myreservableelement"),
@@ -93,6 +93,16 @@ class FileSytemMock() : FileSystemWrapper {
     override fun getKeysFromDirectory(): Map<UniqueReservableKey, Path> {
         return mapOf(this.reservable.key() to Paths.get("keypath"))
     }
+
+
+    override fun getTemplatesFromDir(dir: String): Map<TemplateTypes, String> = FileSystemWrapperImpl(kodein).getTemplatesFromDir(dir)
+
+    override fun parseTemplate(path: String): MailTemplate?  = FileSystemWrapperImpl(kodein).parseTemplate(path)
+
+    override fun readResourceOrFail(filePath: String): String  = FileSystemWrapperImpl(kodein).readResourceOrFail(filePath)
+
+    override fun specificMailDir(key: UniqueReservableKey): String? = FileSystemWrapperImpl(kodein).specificMailDir(key)
+
 
 }
 

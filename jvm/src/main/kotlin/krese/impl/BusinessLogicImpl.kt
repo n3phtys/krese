@@ -133,7 +133,7 @@ class BusinessLogicImpl(private val kodein: Kodein): BusinessLogic {
     }
 
     fun sendEmailVerificationRequest(action: PostAction, sender: Email) {
-        val mail: MailTemplate = mailTemplater.emailVerificationRequest(sender, action)
+        val mail: ProcessedMailTemplate = mailTemplater.emailVerificationRequest(sender, action)
         mailService.sendEmail(listOf(sender), mail.body, mail.subject)
     }
 

@@ -18,6 +18,10 @@ import kotlin.test.assertSame
 class JWTTest {
 
 class ApplicationMockConfig(): ApplicationConfiguration {
+    override fun globalMailDir(): String? {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
     override val mailTestTarget: String
         get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
     override val applicationProtocol: String

@@ -6,7 +6,7 @@ import org.joda.time.DateTime
 import java.nio.file.Path
 
 
-interface FileSystemWrapper {
+interface FileSystemWrapper : MailFileReader, MailFileConfigSpecific {
     fun getKeysFromDirectory() : Map<UniqueReservableKey, Path>
     fun getReservableToKey(key: UniqueReservableKey) : Reservable?
 } //TODO: also includes static files in subdirectory
@@ -67,7 +67,7 @@ interface DatabaseConfiguration {
     val loadMigrationData: Boolean
 }
 
-interface ApplicationConfiguration {
+interface ApplicationConfiguration : MailFileConfigGlobal {
     val reservablesDirectory: String
     val webDirectory: String
     val applicationHost: String
@@ -86,21 +86,24 @@ interface ApplicationConfiguration {
 
 interface MailService {
     fun sendEmail(receivers: List<Email>, bodyHTML: String, subject: String)
-    fun sendEmail(receivers: List<Email>, content: MailTemplate) = this.sendEmail(receivers, content.body, content.subject)
+    fun sendEmail(receivers: List<Email>, content: ProcessedMailTemplate) = this.sendEmail(receivers, content.body, content.subject)
 }
 
-data class MailTemplate(val body: String, val subject: String)
 
 interface MailTemplater {
-    fun emailVerificationRequest(sender: Email, action: PostAction): MailTemplate
-    fun emailNotifyCreationToCreator(action: PostAction): MailTemplate
-    fun emailNotifyCreationToModerator(action: PostAction): MailTemplate
-    fun emailNotifyAcceptanceToModerator(action: AcceptAction): MailTemplate
-    fun emailNotifyAcceptanceToCreator(action: AcceptAction): MailTemplate
-    fun emailNotifiyDeclineToModerator(action: DeclineAction): MailTemplate
-    fun emailNotifiyDeclineToCreator(action: DeclineAction): MailTemplate
-    fun emailNotifiyWithdrawToModerator(action: WithdrawAction): MailTemplate
-    fun emailNotifyWithdrawToCreator(action: WithdrawAction): MailTemplate
+    fun emailVerificationRequest(sender: Email, action: PostAction): ProcessedMailTemplate
+    fun emailNotifyCreationToCreator(action: PostAction): ProcessedMailTemplate
+    fun emailNotifyCreationToModerator(action: PostAction): ProcessedMailTemplate
+    fun emailNotifyAcceptanceToModerator(action: AcceptAction): ProcessedMailTemplate
+    fun emailNotifyAcceptanceToCreator(action: AcceptAction): ProcessedMailTemplate
+    fun emailNotifiyDeclineToModerator(action: DeclineAction): ProcessedMailTemplate
+    fun emailNotifiyDeclineToCreator(action: DeclineAction): ProcessedMailTemplate
+    fun emailNotifiyWithdrawToModerator(action: WithdrawAction): ProcessedMailTemplate
+    fun emailNotifyWithdrawToCreator(action: WithdrawAction): ProcessedMailTemplate
+
+
+    fun loadTemplate(type: TemplateTypes) : MailTemplate
+    fun processTemplate(template: MailTemplate) : ProcessedMailTemplate
 }
 
 interface BusinessLogic {

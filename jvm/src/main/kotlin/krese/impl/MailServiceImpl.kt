@@ -5,7 +5,6 @@ import com.github.salomonbrys.kodein.instance
 import kotlinx.serialization.json.JSON
 import krese.ApplicationConfiguration
 import krese.MailService
-import krese.MailTemplate
 import krese.MailTemplater
 import krese.data.*
 import org.jetbrains.exposed.sql.exposedLogger
@@ -64,54 +63,66 @@ class MailServiceImpl(private val kodein: Kodein) : MailService, MailTemplater {
     }
 
 
-    override fun emailVerificationRequest(sender: Email, action: PostAction): MailTemplate {
+    override fun emailVerificationRequest(sender: Email, action: PostAction): ProcessedMailTemplate {
         //TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-        return MailTemplate("body of confirmation", "Confirmation of Request required")
+        return ProcessedMailTemplate(body = "body of confirmation",  subject = "Confirmation of Request required")
     }
 
 
-    override fun emailNotifyCreationToCreator(action: PostAction): MailTemplate {
+    override fun emailNotifyCreationToCreator(action: PostAction): ProcessedMailTemplate {
         //TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-        return MailTemplate("body of success to creator", "Successfully created reservation")
+        return ProcessedMailTemplate(body = "body of success to creator", subject =  "Successfully created reservation")
     }
 
-    override fun emailNotifyCreationToModerator(action: PostAction): MailTemplate {
+    override fun emailNotifyCreationToModerator(action: PostAction): ProcessedMailTemplate {
         //TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-        return MailTemplate("body of success to moderator", "New Reservation created")
-    }
-
-
-    override fun emailNotifyAcceptanceToModerator(action: AcceptAction): MailTemplate {
-        //TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-        return MailTemplate("body of success to moderator", "Reservation was acccepted")
-    }
-
-    override fun emailNotifyAcceptanceToCreator(action: AcceptAction): MailTemplate {
-        //TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-        return MailTemplate("body of success to creator", "Reservation was acccepted")
+        return ProcessedMailTemplate(body = "body of success to moderator", subject =  "New Reservation created")
     }
 
 
-
-    override fun emailNotifiyDeclineToModerator(action: DeclineAction): MailTemplate {
+    override fun emailNotifyAcceptanceToModerator(action: AcceptAction): ProcessedMailTemplate {
         //TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-        return MailTemplate("body of success to moderator", "Reservation was declined")
+        return ProcessedMailTemplate(body = "body of success to moderator",  subject = "Reservation was acccepted")
     }
 
-    override fun emailNotifiyDeclineToCreator(action: DeclineAction): MailTemplate {
+    override fun emailNotifyAcceptanceToCreator(action: AcceptAction): ProcessedMailTemplate {
         //TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-        return MailTemplate("body of success to creator", "Reservation was declined")
+        return ProcessedMailTemplate(body = "body of success to creator",  subject = "Reservation was acccepted")
     }
 
-    override fun emailNotifiyWithdrawToModerator(action: WithdrawAction): MailTemplate {
+
+
+    override fun emailNotifiyDeclineToModerator(action: DeclineAction): ProcessedMailTemplate {
         //TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-        return MailTemplate("body of success to moderator", "Reservation was withdrawn")
+        return ProcessedMailTemplate(body = "body of success to moderator",  subject = "Reservation was declined")
     }
 
-    override fun emailNotifyWithdrawToCreator(action: WithdrawAction): MailTemplate {
+    override fun emailNotifiyDeclineToCreator(action: DeclineAction): ProcessedMailTemplate {
         //TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-        return MailTemplate("body of success to creator", "Reservation was withdrawn")
+        return ProcessedMailTemplate(body = "body of success to creator",  subject = "Reservation was declined")
     }
+
+    override fun emailNotifiyWithdrawToModerator(action: WithdrawAction): ProcessedMailTemplate {
+        //TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        return ProcessedMailTemplate(body = "body of success to moderator", subject =  "Reservation was withdrawn")
+    }
+
+    override fun emailNotifyWithdrawToCreator(action: WithdrawAction): ProcessedMailTemplate {
+        //TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        return ProcessedMailTemplate(body = "body of success to creator", subject =  "Reservation was withdrawn")
+    }
+
+
+
+
+    override fun loadTemplate(type: TemplateTypes): MailTemplate {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun processTemplate(template: MailTemplate): ProcessedMailTemplate {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
 
 
 }

@@ -5,8 +5,7 @@ import com.github.salomonbrys.kodein.instance
 import kotlinx.serialization.json.JSON
 import krese.ApplicationConfiguration
 import krese.FileSystemWrapper
-import krese.data.Reservable
-import krese.data.UniqueReservableKey
+import krese.data.*
 import krese.migration.migrationFileLoaded
 import java.io.File
 import java.nio.file.Path
@@ -75,4 +74,31 @@ class FileSystemWrapperImpl(private val kodein: Kodein): FileSystemWrapper {
             return null
         }
     }
+
+
+
+    override fun getTemplatesFromDir(dir: String): Map<TemplateTypes, String> {
+        return TemplateTypes.values().map {
+            val f = File(dir + "/" + it.fileName() )
+            if (f.canRead()) {
+                it to f.absolutePath
+            } else {
+                it to null
+            }
+        }.filter { it.second != null }.map { it.first to it.second!! }.toMap()
+    }
+
+    override fun parseTemplate(path: String): MailTemplate? {
+        val lines = File(path).readText()
+        return lines.buildMailTemplate()
+    }
+
+    override fun readResourceOrFail(filePath: String): String {
+        return FileSystemWrapperImpl::class.java.getResourceAsStream(filePath)!!.bufferedReader().use { it.readText() }
+    }
+
+    override fun specificMailDir(key: UniqueReservableKey): String? {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
 }
