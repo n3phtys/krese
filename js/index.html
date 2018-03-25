@@ -13,7 +13,7 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.8.3/modernizr.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.css"/>
 
 
     <!-- Imports -->
@@ -26,48 +26,20 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 
-    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
 
 </head>
 <body>
 
-<div class="w3-container">
+<div class="container">
     <h2>Krese Reservables</h2>
 </div>
 
-<div id="login_status_div" style="padding: 20px;"></div>
+    <div id="login_status_div" style="padding: 20px;"></div>
 
-<div id="key-tab-nav-bar" class="w3-bar w3-black">
-</div>
+    <ul id="key-tab-nav-bar" class="nav nav-tabs nav-justified"></ul>
 
-<div id="key-tab-container" >
-<div id="London" class="w3-container city" style="display:none">
-    <h2>London</h2>
-    <p>London is the capital city of England.</p>
-</div>
-
-<div id="Paris" class="w3-container city" style="display:none">
-    <h2>Paris</h2>
-    <p>Paris is the capital of France.</p>
-</div>
-
-<div id="Tokyo" class="w3-container city" style="display:none">
-    <h2>Tokyo</h2>
-    <p>Tokyo is the capital of Japan.</p>
-</div>
-</div>
-
-<script>
-    function openCity(cityName) {
-        var i;
-        var x = document.getElementsByClassName("city");
-        for (i = 0; i < x.length; i++) {
-            x[i].style.display = "none";
-        }
-        document.getElementById(cityName).style.display = "block";
-    }
-</script>
-
+    <div id="key-tab-container">
+    </div>
 
 
 <script type="text/javascript" src="kotlin.js"></script>

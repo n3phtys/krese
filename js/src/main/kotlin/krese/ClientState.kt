@@ -32,17 +32,16 @@ val LOCALSTORAGE_KRESE_LOGIN_JWT_KEY = "LOCALSTORAGE_KRESE_LOGIN_JWT_KEY"
 
 
 //TODO: - finish form generation
-//TODO: - make bootstrap forms
-
-//TODO: - collapse list of entries per default
-//TODO: - format List as responsive table
 
 //TODO: - add internationalization with override possibility
-//TODO: - set next day to the day after as default form timespan
 
 //TODO: - action commands via client sided indirection (get from url, show confirm dialog for action, and send to post endpoint on server)
 //TODO: - form post submit
 //TODO: - action submit
+
+
+
+//TODO: fix bug of calendar disappearing while browsing tabs
 
 
 class ClientState {
@@ -82,6 +81,19 @@ class ClientState {
         window.setInterval(handler = requestJWTValidation(), timeout = 1000 * 60 * 5)
 
     }
+
+    fun currentEmail() : Email? {
+        val e = localStorage.get(LOCALSTORAGE_KRESE_MY_EMAIL)
+        if (e != null && e.isNotBlank()) {
+            return Email(e)
+        } else {
+            return null
+        }
+    }
+
+    fun isModerator(reservation: Reservation) : Boolean = currentEmail() != null && entries.get(reservation.key)!!.reservable.operatorEmails.contains(currentEmail()!!.address)
+
+    fun isCreator(reservation: Reservation) : Boolean = currentEmail() != null && reservation.email != null && reservation.email!!.equals(currentEmail()!!.address)
 
     fun writeLoginStatus(status: JWTStatus) {
         jwtState = status
@@ -220,7 +232,19 @@ class ClientState {
     }
 
     fun switchTo(uniqueReservableKey: UniqueReservableKey) {
-        val x: HTMLCollection = document.getElementsByClassName("city")
+
+        val allheaders: HTMLCollection = document.getElementsByClassName("tab_header_button")
+
+        0.until(allheaders.length).map {
+            val k = allheaders.get(it)!! as HTMLLIElement
+            k.removeClass("active")
+            if (k.id.equals("tab_header_${uniqueReservableKey.id}")) {
+                k.addClass("active")
+            }
+        }
+
+
+        val x: HTMLCollection = document.getElementsByClassName("reservable-tab")
 
         selectedKey = uniqueReservableKey
 
@@ -248,13 +272,18 @@ class ClientState {
     }
 
     private fun transformKeyIntoButton(key: UniqueReservableKey): HTMLElement {
-        return document.create.button {
-            classes = setOf("w3-bar-item", "w3-button")
+        return document.create.li {
+            id = "tab_header_${key.id}"
+            classes = setOf("tab_header_button")
+            a {
+
+            classes = setOf("")
             onClickFunction = {
                 addURLParameter(SELECTED_KEY_URL_KEY, key.id)
                 switchTo(key)
             }
             +key.id
+        }
         }
     }
 
@@ -273,7 +302,7 @@ class ClientState {
         return document.create.div {
             id = "div_" + key.id
             style = "display:none"
-            classes = setOf("w3-container", "city")
+            classes = setOf("container", "reservable-tab")
 
             h2 {
                 id = "title_header_${key.id}"
@@ -358,17 +387,118 @@ class ClientState {
 </div>
          */
 
+        val collapseId = "collapsedList_${uniqueReservableKey.id}"
 
-        val el = document.create.ol {
-            for (reservation in entries.get(uniqueReservableKey)!!.existingReservations) {
-                li {
-                    +("Name: ${reservation.name} From: ${reservation.startTime} To: ${reservation.endTime} for blocks: ${reservation.blocks.map { it.elementPath.map { it.toString() }.joinToString("-") + " (${it.usedNumber} times)" }}")
+        val el = document.create.div {
+            unsafe {
+                +"""<a class="btn btn-primary" data-toggle="collapse" href="#$collapseId" role="button" aria-expanded="false" aria-controls="$collapseId">
+    Show list
+  </a>"""
+            }
+
+            div {
+                id = collapseId
+                classes = setOf("collapse")
+                div {
+                    classes = setOf("card", "card-body")
+                    div {
+                        classes = setOf("table-responsive")
+                        table {
+                            classes = setOf("table", "table-striped")
+                            thead {
+                                tr {
+                                    th {
+                                        +"From"
+                                    }
+                                    th {
+                                        +"To"
+                                    }
+                                    th {
+                                        +"Name"
+                                    }
+                                    th {
+                                        +"Elements"
+                                    }
+                                    th {
+                                        +"Comments"
+                                    }
+                                    th {
+                                        +"Actions"
+                                    }
+                                }
+                            }
+                            tbody {
+
+                                for (reservation in entries.get(uniqueReservableKey)!!.existingReservations) {
+                                    tr {
+                                        td {
+                                            +reservation.startTime.toDate().toLocalizedDateShort()
+                                        }
+                                        td {
+                                            +reservation.endTime.toDate().toLocalizedDateShort()
+                                        }
+                                        td {
+                                            +reservation.name
+                                        }
+                                        td {
+                                            +reservation.toBlockTableCellString()
+                                        }
+                                        td {
+                                            ActionButtons(reservation)
+                                        }
+                                        td {
+                                            +reservation.commentUser
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
+
+
         listDiv.innerHTML = ""
         listDiv.appendChild(el)
     }
+
+    fun Long.toDate() : Date {
+        return Date(this)
+    }
+
+    fun Date.toLocalizedDateShort() : String {
+        val year = this.getFullYear().toString().takeLast(2)
+        val month = ("00" + (this.getMonth()+1).toString()).takeLast(2)
+        val day = ("00" + (this.getDate().toString())).takeLast(2)
+        return "$day.$month.$year"
+    }
+
+    fun TD.ActionButtons(reservation: Reservation) : Unit {
+        if (isCreator(reservation)) {
+            button { //Withdraw
+                classes = setOf("btn", "btn-danger")
+                span {
+                    classes = setOf("glyphicon", "glyphicon-trash")
+                }
+            }
+        }
+        if (isModerator(reservation)) {
+            button {//accept
+                classes = setOf("btn", "btn-success")
+                span {
+                    classes = setOf("glyphicon", "glyphicon-ok")
+                }
+            }
+            button { //decline
+                classes = setOf("btn", "btn-danger")
+                span {
+                    classes = setOf("glyphicon", "glyphicon-remove")
+                }
+            }
+        }
+    }
+
 
     fun setReservationCalendar(calDiv: Element, uniqueReservableKey: UniqueReservableKey) {
         val config = entries.get(uniqueReservableKey)!!.toCalendarConfig()
@@ -594,7 +724,7 @@ class ClientState {
         }.joinToString("&")
 
         window.history.pushState(null, "Krese Redirect", frontstr + if (paramstr.isBlank()) "" else "?" + paramstr)
-        //causes reloads: window.location.href =
+
     }
 
 

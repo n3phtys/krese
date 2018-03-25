@@ -40,7 +40,11 @@ data class ReservableElement(
 @Serializable
 data class Reservation(
         val id : Long, val key: UniqueReservableKey, val email: Email?, val name: String, val telephone: String?, val commentUser: String, val commentOperator: String?, val startTime: Long, val endTime: Long, val createdTimestamp: Long, val modifiedTimestamp: Long?, val accepted: Boolean, val blocks: List<DbBlockData>
-)
+) {
+    fun toBlockTableCellString() : String {
+        return blocks.map { "${it.usedNumber} * ${it.elementPath.toString()}" }.joinToString()
+    }
+}
 
 @Serializable
 data class GetResponse(
