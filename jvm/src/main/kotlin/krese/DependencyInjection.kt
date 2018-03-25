@@ -18,4 +18,5 @@ val kodein = Kodein {
     bind<MailService>() with singleton {  MailServiceImpl(kodein) }
     bind<MailTemplater>() with singleton {  MailServiceImpl(kodein) }
     bind<HTMLSanitizer>() with singleton {  HTMLSanitizerImpl(kodein) }
+    bind<StringLocalizer>() with singleton { StringLocalizerImpl(kodein)}
 }

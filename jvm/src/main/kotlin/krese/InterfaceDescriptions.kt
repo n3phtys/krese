@@ -1,5 +1,6 @@
 package krese
 
+import kotlinx.serialization.json.JSON
 import krese.data.*
 import krese.impl.*
 import org.joda.time.DateTime
@@ -56,6 +57,18 @@ interface HTMLSanitizer {
     fun sanitize(html:String): String
 }
 
+interface StringLocalizer {
+    fun getTranslations() : Map<String, String>
+    fun getTranslationsAsJS() : String {
+        val translations = getTranslations()
+        return """var kreseTranslationObject = {${
+        translations.map {
+            """ '${it.key}' : '${it.value}' """
+        }.joinToString(",\n")
+        }};"""
+    }
+}
+
 interface DatabaseConfiguration {
     val databasePort: String
     val databaseHost: String
@@ -82,6 +95,7 @@ interface ApplicationConfiguration : MailFileConfigGlobal {
     val mailPort: Int
     val mailStarttls: Boolean
     val mailAuth: Boolean
+    val filePathOfLocalization: String
 }
 
 interface MailService {

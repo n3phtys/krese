@@ -49,10 +49,15 @@ class ClientState {
     var jwt: String? = localStorage.get(LOCALSTORAGE_KRESE_LOGIN_JWT_KEY)
 
     init {
+
+        println("generic.term".localize())
+        println("server.side.declared.term".localize())
+
         println("creationDate =" + Date(creationDate))
         if (localStorage.get(LOCALSTORAGE_KRESE_MY_EMAIL) == null && jwt != null) {
             localStorage.set(LOCALSTORAGE_KRESE_MY_EMAIL, decodeJWT(jwt!!).email)
         }
+
     }
 
     var from = Date(creationDate - 1000L * 60 * 60 * 24 * 180)
@@ -143,6 +148,20 @@ class ClientState {
             }
         }
     }
+
+    fun executeAccept(id : Long) {
+        TODO("Not yet implemented")
+    }
+
+    fun executeDecline(id : Long) {
+        TODO("Not yet implemented")
+    }
+
+    fun executeWithdraw(id : Long) {
+        TODO("Not yet implemented")
+    }
+
+
 
     fun relogin() {
         val oldemail = localStorage.get(LOCALSTORAGE_KRESE_MY_EMAIL)

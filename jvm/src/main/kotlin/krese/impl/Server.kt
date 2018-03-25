@@ -4,6 +4,7 @@ import com.github.salomonbrys.kodein.Kodein
 import com.github.salomonbrys.kodein.instance
 import io.ktor.application.call
 import io.ktor.content.*
+import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.Parameters
 import io.ktor.http.parametersOf
@@ -32,6 +33,7 @@ class Server(private val kodein: Kodein) {
     private val getReceiver: GetReceiver = kodein.instance()
     private val jwtReceiver: JWTReceiver = kodein.instance()
     private val postReceiver: PostReceiver = kodein.instance()
+    private val stringLocalizer: StringLocalizer = kodein.instance()
 
 
     val server = embeddedServer(Netty, appConfig.applicationPort) {
@@ -62,6 +64,13 @@ class Server(private val kodein: Kodein) {
                     call.respondText(JSON.Companion.stringify(getReceiver.retrieveAll(if (jwt != null) authVerifier.decodeJWT(jwt)?.userProfile?.email else null)))
                 }
             }
+
+            get ("/" + Routes.GET_LOCALIZATION.path) {
+                val r = stringLocalizer.getTranslationsAsJS()
+                println("Ingoing to ${Routes.GET_LOCALIZATION} with result = $r")
+                call.respondText(r, ContentType.parse("text/javascript"))
+            }
+
             post ("/" + Routes.GET_RESERVABLES.path) {
                 val params = call.receive<Parameters>()
                 val postStr = params.get("action")
