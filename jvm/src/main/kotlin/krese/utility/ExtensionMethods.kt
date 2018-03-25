@@ -11,6 +11,7 @@ fun PostAction.getId() : Long? {
         is DeclineAction -> this.id
         is WithdrawAction -> this.id
         is AcceptAction -> this.id
+        else -> {throw IllegalArgumentException()}
     }
 }
 

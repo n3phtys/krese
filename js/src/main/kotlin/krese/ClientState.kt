@@ -31,16 +31,6 @@ external fun decodeURIComponent(str: String): String
 val LOCALSTORAGE_KRESE_LOGIN_JWT_KEY = "LOCALSTORAGE_KRESE_LOGIN_JWT_KEY"
 
 
-//TODO: - finish form generation
-
-//TODO: - add internationalization with override possibility
-
-//TODO: - action commands via client sided indirection (get from url, show confirm dialog for action, and send to post endpoint on server)
-//TODO: - form post submit
-//TODO: - action submit
-
-
-
 //TODO: fix bug of calendar disappearing while browsing tabs
 
 
@@ -48,17 +38,6 @@ class ClientState {
     private val creationDate = Date.now()
     var jwt: String? = localStorage.get(LOCALSTORAGE_KRESE_LOGIN_JWT_KEY)
 
-    init {
-
-        println("generic.term".localize())
-        println("server.side.declared.term".localize())
-
-        println("creationDate =" + Date(creationDate))
-        if (localStorage.get(LOCALSTORAGE_KRESE_MY_EMAIL) == null && jwt != null) {
-            localStorage.set(LOCALSTORAGE_KRESE_MY_EMAIL, decodeJWT(jwt!!).email)
-        }
-
-    }
 
     var from = Date(creationDate - 1000L * 60 * 60 * 24 * 180)
     var to = Date(creationDate + 1000L * 60 * 60 * 24 * 180)
@@ -78,16 +57,29 @@ class ClientState {
 
     val SELECTED_KEY_URL_KEY = "selected_key"
 
+
+
     init {
+        if (localStorage.get(LOCALSTORAGE_KRESE_MY_EMAIL) == null && jwt != null) {
+            localStorage.set(LOCALSTORAGE_KRESE_MY_EMAIL, decodeJWT(jwt!!).email)
+        }
+
         testForReceiveRelogin()
         loadAllKeys()
 
         writeLoginStatus(if (jwt != null && jwt!!.isNotBlank()) JWTStatus.PENDING else JWTStatus.UNCHECKED)
         window.setInterval(handler = requestJWTValidation(), timeout = 1000 * 60 * 5)
+        window.setInterval(handler = checkJWT(), timeout = 1000 * 60 * 1)
 
     }
 
-    fun currentEmail() : Email? {
+    private fun checkJWT() {
+        if (localStorage.get(LOCALSTORAGE_KRESE_LOGIN_JWT_KEY) != jwt) {
+            window.location.reload()
+        }
+    }
+
+    fun currentEmail(): Email? {
         val e = localStorage.get(LOCALSTORAGE_KRESE_MY_EMAIL)
         if (e != null && e.isNotBlank()) {
             return Email(e)
@@ -96,9 +88,9 @@ class ClientState {
         }
     }
 
-    fun isModerator(reservation: Reservation) : Boolean = currentEmail() != null && entries.get(reservation.key)!!.reservable.operatorEmails.contains(currentEmail()!!.address)
+    fun isModerator(reservation: Reservation): Boolean = currentEmail() != null && entries.get(reservation.key)!!.reservable.operatorEmails.contains(currentEmail()!!.address)
 
-    fun isCreator(reservation: Reservation) : Boolean = currentEmail() != null && reservation.email != null && reservation.email!!.equals(currentEmail()!!.address)
+    fun isCreator(reservation: Reservation): Boolean = currentEmail() != null && reservation.email != null && reservation.email!!.equals(currentEmail()!!.address)
 
     fun writeLoginStatus(status: JWTStatus) {
         jwtState = status
@@ -149,18 +141,53 @@ class ClientState {
         }
     }
 
-    fun executeAccept(id : Long) {
-        TODO("Not yet implemented")
+    fun executeAccept(id: Long) {
+        ServerPost(AcceptAction(id, ""), jwt).asyncCall {
+            //process result in callback
+            if (it.successful) {
+                if (it.finished) {
+                    window.alert("Successfully accepted reservation, message from server = '${it.message}'")
+                    window.location.reload()
+                } else {
+                    window.alert("Acceptance of Reservation requires reauthentication. Please check your email. Message from server = '${it.message}'")
+                }
+            } else {
+                window.alert("Error while trying to accept reservation, message from server: '${it.message}'")
+            }
+        }
     }
 
-    fun executeDecline(id : Long) {
-        TODO("Not yet implemented")
+    fun executeDecline(id: Long) {
+        ServerPost(DeclineAction(id, ""), jwt).asyncCall {
+            //process result in callback
+            if (it.successful) {
+                if (it.finished) {
+                    window.alert("Successfully declined reservation, message from server = '${it.message}'")
+                    window.location.reload()
+                } else {
+                    window.alert("Decline of Reservation requires reauthentication. Please check your email. Message from server = '${it.message}'")
+                }
+            } else {
+                window.alert("Error while trying to decline reservation, message from server: '${it.message}'")
+            }
+        }
     }
 
-    fun executeWithdraw(id : Long) {
-        TODO("Not yet implemented")
+    fun executeWithdraw(id: Long) {
+        ServerPost(WithdrawAction(id, ""), jwt).asyncCall {
+            //process result in callback
+            if (it.successful) {
+                if (it.finished) {
+                    window.alert("Successfully withdrawn reservation, message from server = '${it.message}'")
+                    window.location.reload()
+                } else {
+                    window.alert("Withdrawal of Reservation requires reauthentication. Please check your email. Message from server = '${it.message}'")
+                }
+            } else {
+                window.alert("Error while trying to withdraw reservation, message from server: '${it.message}'")
+            }
+        }
     }
-
 
 
     fun relogin() {
@@ -224,6 +251,8 @@ class ClientState {
             //("unset relogin parameter")
             unsetURLParameter("relogin")
         }
+
+        //TODO: check for action to commit
     }
 
     fun storePassword(jwt: String?) {
@@ -296,27 +325,17 @@ class ClientState {
             classes = setOf("tab_header_button")
             a {
 
-            classes = setOf("")
-            onClickFunction = {
-                addURLParameter(SELECTED_KEY_URL_KEY, key.id)
-                switchTo(key)
+                classes = setOf("")
+                onClickFunction = {
+                    addURLParameter(SELECTED_KEY_URL_KEY, key.id)
+                    switchTo(key)
+                }
+                +key.id
             }
-            +key.id
-        }
         }
     }
 
     private fun transformKeyIntoDiv(key: UniqueReservableKey): HTMLElement {
-        //TODO: prepare raw structure with skeleton
-
-        /*
-        val uniqueId : String,
-        val prologueMarkdown: String,
-        val epilogueMarkdown: String,
-        val staticFiles: List<String>,
-        val elements: ReservableElement,
-        val operatorEmails: List<String>
-         */
 
         return document.create.div {
             id = "div_" + key.id
@@ -482,34 +501,47 @@ class ClientState {
         listDiv.appendChild(el)
     }
 
-    fun Long.toDate() : Date {
+    fun Long.toDate(): Date {
         return Date(this)
     }
 
-    fun Date.toLocalizedDateShort() : String {
+    fun Date.toLocalizedDateShort(): String {
         val year = this.getFullYear().toString().takeLast(2)
-        val month = ("00" + (this.getMonth()+1).toString()).takeLast(2)
+        val month = ("00" + (this.getMonth() + 1).toString()).takeLast(2)
         val day = ("00" + (this.getDate().toString())).takeLast(2)
         return "$day.$month.$year"
     }
 
-    fun TD.ActionButtons(reservation: Reservation) : Unit {
+    fun TD.ActionButtons(reservation: Reservation): Unit {
         if (isCreator(reservation)) {
-            button { //Withdraw
+            button {
+                //Withdraw
+                onClickFunction = {
+                    executeWithdraw(reservation.id)
+                }
                 classes = setOf("btn", "btn-danger")
                 span {
                     classes = setOf("glyphicon", "glyphicon-trash")
                 }
+
             }
         }
         if (isModerator(reservation)) {
-            button {//accept
+            button {
+                //accept
+                onClickFunction = {
+                    executeAccept(reservation.id)
+                }
                 classes = setOf("btn", "btn-success")
                 span {
                     classes = setOf("glyphicon", "glyphicon-ok")
                 }
             }
-            button { //decline
+            button {
+                //decline
+                onClickFunction = {
+                    executeDecline(reservation.id)
+                }
                 classes = setOf("btn", "btn-danger")
                 span {
                     classes = setOf("glyphicon", "glyphicon-remove")
@@ -535,7 +567,7 @@ class ClientState {
         console.log("creating $this with $key and $prefix")
 
 
-            label { +"${r.name}: ${r.description}" }
+        label { +"${r.name}: ${r.description}" }
         if (r.units != 0) {
             if (r.units != 1) {
                 label {
@@ -561,12 +593,12 @@ class ClientState {
                 label { +"Reserve this element" }
             }
         }
-            div {
-                classes = setOf("form-group col-lg-6")
-                for (@Suppress("NAME_SHADOWING") element in r.subElements) {
-                    this.toFormularInputDiv(element, key, prefix + "_" + r.id)
-                }
+        div {
+            classes = setOf("form-group col-lg-6")
+            for (@Suppress("NAME_SHADOWING") element in r.subElements) {
+                this.toFormularInputDiv(element, key, prefix + "_" + r.id)
             }
+        }
     }
 
     fun addFormular(formDiv: Element, uniqueReservableKey: UniqueReservableKey) {
@@ -784,6 +816,7 @@ class ClientState {
             if (it.successful) {
                 if (it.finished) {
                     window.alert("Successfully created reservation, message from server = '${it.message}', please wait for confirmation by the acting moderator")
+                    window.location.reload()
                 } else {
                     window.alert("Reservation was posted but not finished. Please check your email. Message from server = '${it.message}'")
                 }
@@ -802,7 +835,7 @@ class ClientState {
 }
 
 private fun Date.nextFullDay(): Date {
-    val d : Date = Date(this.getTime() + (1000L * 60 * 60 * 24))
+    val d: Date = Date(this.getTime() + (1000L * 60 * 60 * 24))
     val r = Date(d.getFullYear(), d.getMonth(), d.getDate(), 12, 0)
     println("NextFullDate from ${this.toISOString()} to ${d.toISOString()} and ${r.toISOString()}")
     return r
@@ -828,11 +861,11 @@ fun Map<String, String>.toCreateAction(uniqueReservableKey: UniqueReservableKey)
     val from = this.get(FormFieldNames.From.name)!!.dateStringToMillis()
     val to = this.get(FormFieldNames.To.name)!!.dateStringToMillis()
     val comment = this.get(FormFieldNames.Email.name)!!
-    val blocks =  listOf<DbBlockData>() //TODO("implement extracting the blocks")
-    val ca =  CreateAction(uniqueReservableKey, email, name, phone, comment, from, to, blocks)
+    val blocks = listOf<DbBlockData>() //TODO("implement extracting the blocks")
+    val ca = CreateAction(uniqueReservableKey, email, name, phone, comment, from, to, blocks)
     console.log("CreateAction:")
     console.log(ca)
     return ca
 }
 
-fun String.dateStringToMillis() : Long = Date(Date.parse(this)).getTime().roundToLong()
+fun String.dateStringToMillis(): Long = Date(Date.parse(this)).getTime().roundToLong()

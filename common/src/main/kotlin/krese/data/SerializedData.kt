@@ -130,29 +130,69 @@ enum class LinkActions {
 }
 
 
-
-
-@Serializable
-sealed class PostAction {
+interface PostAction {
 }
-//TODO: PostAction hierarchy is currently not serialized or deseralized correctly
 
 @Serializable
-data class CreateAction(val key: UniqueReservableKey, val email: Email, val name: String, val telephone: String, val commentUser: String, val startTime: Long, val endTime: Long, val blocks: List<DbBlockData>) : PostAction() {
+data class CreateAction(val key: UniqueReservableKey, val email: Email, val name: String, val telephone: String, val commentUser: String, val startTime: Long, val endTime: Long, val blocks: List<DbBlockData>) : PostAction {
     fun isValid(): Boolean = true
 }
 
 @Serializable
-data class DeclineAction(val id: Long, val comment: String) : PostAction()
+data class DeclineAction(val id: Long, val comment: String) : PostAction
 
 @Serializable
-data class WithdrawAction(val id: Long, val comment: String) : PostAction()
+data class WithdrawAction(val id: Long, val comment: String) : PostAction
 
 @Serializable
-data class AcceptAction(val id: Long, val comment: String) : PostAction()
+data class AcceptAction(val id: Long, val comment: String) : PostAction
 
 @Serializable
-data class PostActionInput(val jwt: String?, val payload: JWTPayload?, val action: PostAction)
+sealed class PostActionInput() {
+    companion object {
+        fun build(jwt: String?, action: PostAction) : PostActionInput {
+            return when(action) {
+
+                is CreateAction -> CreateActionInput(jwt, action)
+                is DeclineAction -> DeclineActionInput(jwt, action)
+                is WithdrawAction -> WithdrawActionInput(jwt, action)
+                is AcceptAction -> AcceptActionInput(jwt, action)
+                else -> {throw IllegalArgumentException()}
+            }
+        }
+    }
+
+    abstract fun toJwt(): String?
+    abstract fun toAction(): PostAction
+}
+
+@Serializable
+data class CreateActionInput(val jwt: String?, val action: CreateAction) : PostActionInput() {
+    override fun toJwt(): String? = jwt
+
+    override fun toAction(): PostAction = action
+}
+
+@Serializable
+data class DeclineActionInput(val jwt: String?, val action: DeclineAction) : PostActionInput() {
+    override fun toJwt(): String? = jwt
+
+    override fun toAction(): PostAction = action
+}
+
+@Serializable
+data class AcceptActionInput(val jwt: String?, val action: AcceptAction) : PostActionInput() {
+    override fun toJwt(): String? = jwt
+
+    override fun toAction(): PostAction = action
+}
+
+@Serializable
+data class WithdrawActionInput(val jwt: String?, val action: WithdrawAction) : PostActionInput() {
+    override fun toJwt(): String? = jwt
+
+    override fun toAction(): PostAction = action
+}
 
 
 @Serializable

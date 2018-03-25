@@ -53,11 +53,11 @@ class Server(private val kodein: Kodein) {
                 val key: UniqueReservableKey? = params.get("key").let { if (it != null) UniqueReservableKey(it) else null }
 
 
-                val from: DateTime = if (fromStr != null) DateTime(fromStr.toLong(), DateTimeZone.UTC)  else DateTime(Long.MIN_VALUE)
-                val to: DateTime = if (toStr != null) DateTime(toStr.toLong(), DateTimeZone.UTC)  else DateTime(Long.MAX_VALUE)
+                val from: DateTime = if (fromStr != null) DateTime(fromStr.toLong(), DateTimeZone.UTC) else DateTime(Long.MIN_VALUE)
+                val to: DateTime = if (toStr != null) DateTime(toStr.toLong(), DateTimeZone.UTC) else DateTime(Long.MAX_VALUE)
 
                 if (key != null) {
-                    val ele : GetResponse? = getReceiver.retrieve(key, from, to, jwt?.let { it1 -> authVerifier.decodeJWT(it1)?.userProfile?.email })
+                    val ele: GetResponse? = getReceiver.retrieve(key, from, to, jwt?.let { it1 -> authVerifier.decodeJWT(it1)?.userProfile?.email })
                     val json = if (ele != null) JSON.stringify(ele) else "null"
                     call.respondText(json)
                 } else {
@@ -65,18 +65,53 @@ class Server(private val kodein: Kodein) {
                 }
             }
 
-            get ("/" + Routes.GET_LOCALIZATION.path) {
+            get("/" + Routes.GET_LOCALIZATION.path) {
                 val r = stringLocalizer.getTranslationsAsJS()
-                println("Ingoing to ${Routes.GET_LOCALIZATION} with result = $r")
                 call.respondText(r, ContentType.parse("text/javascript"))
             }
 
-            post ("/" + Routes.GET_RESERVABLES.path) {
+            post("/" + Routes.POST_ACTION_ACCEPT.path) {
                 val params = call.receive<Parameters>()
                 val postStr = params.get("action")
                 println("INPUT: postStr= $postStr ")
                 if (postStr != null) {
-                    val postAction: PostActionInput = JSON.parse(postStr)
+                    val postAction: AcceptActionInput = JSON.parse(postStr)
+                    call.respondText(JSON.stringify(postReceiver.submitForm(postAction)))
+                } else {
+                    call.respond(HttpStatusCode.BadRequest, "could not read action param")
+                }
+            }
+
+            post("/" + Routes.POST_ACTION_CREATE.path) {
+                val params = call.receive<Parameters>()
+                val postStr = params.get("action")
+                println("INPUT: postStr= $postStr ")
+                if (postStr != null) {
+                    val postAction: CreateActionInput = JSON.parse(postStr)
+                    call.respondText(JSON.stringify(postReceiver.submitForm(postAction)))
+                } else {
+                    call.respond(HttpStatusCode.BadRequest, "could not read action param")
+                }
+            }
+
+            post("/" + Routes.POST_ACTION_DECLINE.path) {
+                val params = call.receive<Parameters>()
+                val postStr = params.get("action")
+                println("INPUT: postStr= $postStr ")
+                if (postStr != null) {
+                    val postAction: DeclineActionInput = JSON.parse(postStr)
+                    call.respondText(JSON.stringify(postReceiver.submitForm(postAction)))
+                } else {
+                    call.respond(HttpStatusCode.BadRequest, "could not read action param")
+                }
+            }
+
+            post("/" + Routes.POST_ACTION_WITHDRAW.path) {
+                val params = call.receive<Parameters>()
+                val postStr = params.get("action")
+                println("INPUT: postStr= $postStr ")
+                if (postStr != null) {
+                    val postAction: WithdrawActionInput = JSON.parse(postStr)
                     call.respondText(JSON.stringify(postReceiver.submitForm(postAction)))
                 } else {
                     call.respond(HttpStatusCode.BadRequest, "could not read action param")
@@ -84,27 +119,27 @@ class Server(private val kodein: Kodein) {
             }
 
 
-                post("/" + Routes.POST_CREDENTIALS_VALID.path) {
-                    val params = call.receive<Parameters>()
-                    val jwt = params.get("jwt")
-                    if (jwt != null) {
-                        call.respondText(jwtReceiver.loginStillValid(jwt).toString())
-                    } else {
-                        call.respond(HttpStatusCode.BadRequest, "could not read jwt param")
-                    }
-
+            post("/" + Routes.POST_CREDENTIALS_VALID.path) {
+                val params = call.receive<Parameters>()
+                val jwt = params.get("jwt")
+                if (jwt != null) {
+                    call.respondText(jwtReceiver.loginStillValid(jwt).toString())
+                } else {
+                    call.respond(HttpStatusCode.BadRequest, "could not read jwt param")
                 }
-                post("/" + Routes.POST_RELOGIN) {
-                    val params = call.receive<Parameters>()
-                    val email = params.get("email")
-                    if (email != null) {
-                        jwtReceiver.relogin(email)
-                        call.respondText("true")
-                    } else {
-                        call.respond(HttpStatusCode.BadRequest, "could not read email param")
-                    }
 
+            }
+            post("/" + Routes.POST_RELOGIN.path) {
+                val params = call.receive<Parameters>()
+                val email = params.get("email")
+                if (email != null) {
+                    jwtReceiver.relogin(email)
+                    call.respondText("true")
+                } else {
+                    call.respond(HttpStatusCode.BadRequest, "could not read email param")
                 }
+
+            }
 
             static("") {
                 files(File(appConfig.webDirectory))

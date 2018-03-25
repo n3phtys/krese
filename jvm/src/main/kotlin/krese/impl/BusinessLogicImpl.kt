@@ -6,7 +6,6 @@ import krese.*
 import krese.data.*
 import krese.utility.getId
 import org.joda.time.DateTime
-import java.util.*
 
 class BusinessLogicImpl(private val kodein: Kodein): BusinessLogic {
 
@@ -110,8 +109,14 @@ class BusinessLogicImpl(private val kodein: Kodein): BusinessLogic {
                     return null
                 }
             }
+            else -> {
+                throw IllegalArgumentException()
+            }
         }
     }
+
+
+    //TODO: currently overlying reservations are still possible, needs to be fixed
 
     private fun isPossible(action: CreateAction): Boolean {
         val res = fileSystemWrapper.getReservableToKey(action.key)
@@ -149,6 +154,9 @@ class BusinessLogicImpl(private val kodein: Kodein): BusinessLogic {
                 val res = key?.let { fileSystemWrapper.getReservableToKey(it)?.operatorEmails?.contains(verification.address) }
                 res == true
             }
+            else -> {
+                throw IllegalArgumentException()
+            }
         }
     }
 
@@ -173,6 +181,9 @@ class BusinessLogicImpl(private val kodein: Kodein): BusinessLogic {
             is DeclineAction -> mailTemplater.emailNotifiyDeclineToCreator(action)
             is WithdrawAction -> mailTemplater.emailNotifyWithdrawToCreator(action)
             is AcceptAction -> mailTemplater.emailNotifyAcceptanceToCreator(action)
+            else -> {
+                throw IllegalArgumentException()
+            }
         })
 
     }
@@ -183,6 +194,9 @@ class BusinessLogicImpl(private val kodein: Kodein): BusinessLogic {
             is DeclineAction -> mailTemplater.emailNotifiyDeclineToModerator(action)
             is WithdrawAction -> mailTemplater.emailNotifiyWithdrawToModerator(action)
             is AcceptAction -> mailTemplater.emailNotifyAcceptanceToModerator(action)
+            else -> {
+                throw IllegalArgumentException()
+            }
         })
 
     }

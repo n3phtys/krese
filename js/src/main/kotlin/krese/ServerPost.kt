@@ -6,9 +6,20 @@ import org.w3c.xhr.XMLHttpRequest
 
 class ServerPost(val action: PostAction, val jwt: String?) {
 
+
+    val routepath = when (action) {
+
+        is CreateAction -> Routes.POST_ACTION_CREATE.path
+        is DeclineAction -> Routes.POST_ACTION_DECLINE.path
+        is WithdrawAction -> Routes.POST_ACTION_WITHDRAW.path
+        is AcceptAction -> Routes.POST_ACTION_ACCEPT.path
+        else -> {throw IllegalArgumentException()}
+    }
+
+
     fun asyncCall(func: (PostResponse) -> Unit) {
         val xhttp = XMLHttpRequest()
-        xhttp.open("POST", Routes.POST_ENTRIES_TO_RESERVABLE.path, true)
+        xhttp.open("POST", routepath, true)
         xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded")
         xhttp.onreadystatechange = {
             println("Received something... state = ${xhttp.readyState} and status = ${xhttp.status}")
@@ -17,11 +28,12 @@ class ServerPost(val action: PostAction, val jwt: String?) {
                 func.invoke(res)
             }
         }
-        val json = (when(action) {
-            is CreateAction -> JSON.stringify(PostActionInput(jwt, null, action))
-            is DeclineAction -> TODO()
-            is WithdrawAction -> TODO()
-            is AcceptAction -> TODO()
+        val json = (when (action) {
+            is CreateAction -> JSON.stringify(CreateActionInput(jwt, action))
+            is DeclineAction -> JSON.stringify(DeclineActionInput(jwt, action))
+            is WithdrawAction -> JSON.stringify(WithdrawActionInput(jwt, action))
+            is AcceptAction -> JSON.stringify(AcceptActionInput(jwt, action))
+            else -> {throw IllegalArgumentException()}
         })
         println("Posting action with json = $json")
 
