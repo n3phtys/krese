@@ -24,6 +24,8 @@ class MailerMock(val sentMails: MutableList<List<String>> = mutableListOf()) : M
 }
 
 class ConfigMock(val uniqueNumber: Int) : DatabaseConfiguration, ApplicationConfiguration {
+    override val filePathOfLocalization: String
+        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
     override val loadMigrationData: Boolean
         get() = false
     override val databasePort: String
