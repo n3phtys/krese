@@ -1,8 +1,8 @@
 package krese
 
-import kotlinx.serialization.json.JSON
 import krese.data.*
-import krese.impl.*
+import krese.impl.DbBookingInputData
+import krese.impl.DbBookingOutputData
 import org.joda.time.DateTime
 import java.nio.file.Path
 
@@ -96,6 +96,7 @@ interface ApplicationConfiguration : MailFileConfigGlobal {
     val mailStarttls: Boolean
     val mailAuth: Boolean
     val filePathOfLocalization: String
+    val staticDirectory: String
 }
 
 interface MailService {

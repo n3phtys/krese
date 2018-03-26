@@ -1,25 +1,20 @@
 package krese
 
 import jquery.jq
-import kotlinext.js.asJsObject
+import kotlinx.html.*
+import kotlinx.html.dom.append
 import kotlinx.html.dom.create
-import kotlinx.serialization.json.JSON
-import org.w3c.xhr.XMLHttpRequest
-import kotlinx.html.*
-import kotlinx.html.js.onClickFunction
-
-import kotlinx.html.*
-import kotlinx.html.consumers.*
-import kotlinx.html.dom.*
 import kotlinx.html.js.*
-import org.w3c.dom.*
-import kotlin.browser.*
-import kotlin.dom.*
-import kotlinx.html.*
+import kotlinx.serialization.json.JSON
 import krese.data.*
 import org.w3c.dom.*
 import org.w3c.dom.events.Event
+import org.w3c.xhr.XMLHttpRequest
 import kotlin.browser.document
+import kotlin.browser.localStorage
+import kotlin.browser.window
+import kotlin.dom.addClass
+import kotlin.dom.removeClass
 import kotlin.js.Date
 import kotlin.math.roundToLong
 
@@ -47,7 +42,8 @@ class ClientState {
     var jwtState: JWTStatus = JWTStatus.UNCHECKED
 
     var allKeys: List<UniqueReservableKey> = listOf()
-    val entries: MutableMap<UniqueReservableKey, GetResponse> = mutableMapOf()
+    val reservables: MutableMap<UniqueReservableKey, Reservable> = mutableMapOf()
+    val reservations: MutableMap<UniqueReservableKey, GetResponse> = mutableMapOf()
 
 
     val navbar = document.getElementById("key-tab-nav-bar")!!
@@ -88,7 +84,7 @@ class ClientState {
         }
     }
 
-    fun isModerator(reservation: Reservation): Boolean = currentEmail() != null && entries.get(reservation.key)!!.reservable.operatorEmails.contains(currentEmail()!!.address)
+    fun isModerator(reservation: Reservation): Boolean = currentEmail() != null && reservables.get(reservation.key)!!.operatorEmails.contains(currentEmail()!!.address)
 
     fun isCreator(reservation: Reservation): Boolean = currentEmail() != null && reservation.email != null && reservation.email!!.equals(currentEmail()!!.address)
 
@@ -310,7 +306,11 @@ class ClientState {
         xhttp.open("GET", Routes.GET_RESERVABLES.path + if (jwt != null) "?jwt=$jwt" else "", true)
         xhttp.onreadystatechange = {
             if (xhttp.readyState == 4.toShort() && xhttp.status == 200.toShort()) {
-                allKeys = JSON.parse<GetTotalResponse>(xhttp.responseText).keys
+                val x = JSON.parse<GetTotalResponse>(xhttp.responseText)
+                allKeys = x.keys.map { it.key() }
+                reservables.clear()
+                reservables.putAll(x.keys.map { it.key() to it }.toMap())
+
                 setAllKeysToGUI()
 
                 getURLParameters().get(SELECTED_KEY_URL_KEY)?.let { switchTo(UniqueReservableKey(it)) }
@@ -330,7 +330,7 @@ class ClientState {
                     addURLParameter(SELECTED_KEY_URL_KEY, key.id)
                     switchTo(key)
                 }
-                +key.id
+                +reservables.get(key)!!.title
             }
         }
     }
@@ -390,7 +390,7 @@ class ClientState {
         xhttp.open("GET", Routes.GET_RESERVABLES.path + "?key=${uniqueReservableKey.id}&from=${from.getTime()}&to=${to.getTime()}${if (jwt != null) "&jwt=$jwt" else ""}", true)
         xhttp.onreadystatechange = {
             if (xhttp.readyState == 4.toShort() && xhttp.status == 200.toShort()) {
-                entries.put(uniqueReservableKey, JSON.parse<GetResponse>(xhttp.responseText))
+                reservations.put(uniqueReservableKey, JSON.parse<GetResponse>(xhttp.responseText))
                 setEntriesToKey(uniqueReservableKey)
             }
         }
@@ -398,9 +398,9 @@ class ClientState {
     }
 
     fun setEntriesToKey(uniqueReservableKey: UniqueReservableKey) {
-        document.getElementById("title_header_${uniqueReservableKey.id}")!!.innerHTML = entries.get(uniqueReservableKey)!!.reservable.title
-        document.getElementById("pro_" + uniqueReservableKey.id)!!.innerHTML = entries.get(uniqueReservableKey)!!.reservable.prologue
-        val epilogue = entries.get(uniqueReservableKey)!!.reservable.epilogue
+        document.getElementById("title_header_${uniqueReservableKey.id}")!!.innerHTML = reservables.get(uniqueReservableKey)!!.title
+        document.getElementById("pro_" + uniqueReservableKey.id)!!.innerHTML = reservables.get(uniqueReservableKey)!!.prologue
+        val epilogue = reservables.get(uniqueReservableKey)!!.epilogue
         document.getElementById("epi_" + uniqueReservableKey.id)!!.innerHTML = epilogue
         addFormular(document.getElementById("for_" + uniqueReservableKey.id)!!, uniqueReservableKey)
         setReservationList(document.getElementById("lis_" + uniqueReservableKey.id)!!, uniqueReservableKey)
@@ -467,7 +467,7 @@ class ClientState {
                             }
                             tbody {
 
-                                for (reservation in entries.get(uniqueReservableKey)!!.existingReservations) {
+                                for (reservation in reservations.get(uniqueReservableKey)!!.existingReservations) {
                                     tr {
                                         td {
                                             +reservation.startTime.toDate().toLocalizedDateShort()
@@ -552,7 +552,7 @@ class ClientState {
 
 
     fun setReservationCalendar(calDiv: Element, uniqueReservableKey: UniqueReservableKey) {
-        val config = entries.get(uniqueReservableKey)!!.toCalendarConfig()
+        val config = reservations.get(uniqueReservableKey)!!.toCalendarConfig()
         val configJson = JSON.stringify(config)
         calDiv.innerHTML = ""
         val id = "#" + calDiv.id
@@ -623,7 +623,7 @@ class ClientState {
 
         //onsubmit abort immediate post and instead build CreateAction object
 
-        val r = entries.get(uniqueReservableKey)!!.reservable
+        val r = reservables.get(uniqueReservableKey)!!
 
         formDiv.appendChild(
 
@@ -708,17 +708,39 @@ class ClientState {
                         if (r.checkBoxes.isNotEmpty())
                             r.checkBoxes.map {
                                 div {
-                                    input(type = InputType.checkBox, name = "checkbox_${it.hashCode()}")
-                                    label { +it }
+                                    classes = setOf("checkbox")
+                                    label {
+                                        input(type = InputType.checkBox, name = "checkbox_${it.hashCode()}") {
+                                            id = "checkbox_${uniqueReservableKey.id}_${it.hashCode()}"
+                                            onChangeFunction = { checkCheckBoxes(uniqueReservableKey) }
+                                        }
+                                        +" $it"
+                                    }
                                 }
                             }
                     }
                     div {
-                        submitInput { }
+
+                        submitInput {
+                            classes = setOf("btn", "btn-info")
+                            id = "create_submit_btn_${uniqueReservableKey.id}"
+
+                        }
                     }
                 }
         )
+        checkCheckBoxes(uniqueReservableKey)
     }
+
+
+    fun checkCheckBoxes(uniqueReservableKey: UniqueReservableKey) {
+        val allChecked = reservables.get(uniqueReservableKey)!!.checkBoxes.all {
+            document.getElementById("checkbox_${uniqueReservableKey.id}_${it.hashCode()}")!!.asDynamic().checked == true
+        }
+        document.getElementById("create_submit_btn_${uniqueReservableKey.id}")!!.asDynamic().disabled = !allChecked
+    }
+
+
 
     fun formSubmit(uniqueReservableKey: UniqueReservableKey, formEvent: Event): Boolean {
         formEvent.preventDefault()

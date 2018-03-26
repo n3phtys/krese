@@ -12,7 +12,7 @@ import java.nio.file.Path
 import java.nio.file.Paths
 
 
-class FileSystemWrapperImpl(private val kodein: Kodein): FileSystemWrapper {
+class FileSystemWrapperImpl(private val kodein: Kodein) : FileSystemWrapper {
     private val appConfig: ApplicationConfiguration = kodein.instance()
 
 
@@ -25,7 +25,7 @@ class FileSystemWrapperImpl(private val kodein: Kodein): FileSystemWrapper {
 
 
     init {
-        this.getKeysFromDirectory().forEach{this.getReservableToKey(it.key)}
+        this.getKeysFromDirectory().forEach { this.getReservableToKey(it.key) }
 
 
         val importedData = migrationFileLoaded
@@ -41,7 +41,7 @@ class FileSystemWrapperImpl(private val kodein: Kodein): FileSystemWrapper {
                 }
             }
         }
-        }
+    }
 
 
     override fun getKeysFromDirectory(): Map<UniqueReservableKey, Path> {
@@ -69,17 +69,47 @@ class FileSystemWrapperImpl(private val kodein: Kodein): FileSystemWrapper {
     override fun getReservableToKey(key: UniqueReservableKey): Reservable? {
         val str = this.getKeysFromDirectory().get(key)?.toFile()?.readText()
         if (str != null) {
-            return JSON.parse<Reservable>(str)
+            val x = JSON.parse<Reservable>(str)
+            val prologue = loadPrologue(key)
+            val epilogue = loadEpilogue(key)
+            return x.copy(epilogue = if (epilogue != null) epilogue else "", prologue = if (prologue != null) prologue else "")
         } else {
             return null
         }
     }
 
 
+    private val jsonfilename = "krese.json"
+    private fun loadPrologue(key: UniqueReservableKey): String? {
+        val jsonPath: Path? = this.getKeysFromDirectory().get(key)
+        if (jsonPath != null) {
+            try {
+                return parseMarkdownToHtml(File((jsonPath.toString().substring(0, jsonPath.toString().length - jsonfilename.length) + "prologue.md")).readText())
+            } catch (e: Exception) {
+                return null
+            }
+        } else {
+            return null
+        }
+    }
+
+    private fun loadEpilogue(key: UniqueReservableKey): String? {
+        val jsonPath: Path? = this.getKeysFromDirectory().get(key)
+        if (jsonPath != null) {
+            try {
+                return parseMarkdownToHtml(File((jsonPath.toString().substring(0, jsonPath.toString().length - jsonfilename.length) + "epilogue.md")).readText())
+            } catch (e: Exception) {
+                return null
+            }
+        } else {
+            return null
+        }
+    }
+
 
     override fun getTemplatesFromDir(dir: String): Map<TemplateTypes, String> {
         return TemplateTypes.values().map {
-            val f = File(dir + "/" + it.fileName() )
+            val f = File(dir + "/" + it.fileName())
             if (f.canRead()) {
                 it to f.absolutePath
             } else {

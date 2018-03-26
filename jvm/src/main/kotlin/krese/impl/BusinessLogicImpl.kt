@@ -7,7 +7,7 @@ import krese.data.*
 import krese.utility.getId
 import org.joda.time.DateTime
 
-class BusinessLogicImpl(private val kodein: Kodein): BusinessLogic {
+class BusinessLogicImpl(private val kodein: Kodein) : BusinessLogic {
 
     private val authVerifier: AuthVerifier = kodein.instance()
     private val appConfig: ApplicationConfiguration = kodein.instance()
@@ -16,16 +16,11 @@ class BusinessLogicImpl(private val kodein: Kodein): BusinessLogic {
     private val fileSystemWrapper: FileSystemWrapper = kodein.instance()
     private val databaseEncapsulation: DatabaseEncapsulation = kodein.instance()
 
-    init {
-        //mailService.sendEmail(listOf(Email(appConfig.mailTestTarget)), "krese works body", "Krese was just started")
-    }
 
-
-    override fun retrieveReservations(urk: UniqueReservableKey, from : DateTime, to : DateTime, callerEmail: Email?): GetResponse? {
+    override fun retrieveReservations(urk: UniqueReservableKey, from: DateTime, to: DateTime, callerEmail: Email?): GetResponse? {
         val res = fileSystemWrapper.getReservableToKey(urk)
         if (res != null) {
             return GetResponse(
-                    res,
                     databaseEncapsulation.retrieveBookingsForKey(urk, from, to).map { it.toOutput(res.operatorEmails.contains(callerEmail?.address)) }
             )
         } else {
@@ -34,7 +29,7 @@ class BusinessLogicImpl(private val kodein: Kodein): BusinessLogic {
     }
 
     override fun retrieveKeys(callerEmail: Email?): GetTotalResponse {
-        return GetTotalResponse(fileSystemWrapper.getKeysFromDirectory().keys.toList())
+        return GetTotalResponse(fileSystemWrapper.getKeysFromDirectory().keys.map { fileSystemWrapper.getReservableToKey(it) }.filter { it != null }.map { it!! })
     }
 
 
@@ -47,9 +42,8 @@ class BusinessLogicImpl(private val kodein: Kodein): BusinessLogic {
     }
 
 
-
-    fun getModerator(action: PostAction) : List<Email>? {
-        val key: UniqueReservableKey? = when(action) {
+    fun getModerator(action: PostAction): List<Email>? {
+        val key: UniqueReservableKey? = when (action) {
             is CreateAction -> action.key
             else -> databaseEncapsulation.get(action.getId())?.key
         }
@@ -66,8 +60,8 @@ class BusinessLogicImpl(private val kodein: Kodein): BusinessLogic {
 
     }
 
-    fun legalInGeneral(action : PostAction, verifiedSender: Email?): Email? {
-        val sender : Email = when(action) {
+    fun legalInGeneral(action: PostAction, verifiedSender: Email?): Email? {
+        val sender: Email = when (action) {
             is CreateAction -> action.email
             else -> {
                 if (verifiedSender == null) {
@@ -77,7 +71,7 @@ class BusinessLogicImpl(private val kodein: Kodein): BusinessLogic {
                 }
             }
         }
-        when(action) {
+        when (action) {
             is CreateAction -> {
                 if (isPossible(action)) {
                     return sender
@@ -120,7 +114,7 @@ class BusinessLogicImpl(private val kodein: Kodein): BusinessLogic {
 
     private fun isPossible(action: CreateAction): Boolean {
         val res = fileSystemWrapper.getReservableToKey(action.key)
-         //end date at least 1s after start date
+        //end date at least 1s after start date
         return action.endTime > action.startTime + 1000L &&
                 //key exists
                 res != null &&
@@ -132,7 +126,7 @@ class BusinessLogicImpl(private val kodein: Kodein): BusinessLogic {
                 action.name.isNotBlank() && action.email.address.isNotBlank() && isValidEmail(action.email.address)
     }
 
-    fun requiresEmailVerification(action: PostAction, verification: Email?, verificationValid: Boolean) : Boolean {
+    fun requiresEmailVerification(action: PostAction, verification: Email?, verificationValid: Boolean): Boolean {
         //("check if immediate")
         return !verificationValid
     }
@@ -142,8 +136,8 @@ class BusinessLogicImpl(private val kodein: Kodein): BusinessLogic {
         mailService.sendEmail(listOf(sender), mail.body, mail.subject)
     }
 
-    fun isLegalWithGivenVerification(action: PostAction, verification: Email) : Boolean {
-        return when(action) {
+    fun isLegalWithGivenVerification(action: PostAction, verification: Email): Boolean {
+        return when (action) {
             is CreateAction -> action.email.address.equals(verification.address)
             is DeclineAction -> databaseEncapsulation.get(action.id)?.key?.let { fileSystemWrapper.getReservableToKey(it)?.operatorEmails?.contains(verification.address) } == true
             is WithdrawAction -> databaseEncapsulation.get(action.id)?.email?.address?.equals(verification.address) == true
@@ -161,7 +155,7 @@ class BusinessLogicImpl(private val kodein: Kodein): BusinessLogic {
     }
 
     fun executeAction(action: PostAction) {
-        when(action) {
+        when (action) {
             is CreateAction -> {
                 databaseEncapsulation.createUpdateBooking(null, DbBookingInputData(
                         action.key, action.email, action.name, action.telephone, action.commentUser, "", DateTime(action.startTime), DateTime(action.endTime), DateTime.now(), false, action.blocks
@@ -174,8 +168,8 @@ class BusinessLogicImpl(private val kodein: Kodein): BusinessLogic {
         //("actually write data to database")
     }
 
-    fun notifyCreator(action: PostAction, creators : List<Email>) {
-        mailService.sendEmail(creators, when(action) {
+    fun notifyCreator(action: PostAction, creators: List<Email>) {
+        mailService.sendEmail(creators, when (action) {
 
             is CreateAction -> mailTemplater.emailNotifyCreationToCreator(action)
             is DeclineAction -> mailTemplater.emailNotifiyDeclineToCreator(action)
@@ -189,7 +183,7 @@ class BusinessLogicImpl(private val kodein: Kodein): BusinessLogic {
     }
 
     fun notifyModerator(action: PostAction, moderator: List<Email>) {
-        mailService.sendEmail(moderator, when(action) {
+        mailService.sendEmail(moderator, when (action) {
             is CreateAction -> mailTemplater.emailNotifyCreationToModerator(action)
             is DeclineAction -> mailTemplater.emailNotifiyDeclineToModerator(action)
             is WithdrawAction -> mailTemplater.emailNotifiyWithdrawToModerator(action)
@@ -208,18 +202,18 @@ class BusinessLogicImpl(private val kodein: Kodein): BusinessLogic {
     //: send notification emails to all participants
 
 
-    override fun process(action: PostAction, verification: Email?, verificationValid: Boolean) : PostResponse {
+    override fun process(action: PostAction, verification: Email?, verificationValid: Boolean): PostResponse {
         val actioneer: Email? = legalInGeneral(action, verification)
         if (actioneer != null && (verification == null || actioneer.equals(verification))) {
             if (requiresEmailVerification(action, verification, verificationValid)) {
                 sendEmailVerificationRequest(action, actioneer)
                 return PostResponse(true, false, "verification request send to user email address")
             } else {
-                if (isLegalWithGivenVerification(action, actioneer))  {
+                if (isLegalWithGivenVerification(action, actioneer)) {
                     val mods = getModerator(action)
                     assert(mods != null)
                     notifyModerator(action, mods!!)
-                    val creator = when(action) {
+                    val creator = when (action) {
                         is CreateAction -> action.email
                         else -> databaseEncapsulation.get(action.getId())?.email
                     }

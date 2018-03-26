@@ -1,0 +1,13 @@
+{
+  "uniqueId": "zsecondkey",
+  "prologue": "# Hello World from second!",
+  "epilogue": "\n* just another entry",
+  "elements": {
+    "id": 13,
+    "name": "myelement",
+    "subElements": []
+  },
+  "operatorEmails": [
+    "christopher.kaag@gmail.com"
+  ]
+}

@@ -40,7 +40,9 @@ enum class EnvKey {
 
     KRESE_MAILTEMPLATE_GLOBAL_DIRECTORY,
 
-    KRESE_LOCALIZATION_PROPERTIES_FILEPATH
+    KRESE_LOCALIZATION_PROPERTIES_FILEPATH,
+
+    KRESE_STATIC_WEB_RESOURCE_DIRECTORY
 }
 
 class ConfigurationImpl : DatabaseConfiguration, ApplicationConfiguration {
@@ -64,6 +66,7 @@ class ConfigurationImpl : DatabaseConfiguration, ApplicationConfiguration {
         EnvKey.KRESE_DATABASE_USERNAME -> "admin"
         EnvKey.KRESE_DATABASE_PASSWORD -> "secret"
         EnvKey.KRESE_RESERVABLES_DIRECTORY -> "./conf"
+        EnvKey.KRESE_STATIC_WEB_RESOURCE_DIRECTORY -> "./static"
         EnvKey.KRESE_APPLICATION_HOST -> "localhost"
         EnvKey.KRESE_APPLICATION_PORT -> "8080"
         EnvKey.KRESE_WEB_DIRECTORY -> "../web"
@@ -133,4 +136,6 @@ class ConfigurationImpl : DatabaseConfiguration, ApplicationConfiguration {
     override val filePathOfLocalization: String
         get() = getVal(EnvKey.KRESE_LOCALIZATION_PROPERTIES_FILEPATH)
 
+    override val staticDirectory: String
+        get() = getVal(EnvKey.KRESE_STATIC_WEB_RESOURCE_DIRECTORY)
 }

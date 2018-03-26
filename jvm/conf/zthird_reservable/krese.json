@@ -1,8 +1,7 @@
 {
-  "uniqueId" : "secondkey",
-  "prologue" : "# Hello World from second!",
+  "uniqueId": "zthird_of_all_keys",
+  "prologue" : "# Hello World from third!",
   "epilogue" : "\n* just another entry",
-  "staticFiles" : [],
   "elements" : {
     "id" : 13,
     "name" : "myelement",

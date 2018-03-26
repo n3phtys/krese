@@ -19,11 +19,13 @@ class MailerMock(val sentMails: MutableList<List<String>> = mutableListOf()) : M
     override fun sendEmail(receivers: List<Email>, bodyHTML: String, subject: String) {
         assert(receivers.size >= 1)
         println("MOCK-SENDING MAIL WITH SUBJECT = $subject")
-        sentMails.add(listOf(subject) + receivers.map {it.address} + bodyHTML)
+        sentMails.add(listOf(subject) + receivers.map { it.address } + bodyHTML)
     }
 }
 
 class ConfigMock(val uniqueNumber: Int) : DatabaseConfiguration, ApplicationConfiguration {
+    override val staticDirectory: String
+        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
     override val filePathOfLocalization: String
         get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
     override val loadMigrationData: Boolean
@@ -99,9 +101,9 @@ class FileSytemMock() : FileSystemWrapper {
 
     override fun getTemplatesFromDir(dir: String): Map<TemplateTypes, String> = FileSystemWrapperImpl(kodein).getTemplatesFromDir(dir)
 
-    override fun parseTemplate(path: String): MailTemplate?  = FileSystemWrapperImpl(kodein).parseTemplate(path)
+    override fun parseTemplate(path: String): MailTemplate? = FileSystemWrapperImpl(kodein).parseTemplate(path)
 
-    override fun readResourceOrFail(filePath: String): String  = FileSystemWrapperImpl(kodein).readResourceOrFail(filePath)
+    override fun readResourceOrFail(filePath: String): String = FileSystemWrapperImpl(kodein).readResourceOrFail(filePath)
 
     override fun specificMailDir(key: UniqueReservableKey): String? = FileSystemWrapperImpl(kodein).specificMailDir(key)
 
