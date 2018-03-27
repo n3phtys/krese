@@ -2,27 +2,22 @@ package krese.impl
 
 import com.github.salomonbrys.kodein.Kodein
 import com.github.salomonbrys.kodein.instance
-import kotlinx.serialization.json.JSON
-import krese.ApplicationConfiguration
-import krese.JWTReceiver
-import krese.MailService
-import krese.MailTemplater
+import krese.*
 import krese.data.*
 import org.jetbrains.exposed.sql.exposedLogger
 import java.util.*
-import javax.activation.MimeType
 import javax.mail.*
 import javax.mail.internet.InternetAddress
 import javax.mail.internet.MimeMessage
-import javax.mail.internet.MimeMultipart
 
 class MailServiceImpl(private val kodein: Kodein) : MailService, MailTemplater {
     private val appConfig: ApplicationConfiguration = kodein.instance()
-    private val jwtEndpoint: JWTReceiver = kodein.instance()
+    private val jwtEndpoint: AuthVerifier = kodein.instance()
+    private val fileSystemWrapper: FileSystemWrapper = kodein.instance()
 
     override fun sendEmail(receivers: List<Email>, bodyHTML: String, subject: String) {
         //TODO: use own logger
-        exposedLogger.debug("Sending email to [${(receivers.map{it.address}.joinToString(","))}] with subject=$subject and body: $bodyHTML")
+        exposedLogger.debug("Sending email to [${(receivers.map { it.address }.joinToString(","))}] with subject=$subject and body: $bodyHTML")
 
         val from = appConfig.mailFrom
         val properties: Properties = Properties().let {
@@ -64,74 +59,17 @@ class MailServiceImpl(private val kodein: Kodein) : MailService, MailTemplater {
 
     }
 
-
-    override fun emailVerificationRequest(sender: Email, action: PostAction): ProcessedMailTemplate {
-        //TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-        return ProcessedMailTemplate(body = "body of confirmation",  subject = "Confirmation of Request required")
+    override fun construct(template: TemplateTypes, key: UniqueReservableKey, action: PostAction?, requiresVerification: Boolean, reservable: Reservable?, reservation: Reservation?, receiver: Email): ProcessedMailTemplate {
+        val x = template.getMostSpecificTemplate(key, fileSystemWrapper, this.appConfig, fileSystemWrapper)
+        return ProcessedMailTemplate(x.subject.replaceVariables(action, requiresVerification, reservable, reservation, receiver), x.body.replaceVariables(action, requiresVerification, reservable, reservation, receiver))
     }
 
-
-    override fun emailNotifyCreationToCreator(action: PostAction): ProcessedMailTemplate {
-        //TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-        return ProcessedMailTemplate(body = "body of success to creator", subject =  "Successfully created reservation")
-    }
-
-    override fun emailNotifyCreationToModerator(action: PostAction): ProcessedMailTemplate {
-        //TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-        return ProcessedMailTemplate(body = "body of success to moderator", subject =  "New Reservation created")
-    }
+    private fun String.replaceVariable(variable: TemplateContants, action: PostAction?, requiresVerification: Boolean, reservable: Reservable?, reservation: Reservation?, receiver: Email): String = if (this.contains(variable.name)) this.replace(variable.name, getVariableValue(variable, action, requiresVerification, reservable, reservation, receiver).or()) else this
 
 
-    override fun emailNotifyAcceptanceToModerator(action: AcceptAction): ProcessedMailTemplate {
-        //TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-        return ProcessedMailTemplate(body = "body of success to moderator",  subject = "Reservation was acccepted")
-    }
-
-    override fun emailNotifyAcceptanceToCreator(action: AcceptAction): ProcessedMailTemplate {
-        //TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-        return ProcessedMailTemplate(body = "body of success to creator",  subject = "Reservation was acccepted")
-    }
-
-
-
-    override fun emailNotifiyDeclineToModerator(action: DeclineAction): ProcessedMailTemplate {
-        //TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-        return ProcessedMailTemplate(body = "body of success to moderator",  subject = "Reservation was declined")
-    }
-
-    override fun emailNotifiyDeclineToCreator(action: DeclineAction): ProcessedMailTemplate {
-        //TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-        return ProcessedMailTemplate(body = "body of success to creator",  subject = "Reservation was declined")
-    }
-
-    override fun emailNotifiyWithdrawToModerator(action: WithdrawAction): ProcessedMailTemplate {
-        //TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-        return ProcessedMailTemplate(body = "body of success to moderator", subject =  "Reservation was withdrawn")
-    }
-
-    override fun emailNotifyWithdrawToCreator(action: WithdrawAction): ProcessedMailTemplate {
-        //TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-        return ProcessedMailTemplate(body = "body of success to creator", subject =  "Reservation was withdrawn")
-    }
-
-
-
-
-    override fun loadTemplate(type: TemplateTypes): MailTemplate {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    override fun processTemplate(template: MailTemplate): ProcessedMailTemplate {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-
-    private fun String.replaceVariable(variable: TemplateContants, action: PostAction?, requiresVerification: Boolean, reservable: Reservable?, reservation: Reservation?, receiver: Email) : String = if (this.contains(variable.name)) this.replace(variable.name, getVariableValue(variable, action, requiresVerification, reservable, reservation, receiver).or()) else this
-
-
-    private fun getVariableValue(variable: TemplateContants, action: PostAction?, requiresVerification: Boolean, reservable: Reservable?, reservation: Reservation?, receiver: Email): String? = when(variable) {
-        TemplateContants.POSITIVE_ACTION_LINK -> when(action) {
-            is AcceptAction -> if (requiresVerification) jwtEndpoint.buildLink(action, receiver, reservation, reservable) else  {
+    private fun getVariableValue(variable: TemplateContants, action: PostAction?, requiresVerification: Boolean, reservable: Reservable?, reservation: Reservation?, receiver: Email): String? = when (variable) {
+        TemplateContants.POSITIVE_ACTION_LINK -> when (action) {
+            is AcceptAction -> if (requiresVerification) jwtEndpoint.buildLink(action, receiver, reservation, reservable) else {
                 if (reservation?.email?.address.equals(receiver.address) == true) {
                     //to creator
                     reservation?.id?.let { WithdrawAction(it, "") }?.let { jwtEndpoint.buildLink(it, receiver, reservation, reservable) }
@@ -153,11 +91,34 @@ class MailServiceImpl(private val kodein: Kodein) : MailService, MailTemplater {
             is WithdrawAction -> if (requiresVerification) jwtEndpoint.buildLink(action, receiver, reservation, reservable) else null //if false, no link needed
             else -> null //no link needed
         }
-        TemplateContants.NEGATIVE_ACTION_LINK -> TODO()
+        TemplateContants.NEGATIVE_ACTION_LINK -> when (action) {
+            is AcceptAction -> null
+            is CreateAction -> if (requiresVerification) null else {
+                if (reservation?.email?.address.equals(receiver.address) == true) {
+                    null
+                } else {
+                    //to moderator
+                    reservation?.id?.let { DeclineAction(it, "") }?.let { jwtEndpoint.buildLink(it, receiver, reservation, reservable) }
+                }
+            }
+            is DeclineAction -> null
+            is WithdrawAction -> null
+            else -> null
+        }
         TemplateContants.NAME_OF_CREATOR -> reservation?.name.or()
         TemplateContants.EMAIL_OF_CREATOR -> reservation?.email?.address.or()
         TemplateContants.TELEPHONE_OF_CREATOR -> reservation?.telephone.or()
         TemplateContants.TITLE_OF_RESERVABLE -> reservable?.title.or()
+        TemplateContants.MODERATOR_MARKDOWN_LINKS -> TODO()
+        TemplateContants.LOGIN_LINK -> TODO()
+        TemplateContants.LIST_OF_RESERVED_ELEMENTS -> TODO()
+        TemplateContants.RESERVATION_COMMENT -> TODO()
+        TemplateContants.RESERVATION_FROM_STRING -> TODO()
+        TemplateContants.RESERVATION_TO_STRING -> TODO()
+        TemplateContants.LINK_DURATION -> TODO()
+        TemplateContants.FULL_HOST_ROOT -> TODO()
+        TemplateContants.CREATION_DATE -> TODO()
+        TemplateContants.RESERVATION_DATE -> TODO()
     }
 
 

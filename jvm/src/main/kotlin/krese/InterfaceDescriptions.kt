@@ -16,11 +16,11 @@ interface DatabaseEncapsulation {
 
     fun createUpdateBooking(id: Long?, data: DbBookingInputData): DbBookingOutputData?
 
-    fun deleteBooking(id: Long) : Boolean
+    fun deleteBooking(id: Long): DbBookingOutputData?
 
     fun get(id: Long?) : DbBookingOutputData?
 
-    fun acceptBooking(id: Long) : Boolean
+    fun acceptBooking(id: Long): DbBookingOutputData?
 
     fun retrieveBookingsForKey(key: UniqueReservableKey, includeMinTimestamp: DateTime = DateTime().withMillis(Long.MIN_VALUE), excludeMaxTimestamp: DateTime = DateTime().withMillis(Long.MAX_VALUE)) : List<DbBookingOutputData>
 
@@ -33,8 +33,6 @@ interface JWTReceiver {
     fun loginStillValid(jwt: String) : Boolean
 
     fun relogin(email: String)
-
-    fun buildLink(action: PostAction, receiver: Email, reservation: Reservation?, reservable: Reservable?) : String
 }
 
 interface AuthVerifier {
@@ -43,6 +41,8 @@ interface AuthVerifier {
     fun encodeJWT(content: JWTPayload): String?
     fun encodeBase64(plaintext: String): String
     fun decodeBase64(base64: String): String
+
+    fun buildLink(action: PostAction, receiver: Email, reservation: Reservation?, reservable: Reservable?): String
 }
 
 interface GetReceiver {
@@ -103,24 +103,12 @@ interface ApplicationConfiguration : MailFileConfigGlobal {
 
 interface MailService {
     fun sendEmail(receivers: List<Email>, bodyHTML: String, subject: String)
-    fun sendEmail(receivers: List<Email>, content: ProcessedMailTemplate) = this.sendEmail(receivers, content.body, content.subject)
+    fun sendEmail(receiver: Email, content: ProcessedMailTemplate) = this.sendEmail(kotlin.collections.listOf(receiver), content.body, content.subject)
 }
 
 
 interface MailTemplater {
-    fun emailVerificationRequest(sender: Email, action: PostAction): ProcessedMailTemplate
-    fun emailNotifyCreationToCreator(action: PostAction): ProcessedMailTemplate
-    fun emailNotifyCreationToModerator(action: PostAction): ProcessedMailTemplate
-    fun emailNotifyAcceptanceToModerator(action: AcceptAction): ProcessedMailTemplate
-    fun emailNotifyAcceptanceToCreator(action: AcceptAction): ProcessedMailTemplate
-    fun emailNotifiyDeclineToModerator(action: DeclineAction): ProcessedMailTemplate
-    fun emailNotifiyDeclineToCreator(action: DeclineAction): ProcessedMailTemplate
-    fun emailNotifiyWithdrawToModerator(action: WithdrawAction): ProcessedMailTemplate
-    fun emailNotifyWithdrawToCreator(action: WithdrawAction): ProcessedMailTemplate
-
-
-    fun loadTemplate(type: TemplateTypes) : MailTemplate
-    fun processTemplate(template: MailTemplate) : ProcessedMailTemplate
+    fun construct(template: TemplateTypes, key: UniqueReservableKey, action: PostAction?, requiresVerification: Boolean, reservable: Reservable?, reservation: Reservation?, receiver: Email): ProcessedMailTemplate
 }
 
 interface BusinessLogic {

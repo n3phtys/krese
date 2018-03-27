@@ -131,9 +131,9 @@ class BusinessLogicImpl(private val kodein: Kodein) : BusinessLogic {
         return !verificationValid
     }
 
-    fun sendEmailVerificationRequest(action: PostAction, sender: Email) {
-        val mail: ProcessedMailTemplate = mailTemplater.emailVerificationRequest(sender, action)
-        mailService.sendEmail(listOf(sender), mail.body, mail.subject)
+    fun sendEmailVerificationRequest(action: PostAction, key: UniqueReservableKey, reservable: Reservable?, reservation: Reservation?, receiver: Email) {
+        val mail: ProcessedMailTemplate = mailTemplater.construct(action.toVerifyTemplate(), key, action, true, reservable, reservation, receiver)
+        mailService.sendEmail(listOf(receiver), mail.body, mail.subject)
     }
 
     fun isLegalWithGivenVerification(action: PostAction, verification: Email): Boolean {
@@ -154,27 +154,32 @@ class BusinessLogicImpl(private val kodein: Kodein) : BusinessLogic {
         }
     }
 
-    fun executeAction(action: PostAction) {
-        when (action) {
+    fun executeAction(action: PostAction): DbBookingOutputData? {
+        return when (action) {
             is CreateAction -> {
                 databaseEncapsulation.createUpdateBooking(null, DbBookingInputData(
                         action.key, action.email, action.name, action.telephone, action.commentUser, "", DateTime(action.startTime), DateTime(action.endTime), DateTime.now(), false, action.blocks
                 ))
             }
-            is DeclineAction -> databaseEncapsulation.deleteBooking(action.id)
+            is DeclineAction -> {
+                databaseEncapsulation.deleteBooking(action.id)
+            }
             is WithdrawAction -> databaseEncapsulation.deleteBooking(action.id)
             is AcceptAction -> databaseEncapsulation.acceptBooking(action.id)
+            else -> {
+                throw IllegalArgumentException()
+            }
         }
         //("actually write data to database")
     }
 
-    fun notifyCreator(action: PostAction, creators: List<Email>) {
-        mailService.sendEmail(creators, when (action) {
+    fun notifyCreator(action: PostAction, creator: Email, key: UniqueReservableKey, reservable: Reservable?, reservation: Reservation?) {
+        mailService.sendEmail(creator, when (action) {
 
-            is CreateAction -> mailTemplater.emailNotifyCreationToCreator(action)
-            is DeclineAction -> mailTemplater.emailNotifiyDeclineToCreator(action)
-            is WithdrawAction -> mailTemplater.emailNotifyWithdrawToCreator(action)
-            is AcceptAction -> mailTemplater.emailNotifyAcceptanceToCreator(action)
+            is CreateAction -> mailTemplater.construct(TemplateTypes.CreatedToCreator, key, action, false, reservable, reservation, creator)
+            is DeclineAction -> mailTemplater.construct(TemplateTypes.DeclinedToCreator, key, action, false, reservable, reservation, creator)
+            is WithdrawAction -> mailTemplater.construct(TemplateTypes.WithdrawnToCreator, key, action, false, reservable, reservation, creator)
+            is AcceptAction -> mailTemplater.construct(TemplateTypes.AcceptedToCreator, key, action, false, reservable, reservation, creator)
             else -> {
                 throw IllegalArgumentException()
             }
@@ -182,12 +187,12 @@ class BusinessLogicImpl(private val kodein: Kodein) : BusinessLogic {
 
     }
 
-    fun notifyModerator(action: PostAction, moderator: List<Email>) {
+    fun notifyModerator(action: PostAction, moderator: Email, key: UniqueReservableKey, reservable: Reservable?, reservation: Reservation?) {
         mailService.sendEmail(moderator, when (action) {
-            is CreateAction -> mailTemplater.emailNotifyCreationToModerator(action)
-            is DeclineAction -> mailTemplater.emailNotifiyDeclineToModerator(action)
-            is WithdrawAction -> mailTemplater.emailNotifiyWithdrawToModerator(action)
-            is AcceptAction -> mailTemplater.emailNotifyAcceptanceToModerator(action)
+            is CreateAction -> mailTemplater.construct(TemplateTypes.CreatedToModerator, key, action, false, reservable, reservation, moderator)
+            is DeclineAction -> mailTemplater.construct(TemplateTypes.DeclinedToModerator, key, action, false, reservable, reservation, moderator)
+            is WithdrawAction -> mailTemplater.construct(TemplateTypes.WithdrawnToModerator, key, action, false, reservable, reservation, moderator)
+            is AcceptAction -> mailTemplater.construct(TemplateTypes.AcceptedToCreator, key, action, false, reservable, reservation, moderator)
             else -> {
                 throw IllegalArgumentException()
             }
@@ -201,29 +206,76 @@ class BusinessLogicImpl(private val kodein: Kodein) : BusinessLogic {
     //: check if legal for given verification
     //: send notification emails to all participants
 
+    private fun getKey(action: PostAction): UniqueReservableKey? = when (action) {
+        is CreateAction -> action.key
+        is DeclineAction -> databaseEncapsulation.get(action.id)?.key
+        is WithdrawAction -> databaseEncapsulation.get(action.id)?.key
+        is AcceptAction -> databaseEncapsulation.get(action.id)?.key
+        else -> {
+            throw IllegalArgumentException()
+        }
+    }
+
+    private fun getReservable(action: PostAction): Reservable? = getKey(action)?.let { fileSystemWrapper.getReservableToKey(it) }
+
+    private fun getReservation(action: PostAction): Reservation? = when (action) {
+        is CreateAction -> null
+        is DeclineAction -> databaseEncapsulation.get(action.id)?.toOutput(true)
+        is WithdrawAction -> databaseEncapsulation.get(action.id)?.toOutput(true)
+        is AcceptAction -> databaseEncapsulation.get(action.id)?.toOutput(true)
+        else -> {
+            throw IllegalArgumentException()
+        }
+    }
 
     override fun process(action: PostAction, verification: Email?, verificationValid: Boolean): PostResponse {
         val actioneer: Email? = legalInGeneral(action, verification)
         if (actioneer != null && (verification == null || actioneer.equals(verification))) {
-            if (requiresEmailVerification(action, verification, verificationValid)) {
-                sendEmailVerificationRequest(action, actioneer)
-                return PostResponse(true, false, "verification request send to user email address")
-            } else {
-                if (isLegalWithGivenVerification(action, actioneer)) {
-                    val mods = getModerator(action)
-                    assert(mods != null)
-                    notifyModerator(action, mods!!)
-                    val creator = when (action) {
-                        is CreateAction -> action.email
-                        else -> databaseEncapsulation.get(action.getId())?.email
-                    }
-                    assert(creator != null)
-                    notifyCreator(action, listOf(creator!!))
-                    executeAction(action)
-                    return PostResponse(true, true, "post request processed successfully")
+            val key = getKey(action)
+            if (key != null) {
+                val reservable = getReservable(action)
+                var reservation = getReservation(action)
+                if (requiresEmailVerification(action, verification, verificationValid)) {
+                    sendEmailVerificationRequest(action, key, reservable, reservation, actioneer)
+                    return PostResponse(true, false, "verification request send to user email address")
                 } else {
-                    return PostResponse(false, false, "user is not authorized")
+                    if (isLegalWithGivenVerification(action, actioneer)) {
+                        val mods = getModerator(action)
+                        assert(mods != null)
+
+                        val creator = when (action) {
+                            is CreateAction -> action.email
+                            else -> databaseEncapsulation.get(action.getId())?.email
+                        }
+                        assert(creator != null)
+
+                        when (action) {
+                            is CreateAction -> {
+                                val x = executeAction(action)
+                                if (x != null) {
+                                    reservation = x.toOutput(true)
+                                }
+                            }
+                            else -> {
+                            }
+                        }
+                        mods!!.forEach { notifyModerator(action, it, key, reservable, reservation) }
+                        notifyCreator(action, creator!!, key, reservable, reservation)
+                        when (action) {
+                            is CreateAction -> {
+                            }
+                            else -> {
+                                executeAction(action)
+                            }
+                        }
+
+                        return PostResponse(true, true, "post request processed successfully")
+                    } else {
+                        return PostResponse(false, false, "user is not authorized")
+                    }
                 }
+            } else {
+                return PostResponse(false, false, "UniqueReservableKey not recognized")
             }
         } else {
             return PostResponse(false, false, "invalid post request")

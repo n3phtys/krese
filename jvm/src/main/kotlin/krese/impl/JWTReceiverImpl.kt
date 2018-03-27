@@ -50,4 +50,6 @@ class JWTReceiverImpl(private val kodein: Kodein): JWTReceiver {
     }
 
     //TODO replace with a public / private key infrastructure, by creating a private key in clientside localstorage
+
+
 }

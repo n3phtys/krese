@@ -54,7 +54,6 @@ class ClientState {
     val SELECTED_KEY_URL_KEY = "selected_key"
 
 
-
     init {
         if (localStorage.get(LOCALSTORAGE_KRESE_MY_EMAIL) == null && jwt != null) {
             localStorage.set(LOCALSTORAGE_KRESE_MY_EMAIL, decodeJWT(jwt!!).email)
@@ -553,10 +552,18 @@ class ClientState {
 
     fun setReservationCalendar(calDiv: Element, uniqueReservableKey: UniqueReservableKey) {
         val config = reservations.get(uniqueReservableKey)!!.toCalendarConfig()
+        @Suppress("UNUSED_VARIABLE")
         val configJson = JSON.stringify(config)
         calDiv.innerHTML = ""
-        val id = "#" + calDiv.id
-        jq(id).asDynamic().fullCalendar(js("JSON.parse(configJson)"))
+
+        val calid = "#child_" + calDiv.id
+        calDiv.append {
+            div {
+                id = calid.drop(1)
+            }
+        }
+
+        jq(calid).asDynamic().fullCalendar(js("JSON.parse(configJson)"))
     }
 
     fun DIV.toFormularInputDiv(element: ReservableElement, key: UniqueReservableKey, prefix: String): Unit {
@@ -739,7 +746,6 @@ class ClientState {
         }
         document.getElementById("create_submit_btn_${uniqueReservableKey.id}")!!.asDynamic().disabled = !allChecked
     }
-
 
 
     fun formSubmit(uniqueReservableKey: UniqueReservableKey, formEvent: Event): Boolean {

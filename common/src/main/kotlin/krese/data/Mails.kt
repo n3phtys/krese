@@ -1,7 +1,6 @@
 package krese.data
 
 
-
 //first line of file is
 //#<Subject>
 
@@ -53,42 +52,40 @@ enum class TemplateTypes {
     LoginVerification;
 
 
-    fun fileName() : String = "${this.name}.md"
+    fun fileName(): String = "${this.name}.md"
 
-fun getResourceTemplate(reader: MailFileReader) : MailTemplate {
+    fun getResourceTemplate(reader: MailFileReader): MailTemplate {
         val folder = "compiledmailtemplates"
         val resourcePath = "/$folder/${this.fileName()}"
-    val filecontent = reader.readResourceOrFail(resourcePath)
-    return filecontent.buildMailTemplate()
-}
-
-fun getGlobalTemplate(reader: MailFileReader, config: MailFileConfigGlobal) : MailTemplate? {
-    val p = config.globalMailDir()
-    if (p != null) {
-        val s = reader.getTemplatesFromDir(p).get(this)
-        if (s != null) {
-            return reader.parseTemplate(s)
-        }
+        val filecontent = reader.readResourceOrFail(resourcePath)
+        return filecontent.buildMailTemplate()
     }
-    return null
-}
 
-
-
-
-fun getKeySpecificTemplate(key: UniqueReservableKey, reader: MailFileReader, config: MailFileConfigSpecific) : MailTemplate? {
-    val p = config.specificMailDir(key)
-    if (p != null) {
-        val s = reader.getTemplatesFromDir(p).get(this)
-        if (s != null) {
-            return reader.parseTemplate(s)
+    fun getGlobalTemplate(reader: MailFileReader, config: MailFileConfigGlobal): MailTemplate? {
+        val p = config.globalMailDir()
+        if (p != null) {
+            val s = reader.getTemplatesFromDir(p).get(this)
+            if (s != null) {
+                return reader.parseTemplate(s)
+            }
         }
+        return null
     }
-    return null
-}
 
 
-    fun getMostSpecificTemplate(key: UniqueReservableKey, reader: MailFileReader, configGlobal: MailFileConfigGlobal, configSpecial: MailFileConfigSpecific) : MailTemplate? {
+    fun getKeySpecificTemplate(key: UniqueReservableKey, reader: MailFileReader, config: MailFileConfigSpecific): MailTemplate? {
+        val p = config.specificMailDir(key)
+        if (p != null) {
+            val s = reader.getTemplatesFromDir(p).get(this)
+            if (s != null) {
+                return reader.parseTemplate(s)
+            }
+        }
+        return null
+    }
+
+
+    fun getMostSpecificTemplate(key: UniqueReservableKey, reader: MailFileReader, configGlobal: MailFileConfigGlobal, configSpecial: MailFileConfigSpecific): MailTemplate {
         val a = this.getKeySpecificTemplate(key, reader, configSpecial)
         if (a != null) {
             return a
@@ -105,6 +102,16 @@ fun getKeySpecificTemplate(key: UniqueReservableKey, reader: MailFileReader, con
 
 }
 
+fun PostAction.toVerifyTemplate(): TemplateTypes {
+    return when (this) {
+        is CreateAction -> TemplateTypes.CreateRequestVerificationToCreator
+        is DeclineAction -> TemplateTypes.DeclineRequestVerificationToModerator
+        is AcceptAction -> TemplateTypes.AcceptRequestVerificationToModerator
+        is WithdrawAction -> TemplateTypes.WithdrawRequestVerificationToCreator
+        else -> throw IllegalArgumentException()
+    }
+}
+
 
 fun String.buildMailTemplate(): MailTemplate {
     val filecontent = this.lines()
@@ -114,9 +121,9 @@ fun String.buildMailTemplate(): MailTemplate {
 }
 
 interface MailFileReader {
-    fun getTemplatesFromDir(dir : String) : Map<TemplateTypes, String>
-    fun parseTemplate(path: String) : MailTemplate?
-    fun readResourceOrFail(filePath: String) : String
+    fun getTemplatesFromDir(dir: String): Map<TemplateTypes, String>
+    fun parseTemplate(path: String): MailTemplate?
+    fun readResourceOrFail(filePath: String): String
 }
 
 interface MailFileConfigGlobal {

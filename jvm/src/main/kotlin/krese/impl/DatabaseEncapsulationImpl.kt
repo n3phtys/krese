@@ -2,9 +2,7 @@ package krese.impl
 
 import com.github.salomonbrys.kodein.Kodein
 import com.github.salomonbrys.kodein.instance
-import kotlinx.serialization.KSerializer
 import kotlinx.serialization.internal.IntSerializer
-import kotlinx.serialization.internal.StringSerializer
 import kotlinx.serialization.json.JSON
 import kotlinx.serialization.list
 import krese.DatabaseConfiguration
@@ -12,14 +10,17 @@ import krese.DatabaseEncapsulation
 import krese.HTMLSanitizer
 import krese.data.*
 import krese.migration.migrationFileLoaded
-import krese.migration.migrationFileLocation
-import org.jetbrains.exposed.dao.*
+import org.jetbrains.exposed.dao.EntityID
+import org.jetbrains.exposed.dao.LongEntity
+import org.jetbrains.exposed.dao.LongEntityClass
+import org.jetbrains.exposed.dao.LongIdTable
 import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.transactions.transaction
-import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SchemaUtils.create
+import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.deleteWhere
+import org.jetbrains.exposed.sql.or
+import org.jetbrains.exposed.sql.transactions.transaction
 import org.joda.time.DateTime
-import javax.swing.text.html.HTML
 
 
 class DatabaseEncapsulationImpl(private val kodein: Kodein) : DatabaseEncapsulation {
@@ -134,7 +135,8 @@ class DatabaseEncapsulationImpl(private val kodein: Kodein) : DatabaseEncapsulat
         }
     }
 
-    override fun deleteBooking(id: Long) : Boolean {
+    override fun deleteBooking(id: Long): DbBookingOutputData? {
+        val x = this.get(id)
         Database.connect(databaseConfig.databaseJDBC, driver = databaseConfig.databaseDriver)
         var exists : Boolean = false
         transaction {
@@ -143,10 +145,11 @@ class DatabaseEncapsulationImpl(private val kodein: Kodein) : DatabaseEncapsulat
             DbBookings.deleteWhere { DbBookings.id eq id}
 
         }
-        return exists
+        return if (exists) x else null
     }
 
-    override fun acceptBooking(id: Long) : Boolean {
+    override fun acceptBooking(id: Long): DbBookingOutputData? {
+        val x = this.get(id)
         Database.connect(databaseConfig.databaseJDBC, driver = databaseConfig.databaseDriver)
         var found : Boolean = false
         transaction {
@@ -156,7 +159,7 @@ class DatabaseEncapsulationImpl(private val kodein: Kodein) : DatabaseEncapsulat
                 found = true
             }
         }
-        return found
+        return if (found) x else null
     }
 
     override fun retrieveBookingsForKey(key: UniqueReservableKey, includeMinTimestamp: DateTime, excludeMaxTimestamp: DateTime) : List<DbBookingOutputData> {

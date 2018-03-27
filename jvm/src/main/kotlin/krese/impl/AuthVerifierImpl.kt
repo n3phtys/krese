@@ -6,11 +6,9 @@ import com.auth0.jwt.exceptions.JWTCreationException
 import com.auth0.jwt.exceptions.JWTVerificationException
 import com.github.salomonbrys.kodein.Kodein
 import com.github.salomonbrys.kodein.instance
-import krese.*
-import krese.data.Email
-import krese.data.JWTPayload
-import krese.data.LinkActions
-import krese.data.UserProfile
+import krese.ApplicationConfiguration
+import krese.AuthVerifier
+import krese.data.*
 import java.io.UnsupportedEncodingException
 import java.util.*
 
@@ -84,5 +82,10 @@ class AuthVerifierImpl(private val kodein: Kodein) : AuthVerifier {
         } catch (e: JWTVerificationException) {
             return null
         }
+    }
+
+
+    override fun buildLink(action: PostAction, receiver: Email, reservation: Reservation?, reservable: Reservable?): String {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 }
