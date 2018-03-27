@@ -5,6 +5,8 @@ import com.github.salomonbrys.kodein.instance
 import krese.*
 import krese.data.*
 import org.jetbrains.exposed.sql.exposedLogger
+import org.joda.time.DateTime
+import org.joda.time.format.ISODateTimeFormat
 import java.util.*
 import javax.mail.*
 import javax.mail.internet.InternetAddress
@@ -118,7 +120,8 @@ class MailServiceImpl(private val kodein: Kodein) : MailService, MailTemplater {
         TemplateContants.LINK_DURATION -> TODO()
         TemplateContants.FULL_HOST_ROOT -> TODO()
         TemplateContants.CREATION_DATE -> TODO()
-        TemplateContants.RESERVATION_DATE -> TODO()
+        TemplateContants.RESERVATION_DATE -> DateTime(reservation?.startTime).toString(ISODateTimeFormat.date())
+
     }
 
 

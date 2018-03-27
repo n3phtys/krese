@@ -128,7 +128,7 @@ class FileSystemWrapperImpl(private val kodein: Kodein) : FileSystemWrapper {
     }
 
     override fun specificMailDir(key: UniqueReservableKey): String? {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        return this.getKeysFromDirectory().get(key)?.toFile()?.parent
     }
 
 }
