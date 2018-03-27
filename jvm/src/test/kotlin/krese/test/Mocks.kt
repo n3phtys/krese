@@ -49,13 +49,13 @@ class ConfigMock(val uniqueNumber: Int) : DatabaseConfiguration, ApplicationConf
     override val webDirectory: String
         get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
     override val applicationHost: String
-        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
+        get() = "localhost"
     override val applicationProtocol: String
-        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
+        get() = "http"
     override val applicationPort: Int
-        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
+        get() = 8080
     override val hashSecret: String
-        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
+        get() = "secret"
     override val mailUsername: String
         get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
     override val mailPassword: String

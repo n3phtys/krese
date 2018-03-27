@@ -43,9 +43,9 @@ class JWTTest {
     fun authverifier_encodesAndDecodesJWTCorrectly() {
         val auth = AuthVerifierImpl(kodein)
         val userProfile = buildUserProfile(Email("my@email.com"), DateTime.now().minusSeconds(5), DateTime.now().plusSeconds(10))
-        val input1 = JWTPayload(createAction, listOf("param a", "Param b", "[54,24,643]"), userProfile)
-        val input2 = JWTPayload(null, listOf("Do not need"), userProfile)
-        val input3 = JWTPayload(null, listOf("Do not need"), userProfile.copy(validTo = userProfile.validTo - 11000))
+        val input1 = JWTPayload(createAction, listOf(), userProfile)
+        val input2 = JWTPayload(null, listOf(), userProfile)
+        val input3 = JWTPayload(null, listOf(), userProfile.copy(validTo = userProfile.validTo - 11000))
         val encoded1 = auth.encodeJWT(input1)
         val encoded2 = auth.encodeJWT(input2)
         val encoded3 = auth.encodeJWT(input3)

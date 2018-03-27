@@ -95,7 +95,21 @@ data class Booking(val timestamp_created: Long, val timestamp_edited: Long, val 
 
 @Serializable
 data class DbBlockData(val elementPath: List<Int>, val usedNumber: Int) {
+    fun namedBlock(reservable: Reservable?): String {
+        if (reservable != null) {
+            var current = reservable.elements
+            this.elementPath.drop(1).forEach { id ->
+                val ne = current.subElements.find { it.id == id }
+                if (ne != null) {
+                    current = ne
+                }
+            }
+            return "* ${current.name} (x${this.usedNumber})"
+        } else {
+            return ""
+        }
     }
+}
 
 @Serializable
 data class FullBooking(val booking: Booking, val fullUser: FullUser)
@@ -149,7 +163,16 @@ fun toJson(action: PostAction?): Pair<String, String> {
 private fun String?.or(s: String): String = if (this != null) this else s
 
 fun buildFromJson(tag: String?, json: String?): PostAction? {
-    TODO("not yet implemented")
+    if (json == null) {
+        return null
+    }
+    return when (tag) {
+        "CreateAction" -> JSON.parse<CreateAction>(json)
+        "AcceptAction" -> JSON.parse<AcceptAction>(json)
+        "DeclineAction" -> JSON.parse<DeclineAction>(json)
+        "WithdrawAction" -> JSON.parse<WithdrawAction>(json)
+        else -> null
+    }
 }
 
 

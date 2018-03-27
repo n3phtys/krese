@@ -130,8 +130,9 @@ class Server(private val kodein: Kodein) {
             post("/" + Routes.POST_RELOGIN.path) {
                 val params = call.receive<Parameters>()
                 val email = params.get("email")
+                val key = params.get("key")
                 if (email != null) {
-                    jwtReceiver.relogin(email)
+                    jwtReceiver.relogin(email, key?.let { it1 -> UniqueReservableKey(it1) })
                     call.respondText("true")
                 } else {
                     call.respond(HttpStatusCode.BadRequest, "could not read email param")

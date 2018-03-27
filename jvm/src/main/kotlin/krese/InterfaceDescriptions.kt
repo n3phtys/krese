@@ -8,8 +8,8 @@ import java.nio.file.Path
 
 
 interface FileSystemWrapper : MailFileReader, MailFileConfigSpecific {
-    fun getKeysFromDirectory() : Map<UniqueReservableKey, Path>
-    fun getReservableToKey(key: UniqueReservableKey) : Reservable?
+    fun getKeysFromDirectory(): Map<UniqueReservableKey, Path>
+    fun getReservableToKey(key: UniqueReservableKey): Reservable?
 } //TODO: also includes static files in subdirectory
 
 interface DatabaseEncapsulation {
@@ -18,21 +18,21 @@ interface DatabaseEncapsulation {
 
     fun deleteBooking(id: Long): DbBookingOutputData?
 
-    fun get(id: Long?) : DbBookingOutputData?
+    fun get(id: Long?): DbBookingOutputData?
 
     fun acceptBooking(id: Long): DbBookingOutputData?
 
-    fun retrieveBookingsForKey(key: UniqueReservableKey, includeMinTimestamp: DateTime = DateTime().withMillis(Long.MIN_VALUE), excludeMaxTimestamp: DateTime = DateTime().withMillis(Long.MAX_VALUE)) : List<DbBookingOutputData>
+    fun retrieveBookingsForKey(key: UniqueReservableKey, includeMinTimestamp: DateTime = DateTime().withMillis(Long.MIN_VALUE), excludeMaxTimestamp: DateTime = DateTime().withMillis(Long.MAX_VALUE)): List<DbBookingOutputData>
 
     fun isFree(key: UniqueReservableKey, blocks: List<DbBlockData>, startMillis: Long, endMillis: Long, reservableElement: ReservableElement): Boolean
 }
 
 interface JWTReceiver {
-    fun receiveJWTAction(jwtAction: String) : PostResponse
+    fun receiveJWTAction(jwtAction: String): PostResponse
 
-    fun loginStillValid(jwt: String) : Boolean
+    fun loginStillValid(jwt: String): Boolean
 
-    fun relogin(email: String)
+    fun relogin(email: String, key: UniqueReservableKey?)
 }
 
 interface AuthVerifier {
@@ -46,7 +46,7 @@ interface AuthVerifier {
 }
 
 interface GetReceiver {
-    fun retrieve(key: UniqueReservableKey, from : DateTime, to : DateTime, callerEmail: Email?): GetResponse?
+    fun retrieve(key: UniqueReservableKey, from: DateTime, to: DateTime, callerEmail: Email?): GetResponse?
     fun retrieveAll(callerEmail: Email?): GetTotalResponse
 }
 
@@ -56,12 +56,12 @@ interface PostReceiver {
 }
 
 interface HTMLSanitizer {
-    fun sanitize(html:String): String
+    fun sanitize(html: String): String
 }
 
 interface StringLocalizer {
-    fun getTranslations() : Map<String, String>
-    fun getTranslationsAsJS() : String {
+    fun getTranslations(): Map<String, String>
+    fun getTranslationsAsJS(): String {
         val translations = getTranslations()
         return """var kreseTranslationObject = {${
         translations.map {
@@ -88,9 +88,9 @@ interface ApplicationConfiguration : MailFileConfigGlobal {
     val applicationHost: String
     val applicationProtocol: String
     val applicationPort: Int
-    val hashSecret : String
+    val hashSecret: String
     val mailUsername: String
-    val mailPassword : String
+    val mailPassword: String
     val mailFrom: String
     val mailTestTarget: String
     val mailHost: String
@@ -108,15 +108,15 @@ interface MailService {
 
 
 interface MailTemplater {
-    fun construct(template: TemplateTypes, key: UniqueReservableKey, action: PostAction?, requiresVerification: Boolean, reservable: Reservable?, reservation: Reservation?, receiver: Email): ProcessedMailTemplate
+    fun construct(template: TemplateTypes, key: UniqueReservableKey?, action: PostAction?, requiresVerification: Boolean, reservable: Reservable?, reservation: Reservation?, receiver: Email): ProcessedMailTemplate
 }
 
 interface BusinessLogic {
 
-    fun process(action: PostAction, verification: Email?, verificationValid: Boolean) : PostResponse
+    fun process(action: PostAction, verification: Email?, verificationValid: Boolean): PostResponse
 
-    fun retrieveReservations(urk: UniqueReservableKey, from : DateTime, to : DateTime, callerEmail: Email?) : GetResponse?
+    fun retrieveReservations(urk: UniqueReservableKey, from: DateTime, to: DateTime, callerEmail: Email?): GetResponse?
 
-    fun retrieveKeys(callerEmail: Email?) : GetTotalResponse
+    fun retrieveKeys(callerEmail: Email?): GetTotalResponse
 }
 

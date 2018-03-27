@@ -85,8 +85,8 @@ enum class TemplateTypes {
     }
 
 
-    fun getMostSpecificTemplate(key: UniqueReservableKey, reader: MailFileReader, configGlobal: MailFileConfigGlobal, configSpecial: MailFileConfigSpecific): MailTemplate {
-        val a = this.getKeySpecificTemplate(key, reader, configSpecial)
+    fun getMostSpecificTemplate(key: UniqueReservableKey?, reader: MailFileReader, configGlobal: MailFileConfigGlobal, configSpecial: MailFileConfigSpecific): MailTemplate {
+        val a = key?.let { this.getKeySpecificTemplate(it, reader, configSpecial) }
         if (a != null) {
             return a
         } else {

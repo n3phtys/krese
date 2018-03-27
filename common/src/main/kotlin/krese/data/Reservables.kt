@@ -44,6 +44,14 @@ data class Reservation(
     fun toBlockTableCellString() : String {
         return blocks.map { "${it.usedNumber} * ${it.elementPath}" }.joinToString()
     }
+
+    fun namedBlocks(reservable: Reservable?): String {
+        if (reservable != null) {
+            return blocks.map { it.namedBlock(reservable) }.joinToString("\n")
+        } else {
+            return ""
+        }
+    }
 }
 
 @Serializable
