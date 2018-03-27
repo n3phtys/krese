@@ -42,7 +42,7 @@ interface AuthVerifier {
     fun encodeBase64(plaintext: String): String
     fun decodeBase64(base64: String): String
 
-    fun buildLink(action: PostAction, receiver: Email, reservation: Reservation?, reservable: Reservable?): String
+    fun buildLink(action: PostAction?, receiver: Email, reservation: Reservation?, reservable: Reservable?): String
 }
 
 interface GetReceiver {

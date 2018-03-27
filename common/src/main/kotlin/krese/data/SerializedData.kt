@@ -1,7 +1,7 @@
 package krese.data
 
 
-import kotlinx.serialization.*
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JSON
 
 
@@ -133,6 +133,26 @@ enum class LinkActions {
 interface PostAction {
 }
 
+
+fun toJson(action: PostAction?): Pair<String, String> {
+    return when (action) {
+        is CreateAction -> Pair("CreateAction", JSON.Companion.stringify(action))
+        is AcceptAction -> Pair("AcceptAction", JSON.Companion.stringify(action))
+        is DeclineAction -> Pair("DeclineAction", JSON.Companion.stringify(action))
+        is WithdrawAction -> Pair("WithdrawAction", JSON.Companion.stringify(action))
+        else -> {
+            Pair("null", "{}")
+        }
+    }
+}
+
+private fun String?.or(s: String): String = if (this != null) this else s
+
+fun buildFromJson(tag: String?, json: String?): PostAction? {
+    TODO("not yet implemented")
+}
+
+
 @Serializable
 data class CreateAction(val key: UniqueReservableKey, val email: Email, val name: String, val telephone: String, val commentUser: String, val startTime: Long, val endTime: Long, val blocks: List<DbBlockData>) : PostAction {
     fun isValid(): Boolean = true
@@ -196,8 +216,7 @@ data class WithdrawActionInput(val jwt: String?, val action: WithdrawAction) : P
 
 
 @Serializable
-data class JWTPayload(val action: LinkActions?, val params: List<String>, val userProfile: UserProfile) {
-    fun extractAction(): PostAction = extractAction()
+data class JWTPayload(val action: PostAction?, val params: List<String>, val userProfile: UserProfile) {
 }
 
 expect fun extractJWTPayloadAction(payload: JWTPayload) : PostAction?

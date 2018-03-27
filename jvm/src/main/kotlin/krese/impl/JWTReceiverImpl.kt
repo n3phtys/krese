@@ -19,7 +19,7 @@ class JWTReceiverImpl(private val kodein: Kodein): JWTReceiver {
 
     override fun receiveJWTAction(jwtAction: String): PostResponse {
         val action: JWTPayload? = authVerifier.decodeJWT(jwtAction)
-        val postAction: PostAction? = action?.extractAction()
+        val postAction: PostAction? = action?.action
         if (postAction != null) {
             return postReceiver.submitForm(PostActionInput.build(jwtAction, postAction))
         } else {
@@ -32,6 +32,8 @@ class JWTReceiverImpl(private val kodein: Kodein): JWTReceiver {
     }
 
     override fun relogin(email: String) {
+        //TODO: use mail template
+
         //TODO: also add selected key to link, to keep the right state for the user
 
         //check if email is legal & create jwt for user

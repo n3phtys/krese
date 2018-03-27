@@ -9,6 +9,7 @@ import com.github.salomonbrys.kodein.instance
 import krese.ApplicationConfiguration
 import krese.AuthVerifier
 import krese.data.*
+import org.joda.time.DateTime
 import java.io.UnsupportedEncodingException
 import java.util.*
 
@@ -16,21 +17,21 @@ class AuthVerifierImpl(private val kodein: Kodein) : AuthVerifier {
 
     private val issuer = "krese"
     private val key_email = "email"
-    private val key_params = "params"
-    private val key_action = "action"
+    private val key_actionjson = "actionjson"
+    private val key_actiontag = "actiontag"
 
     override fun encodeJWT(content: JWTPayload): String? {
         try {
+            val jsonAndTag = toJson(content.action)
             val claimssame = JWT.create()
                     .withIssuer(issuer)
                     .withClaim(key_email, content.userProfile.email.address)
-                    .withClaim(key_action, content.action.toString())
-                    .withArrayClaim(key_params, content.params.toTypedArray())
                     .withIssuedAt(Date())
                     .withExpiresAt(Date(content.userProfile.validTo))
                     .withNotBefore(Date(content.userProfile.validFrom))
             val claims = if (content.action != null) {
-                claimssame.withClaim(key_action, content.action.toString())
+                claimssame.withClaim(key_actiontag, jsonAndTag.first)
+                        .withClaim(key_actionjson, jsonAndTag.second)
             } else {
                 claimssame
             }
@@ -67,16 +68,17 @@ class AuthVerifierImpl(private val kodein: Kodein) : AuthVerifier {
     override fun decodeJWT(jwt: String): JWTPayload? {
         try {
             val decoded = JWT.require(algorithm).withIssuer(issuer).build().verify(jwt)
-            val actionStr = decoded.claims.get(key_action)
-            var action : LinkActions? = null
+            val actionTag = decoded.claims.get(key_actiontag)
+            val actionJson = decoded.claims.get(key_actionjson)
+            var action: PostAction? = null
             try {
-                action = LinkActions.valueOf(actionStr!!.asString())
+                action = buildFromJson(actionTag?.asString(), actionJson?.asString())
             } catch (ignored: NullPointerException) {
 
             } catch (ignored: IllegalArgumentException) {
 
             }
-            return JWTPayload(action, decoded.getClaim(key_params).asList(String::class.java), UserProfile(Email(decoded.getClaim(key_email).asString()), decoded.notBefore.time, decoded.expiresAt.time))
+            return JWTPayload(action, listOf(), UserProfile(Email(decoded.getClaim(key_email).asString()), decoded.notBefore.time, decoded.expiresAt.time))
         } catch (e: UnsupportedEncodingException) {
             return null
         } catch (e: JWTVerificationException) {
@@ -85,7 +87,19 @@ class AuthVerifierImpl(private val kodein: Kodein) : AuthVerifier {
     }
 
 
-    override fun buildLink(action: PostAction, receiver: Email, reservation: Reservation?, reservable: Reservable?): String {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    override fun buildLink(action: PostAction?, receiver: Email, reservation: Reservation?, reservable: Reservable?): String {
+        val loginFrom = DateTime.now()
+        val loginTo = DateTime.now().plusDays(2)
+        val actionFrom = DateTime.now()
+        val actionTo = DateTime.now().plusDays(90)
+        val reloginjwt: String? = encodeJWT(JWTPayload(null, listOf(), buildUserProfile(receiver, loginFrom, loginTo)))
+        val actionjwt: String? = encodeJWT(JWTPayload(action, listOf(), buildUserProfile(receiver, actionFrom, actionTo)))
+        val key: String? = reservable?.uniqueId
+
+        val map: Map<String, String> = mapOf("relogin" to reloginjwt, "action" to actionjwt, "selected_key" to key).filter { it.value != null }.mapValues { it.value!! }
+
+        val link = "${appConfig.applicationProtocol}://${appConfig.applicationHost}:${appConfig.applicationPort}/index.html?${map.map { "${it.key}=${it.value}" }.joinToString("&")}"
+
+        return link
     }
 }
