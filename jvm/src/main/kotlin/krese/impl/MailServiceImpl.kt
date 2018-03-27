@@ -4,6 +4,7 @@ import com.github.salomonbrys.kodein.Kodein
 import com.github.salomonbrys.kodein.instance
 import kotlinx.serialization.json.JSON
 import krese.ApplicationConfiguration
+import krese.JWTReceiver
 import krese.MailService
 import krese.MailTemplater
 import krese.data.*
@@ -17,6 +18,7 @@ import javax.mail.internet.MimeMultipart
 
 class MailServiceImpl(private val kodein: Kodein) : MailService, MailTemplater {
     private val appConfig: ApplicationConfiguration = kodein.instance()
+    private val jwtEndpoint: JWTReceiver = kodein.instance()
 
     override fun sendEmail(receivers: List<Email>, bodyHTML: String, subject: String) {
         //TODO: use own logger
@@ -124,5 +126,47 @@ class MailServiceImpl(private val kodein: Kodein) : MailService, MailTemplater {
     }
 
 
+    private fun String.replaceVariable(variable: TemplateContants, action: PostAction?, requiresVerification: Boolean, reservable: Reservable?, reservation: Reservation?, receiver: Email) : String = if (this.contains(variable.name)) this.replace(variable.name, getVariableValue(variable, action, requiresVerification, reservable, reservation, receiver).or()) else this
 
+
+    private fun getVariableValue(variable: TemplateContants, action: PostAction?, requiresVerification: Boolean, reservable: Reservable?, reservation: Reservation?, receiver: Email): String? = when(variable) {
+        TemplateContants.POSITIVE_ACTION_LINK -> when(action) {
+            is AcceptAction -> if (requiresVerification) jwtEndpoint.buildLink(action, receiver, reservation, reservable) else  {
+                if (reservation?.email?.address.equals(receiver.address) == true) {
+                    //to creator
+                    reservation?.id?.let { WithdrawAction(it, "") }?.let { jwtEndpoint.buildLink(it, receiver, reservation, reservable) }
+                } else {
+                    //to moderator
+                    null
+                }
+            }
+            is CreateAction -> if (requiresVerification) jwtEndpoint.buildLink(action, receiver, reservation, reservable) else {
+                if (reservation?.email?.address.equals(receiver.address) == true) {
+                    //to creator
+                    reservation?.id?.let { WithdrawAction(it, "") }?.let { jwtEndpoint.buildLink(it, receiver, reservation, reservable) }
+                } else {
+                    //to moderator
+                    reservation?.id?.let { AcceptAction(it, "") }?.let { jwtEndpoint.buildLink(it, receiver, reservation, reservable) }
+                }
+            }
+            is DeclineAction -> if (requiresVerification) jwtEndpoint.buildLink(action, receiver, reservation, reservable) else null //if false, no link needed
+            is WithdrawAction -> if (requiresVerification) jwtEndpoint.buildLink(action, receiver, reservation, reservable) else null //if false, no link needed
+            else -> null //no link needed
+        }
+        TemplateContants.NEGATIVE_ACTION_LINK -> TODO()
+        TemplateContants.NAME_OF_CREATOR -> reservation?.name.or()
+        TemplateContants.EMAIL_OF_CREATOR -> reservation?.email?.address.or()
+        TemplateContants.TELEPHONE_OF_CREATOR -> reservation?.telephone.or()
+        TemplateContants.TITLE_OF_RESERVABLE -> reservable?.title.or()
+    }
+
+
+    fun String.replaceVariables(action: PostAction?, requiresVerification: Boolean, reservable: Reservable?, reservation: Reservation?, receiver: Email): String {
+        var str = this
+        TemplateContants.values().forEach { str = str.replaceVariable(it, action, requiresVerification, reservable, reservation, receiver) }
+        return str
+    }
+
+
+    fun String?.or(default: String = "null"): String = if (this != null) this else default
 }

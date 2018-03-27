@@ -33,6 +33,8 @@ interface JWTReceiver {
     fun loginStillValid(jwt: String) : Boolean
 
     fun relogin(email: String)
+
+    fun buildLink(action: PostAction, receiver: Email, reservation: Reservation?, reservable: Reservable?) : String
 }
 
 interface AuthVerifier {
