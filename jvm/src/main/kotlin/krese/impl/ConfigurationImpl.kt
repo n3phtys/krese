@@ -2,6 +2,7 @@ package krese.impl
 
 import krese.ApplicationConfiguration
 import krese.DatabaseConfiguration
+import java.io.File
 
 enum class EnvKey {
     KRESE_MAIL_USERNAME,
@@ -74,6 +75,14 @@ class ConfigurationImpl : DatabaseConfiguration, ApplicationConfiguration {
         EnvKey.KRESE_MAIL_TEST_RECEIVER -> "receiver@email.com"
         EnvKey.KRESE_MAILTEMPLATE_GLOBAL_DIRECTORY -> defaultValue(EnvKey.KRESE_RESERVABLES_DIRECTORY) + "/mailtemplates"
         EnvKey.KRESE_LOCALIZATION_PROPERTIES_FILEPATH -> defaultValue(EnvKey.KRESE_RESERVABLES_DIRECTORY) + "/locale.properties"
+    }
+
+
+    init {
+        val defaultContent = "#!/usr/bin/env bash\n\n" + EnvKey.values().map { "export ${it.name}=\"${defaultValue(it)}\"" }.joinToString("\n")
+        File("default.env").printWriter().use { out ->
+            out.println(defaultContent)
+        }
     }
 
 
