@@ -98,7 +98,7 @@ class AuthVerifierImpl(private val kodein: Kodein) : AuthVerifier {
 
         val map: Map<String, String> = mapOf("relogin" to reloginjwt, "action" to actionjwt, "selected_key" to key).filter { it.value != null }.mapValues { it.value!! }
 
-        val link = "${appConfig.applicationProtocol}://${appConfig.applicationHost}:${appConfig.applicationPort}/index.html?${map.map { "${it.key}=${it.value}" }.joinToString("&")}"
+        val link = "${appConfig.applicationRoot}/index.html?${map.map { "${it.key}=${it.value}" }.joinToString("&")}"
 
         return link
     }

@@ -24,6 +24,8 @@ class MailerMock(val sentMails: MutableList<List<String>> = mutableListOf()) : M
 }
 
 class ConfigMock(val uniqueNumber: Int) : DatabaseConfiguration, ApplicationConfiguration {
+    override val applicationRoot: String
+        get() = "http://localhost:8080"
     override val staticDirectory: String
         get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
     override val filePathOfLocalization: String
@@ -48,10 +50,6 @@ class ConfigMock(val uniqueNumber: Int) : DatabaseConfiguration, ApplicationConf
         get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
     override val webDirectory: String
         get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
-    override val applicationHost: String
-        get() = "localhost"
-    override val applicationProtocol: String
-        get() = "http"
     override val applicationPort: Int
         get() = 8080
     override val hashSecret: String

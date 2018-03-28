@@ -31,13 +31,11 @@ enum class EnvKey {
 
     KRESE_RESERVABLES_DIRECTORY,
 
-    KRESE_APPLICATION_HOST,
-
     KRESE_APPLICATION_PORT,
 
     KRESE_WEB_DIRECTORY,
 
-    KRESE_APPLICATION_PROTOCOL,
+    KRESE_APPLICATION_ROOT,
 
     KRESE_MAILTEMPLATE_GLOBAL_DIRECTORY,
 
@@ -68,10 +66,9 @@ class ConfigurationImpl : DatabaseConfiguration, ApplicationConfiguration {
         EnvKey.KRESE_DATABASE_PASSWORD -> "secret"
         EnvKey.KRESE_RESERVABLES_DIRECTORY -> "./conf"
         EnvKey.KRESE_STATIC_WEB_RESOURCE_DIRECTORY -> "./static"
-        EnvKey.KRESE_APPLICATION_HOST -> "localhost"
         EnvKey.KRESE_APPLICATION_PORT -> "8080"
         EnvKey.KRESE_WEB_DIRECTORY -> "../web"
-        EnvKey.KRESE_APPLICATION_PROTOCOL -> "http"
+        EnvKey.KRESE_APPLICATION_ROOT -> "http://localhost:8080"
         EnvKey.KRESE_MAIL_TEST_RECEIVER -> "receiver@email.com"
         EnvKey.KRESE_MAILTEMPLATE_GLOBAL_DIRECTORY -> defaultValue(EnvKey.KRESE_RESERVABLES_DIRECTORY) + "/mailtemplates"
         EnvKey.KRESE_LOCALIZATION_PROPERTIES_FILEPATH -> defaultValue(EnvKey.KRESE_RESERVABLES_DIRECTORY) + "/locale.properties"
@@ -128,10 +125,6 @@ class ConfigurationImpl : DatabaseConfiguration, ApplicationConfiguration {
         get() = getVal(EnvKey.KRESE_DATABASE_PASSWORD)
     override val reservablesDirectory: String
         get() = getVal(EnvKey.KRESE_RESERVABLES_DIRECTORY)
-    override val applicationHost: String
-        get() = getVal(EnvKey.KRESE_APPLICATION_HOST)
-    override val applicationProtocol: String
-        get() = getVal(EnvKey.KRESE_APPLICATION_PROTOCOL)
     override val applicationPort: Int
         get() = getVal(EnvKey.KRESE_APPLICATION_PORT).toInt()
     override val webDirectory: String
@@ -147,4 +140,7 @@ class ConfigurationImpl : DatabaseConfiguration, ApplicationConfiguration {
 
     override val staticDirectory: String
         get() = getVal(EnvKey.KRESE_STATIC_WEB_RESOURCE_DIRECTORY)
+
+    override val applicationRoot: String
+        get() = getVal(EnvKey.KRESE_APPLICATION_ROOT)
 }

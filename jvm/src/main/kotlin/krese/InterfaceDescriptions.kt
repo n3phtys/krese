@@ -85,9 +85,8 @@ interface DatabaseConfiguration {
 interface ApplicationConfiguration : MailFileConfigGlobal {
     val reservablesDirectory: String
     val webDirectory: String
-    val applicationHost: String
-    val applicationProtocol: String
     val applicationPort: Int
+    val applicationRoot: String
     val hashSecret: String
     val mailUsername: String
     val mailPassword: String
