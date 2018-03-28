@@ -40,3 +40,4 @@ class ServerPost(val action: PostAction, val jwt: String?) {
         xhttp.send("action=${encodeURIComponent(json)}")
     }
 }
+

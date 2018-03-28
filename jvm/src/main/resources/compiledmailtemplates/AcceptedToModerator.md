@@ -12,6 +12,6 @@ Between RESERVATION_FROM_STRING and RESERVATION_TO_STRING.
 
 You can press the following link to immediately decline and delete the reservation:<br>
 
-[POSITIVE_ACTION_LINK](POSITIVE_ACTION_LINK)
+<a href="POSITIVE_ACTION_LINK" >POSITIVE_ACTION_LINK</a>
 <br>
 The given link will continue to work for LINK_DURATION after receiving this email.

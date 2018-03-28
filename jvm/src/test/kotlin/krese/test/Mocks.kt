@@ -16,10 +16,13 @@ fun List<String>.emailSubject() = this.first()
 fun List<String>.emailBody() = this.last()
 
 class MailerMock(val sentMails: MutableList<List<String>> = mutableListOf()) : MailService {
-    override fun sendEmail(receivers: List<Email>, bodyHTML: String, subject: String) {
-        assert(receivers.size >= 1)
-        println("MOCK-SENDING MAIL WITH SUBJECT = $subject")
-        sentMails.add(listOf(subject) + receivers.map { it.address } + bodyHTML)
+    override suspend fun sendEmail(receivers: List<Email>, bodyHTML: String, subject: String) {
+        TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
+    }
+
+    override fun sendEmail(receiver: Email, content: ProcessedMailTemplate) {
+        println("MOCK-SENDING MAIL WITH SUBJECT = ${content.subject}")
+        sentMails.add(listOf(content.subject) + receiver.address + content.body)
     }
 }
 

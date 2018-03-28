@@ -140,6 +140,24 @@ class Server(private val kodein: Kodein) {
 
             }
 
+            post("/" + Routes.POST_ACTION_SIGNED.path) {
+                val params = call.receive<Parameters>()
+                val postStr = params.get("action")
+                println("INPUT: postStr= $postStr ")
+                if (postStr != null) {
+                    val action = authVerifier.decodeJWT(postStr)
+                    if (action != null && action.action != null) {
+                        println("action = ${action.toString()}")
+                        call.respondText(JSON.stringify(postReceiver.submitForm(PostActionInput.build(postStr, action.action!!))))
+                    } else {
+                        call.respond(HttpStatusCode.BadRequest, "could not validate crypto signature of link")
+                    }
+                } else {
+                    call.respond(HttpStatusCode.BadRequest, "could not read action param")
+                }
+
+            }
+
             static("static") {
                 files(File(appConfig.staticDirectory))
             }

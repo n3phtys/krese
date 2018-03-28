@@ -131,9 +131,9 @@ class BusinessLogicImpl(private val kodein: Kodein) : BusinessLogic {
         return !verificationValid
     }
 
-    fun sendEmailVerificationRequest(action: PostAction, key: UniqueReservableKey, reservable: Reservable?, reservation: Reservation?, receiver: Email) {
-        val mail: ProcessedMailTemplate = mailTemplater.construct(action.toVerifyTemplate(), key, action, true, reservable, reservation, receiver)
-        mailService.sendEmail(listOf(receiver), mail.body, mail.subject)
+    fun sendEmailVerificationRequest(action: PostAction, key: UniqueReservableKey, reservable: Reservable?, reservation: Reservation?, receiver: Email, toModerator: Boolean) {
+        val mail: ProcessedMailTemplate = mailTemplater.construct(action.toVerifyTemplate(), key, action, true, reservable, reservation, receiver, toModerator)
+        mailService.sendEmail(receiver, mail)
     }
 
     fun isLegalWithGivenVerification(action: PostAction, verification: Email): Boolean {
@@ -176,10 +176,10 @@ class BusinessLogicImpl(private val kodein: Kodein) : BusinessLogic {
     fun notifyCreator(action: PostAction, creator: Email, key: UniqueReservableKey, reservable: Reservable?, reservation: Reservation?) {
         mailService.sendEmail(creator, when (action) {
 
-            is CreateAction -> mailTemplater.construct(TemplateTypes.CreatedToCreator, key, action, false, reservable, reservation, creator)
-            is DeclineAction -> mailTemplater.construct(TemplateTypes.DeclinedToCreator, key, action, false, reservable, reservation, creator)
-            is WithdrawAction -> mailTemplater.construct(TemplateTypes.WithdrawnToCreator, key, action, false, reservable, reservation, creator)
-            is AcceptAction -> mailTemplater.construct(TemplateTypes.AcceptedToCreator, key, action, false, reservable, reservation, creator)
+            is CreateAction -> mailTemplater.construct(TemplateTypes.CreatedToCreator, key, action, false, reservable, reservation, creator, false)
+            is DeclineAction -> mailTemplater.construct(TemplateTypes.DeclinedToCreator, key, action, false, reservable, reservation, creator, false)
+            is WithdrawAction -> mailTemplater.construct(TemplateTypes.WithdrawnToCreator, key, action, false, reservable, reservation, creator, false)
+            is AcceptAction -> mailTemplater.construct(TemplateTypes.AcceptedToCreator, key, action, false, reservable, reservation, creator, false)
             else -> {
                 throw IllegalArgumentException()
             }
@@ -189,10 +189,10 @@ class BusinessLogicImpl(private val kodein: Kodein) : BusinessLogic {
 
     fun notifyModerator(action: PostAction, moderator: Email, key: UniqueReservableKey, reservable: Reservable?, reservation: Reservation?) {
         mailService.sendEmail(moderator, when (action) {
-            is CreateAction -> mailTemplater.construct(TemplateTypes.CreatedToModerator, key, action, false, reservable, reservation, moderator)
-            is DeclineAction -> mailTemplater.construct(TemplateTypes.DeclinedToModerator, key, action, false, reservable, reservation, moderator)
-            is WithdrawAction -> mailTemplater.construct(TemplateTypes.WithdrawnToModerator, key, action, false, reservable, reservation, moderator)
-            is AcceptAction -> mailTemplater.construct(TemplateTypes.AcceptedToCreator, key, action, false, reservable, reservation, moderator)
+            is CreateAction -> mailTemplater.construct(TemplateTypes.CreatedToModerator, key, action, false, reservable, reservation, moderator, true)
+            is DeclineAction -> mailTemplater.construct(TemplateTypes.DeclinedToModerator, key, action, false, reservable, reservation, moderator, true)
+            is WithdrawAction -> mailTemplater.construct(TemplateTypes.WithdrawnToModerator, key, action, false, reservable, reservation, moderator, true)
+            is AcceptAction -> mailTemplater.construct(TemplateTypes.AcceptedToModerator, key, action, false, reservable, reservation, moderator, true)
             else -> {
                 throw IllegalArgumentException()
             }
@@ -230,13 +230,15 @@ class BusinessLogicImpl(private val kodein: Kodein) : BusinessLogic {
 
     override fun process(action: PostAction, verification: Email?, verificationValid: Boolean): PostResponse {
         val actioneer: Email? = legalInGeneral(action, verification)
+        println("actioneer = $actioneer  with verification = $verification")
         if (actioneer != null && (verification == null || actioneer.equals(verification))) {
             val key = getKey(action)
             if (key != null) {
                 val reservable = getReservable(action)
                 var reservation = getReservation(action)
+                val isModerator: Boolean = reservable?.operatorEmails?.any { it.equals(actioneer.address) } == true
                 if (requiresEmailVerification(action, verification, verificationValid)) {
-                    sendEmailVerificationRequest(action, key, reservable, reservation, actioneer)
+                    sendEmailVerificationRequest(action, key, reservable, reservation, actioneer, isModerator)
                     return PostResponse(true, false, "verification request send to user email address")
                 } else {
                     if (isLegalWithGivenVerification(action, actioneer)) {

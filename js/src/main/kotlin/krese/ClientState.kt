@@ -26,7 +26,7 @@ external fun decodeURIComponent(str: String): String
 val LOCALSTORAGE_KRESE_LOGIN_JWT_KEY = "LOCALSTORAGE_KRESE_LOGIN_JWT_KEY"
 
 
-//TODO: fix bug of calendar disappearing while browsing tabs
+//TODO: add confirm() check before each posting (even url given actions!)
 
 
 class ClientState {
@@ -60,6 +60,7 @@ class ClientState {
         }
 
         testForReceiveRelogin()
+        testForReceiveAction()
         loadAllKeys()
 
         writeLoginStatus(if (jwt != null && jwt!!.isNotBlank()) JWTStatus.PENDING else JWTStatus.UNCHECKED)
@@ -83,9 +84,9 @@ class ClientState {
         }
     }
 
-    fun isModerator(reservation: Reservation): Boolean = currentEmail() != null && reservables.get(reservation.key)!!.operatorEmails.contains(currentEmail()!!.address)
+    fun isModerator(reservation: Reservation): Boolean = jwt != null && currentEmail() != null && reservables.get(reservation.key)!!.operatorEmails.contains(currentEmail()!!.address)
 
-    fun isCreator(reservation: Reservation): Boolean = currentEmail() != null && reservation.email != null && reservation.email!!.equals(currentEmail()!!.address)
+    fun isCreator(reservation: Reservation): Boolean = jwt != null && currentEmail() != null && reservation.email != null && reservation.email!!.equals(currentEmail()!!.address)
 
     fun writeLoginStatus(status: JWTStatus) {
         jwtState = status
@@ -250,6 +251,27 @@ class ClientState {
         //TODO: check for action to commit
     }
 
+    fun testForReceiveAction() {
+
+        val action = getURLParameters().get("action")
+        val cs: ClientState = this
+        if (action != null) {
+            ServerActionPost(action).asyncCall {
+                window.alert(if (it.successful) {
+                    if (it.finished) {
+                        "Success! Message from Server: ${it.message}"
+                    } else {
+                        "Still requiring authentication! Message from Server: ${it.message}"
+                    }
+                } else {
+                    "Failure! Message from Server: ${it.message}"
+                })
+                cs.unsetURLParameter("action")
+            }
+        }
+    }
+
+
     fun storePassword(jwt: String?) {
         if (jwt != null) {
             console.log("STORING NEWER JWT CREDENTIALS: $jwt")
@@ -345,30 +367,40 @@ class ClientState {
                 id = "title_header_${key.id}"
                 +key.id
             }
+            div {
+                div {
+                    id = "pro_" + key.id
+                    +"Prologue for = ${key.id}"
+                }
+                div {
+                    div {
+                        id = "for_" + key.id
+                        +"Formular"
+                    }
+                }
+                div {
+                    id = "epi_" + key.id
+                    +"Epilogue"
+                }
+            }
+            div {
+                hr {
 
-            div {
-                id = "pro_" + key.id
-                +"Prologue for = ${key.id}"
+                }
             }
             div {
-                id = "for_" + key.id
-                +"Formular"
-            }
-            div {
-                id = "epi_" + key.id
-                +"Epilogue"
-            }
-            div {
-                id = "cal_" + key.id
-                +"Kalender"
-            }
-            div {
-                id = "dap_" + key.id
-                +"From To Date Picker"
-            }
-            div {
-                id = "lis_" + key.id
-                +"Liste"
+                div {
+                    id = "cal_" + key.id
+                    +"Kalender"
+                }
+                div {
+                    id = "dap_" + key.id
+                    +"From To Date Picker"
+                }
+                div {
+                    id = "lis_" + key.id
+                    +"Liste"
+                }
             }
         }
     }
@@ -457,10 +489,10 @@ class ClientState {
                                         +"Elements"
                                     }
                                     th {
-                                        +"Comments"
+                                        +"Actions"
                                     }
                                     th {
-                                        +"Actions"
+                                        +"Comments"
                                     }
                                 }
                             }
@@ -526,14 +558,16 @@ class ClientState {
             }
         }
         if (isModerator(reservation)) {
-            button {
-                //accept
-                onClickFunction = {
-                    executeAccept(reservation.id)
-                }
-                classes = setOf("btn", "btn-success")
-                span {
-                    classes = setOf("glyphicon", "glyphicon-ok")
+            if (!reservation.accepted) {
+                button {
+                    //accept
+                    onClickFunction = {
+                        executeAccept(reservation.id)
+                    }
+                    classes = setOf("btn", "btn-success")
+                    span {
+                        classes = setOf("glyphicon", "glyphicon-ok")
+                    }
                 }
             }
             button {

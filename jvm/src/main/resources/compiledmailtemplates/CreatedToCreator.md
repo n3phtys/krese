@@ -12,6 +12,6 @@ The reservation has been saved but not been confirmed yet. A moderator will soon
 <br>
 You can press the following link to immediately withdraw and delete your reservation:<br>
 
-[POSITIVE_ACTION_LINK](POSITIVE_ACTION_LINK)
+<a href="POSITIVE_ACTION_LINK" >POSITIVE_ACTION_LINK</a>
 <br>
 The given link will continue to work for LINK_DURATION after receiving this email.

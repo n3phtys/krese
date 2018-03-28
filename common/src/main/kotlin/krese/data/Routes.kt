@@ -7,6 +7,7 @@ enum class Routes(val path:String) {
     POST_ACTION_WITHDRAW("reservable/withdraw"),
     POST_ACTION_ACCEPT("reservable/withdraw"),
     POST_CREDENTIALS_VALID("util/valid/credentials"),
+    POST_ACTION_SIGNED("reservable/fromemail"),
     POST_RELOGIN("util/login"),
     GET_LOCALIZATION("util/locale/properties"),
 }

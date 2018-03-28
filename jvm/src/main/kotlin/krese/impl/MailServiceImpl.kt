@@ -17,7 +17,7 @@ class MailServiceImpl(private val kodein: Kodein) : MailService, MailTemplater {
     private val authVerifier: AuthVerifier = kodein.instance()
     private val fileSystemWrapper: FileSystemWrapper = kodein.instance()
 
-    override fun sendEmail(receivers: List<Email>, bodyHTML: String, subject: String) {
+    override suspend fun sendEmail(receivers: List<Email>, bodyHTML: String, subject: String) {
         //TODO: use own logger
         exposedLogger.debug("Sending email to [${(receivers.map { it.address }.joinToString(","))}] with subject=$subject and body: $bodyHTML")
 
@@ -61,30 +61,30 @@ class MailServiceImpl(private val kodein: Kodein) : MailService, MailTemplater {
 
     }
 
-    override fun construct(template: TemplateTypes, key: UniqueReservableKey?, action: PostAction?, requiresVerification: Boolean, reservable: Reservable?, reservation: Reservation?, receiver: Email): ProcessedMailTemplate {
+    override fun construct(template: TemplateTypes, key: UniqueReservableKey?, action: PostAction?, requiresVerification: Boolean, reservable: Reservable?, reservation: Reservation?, receiver: Email, toModerator: Boolean): ProcessedMailTemplate {
 
         //TODO: add key to processing
 
         val x = template.getMostSpecificTemplate(key, fileSystemWrapper, this.appConfig, fileSystemWrapper)
-        return ProcessedMailTemplate(x.subject.replaceVariables(action, requiresVerification, reservable, reservation, receiver), x.body.replaceVariables(action, requiresVerification, reservable, reservation, receiver))
+        return ProcessedMailTemplate(x.subject.replaceVariables(action, requiresVerification, reservable, reservation, receiver, toModerator), x.body.replaceVariables(action, requiresVerification, reservable, reservation, receiver, toModerator))
     }
 
-    private fun String.replaceVariable(variable: TemplateContants, action: PostAction?, requiresVerification: Boolean, reservable: Reservable?, reservation: Reservation?, receiver: Email): String = if (this.contains(variable.name)) this.replace(variable.name, getVariableValue(variable, action, requiresVerification, reservable, reservation, receiver).or()) else this
+    private fun String.replaceVariable(variable: TemplateContants, action: PostAction?, requiresVerification: Boolean, reservable: Reservable?, reservation: Reservation?, receiver: Email, toModerator: Boolean): String = if (this.contains(variable.name)) this.replace(variable.name, getVariableValue(variable, action, requiresVerification, reservable, reservation, receiver, toModerator).or()) else this
 
 
-    private fun getVariableValue(variable: TemplateContants, action: PostAction?, requiresVerification: Boolean, reservable: Reservable?, reservation: Reservation?, receiver: Email): String? = when (variable) {
+    private fun getVariableValue(variable: TemplateContants, action: PostAction?, requiresVerification: Boolean, reservable: Reservable?, reservation: Reservation?, receiver: Email, toModerator: Boolean): String? = when (variable) {
         TemplateContants.POSITIVE_ACTION_LINK -> when (action) {
             is AcceptAction -> if (requiresVerification) authVerifier.buildLink(action, receiver, reservation, reservable) else {
-                if (reservation?.email?.address.equals(receiver.address) == true) {
+                if (!toModerator) {
                     //to creator
                     reservation?.id?.let { WithdrawAction(it, "") }?.let { authVerifier.buildLink(it, receiver, reservation, reservable) }
                 } else {
                     //to moderator
-                    null
+                    reservation?.id?.let { DeclineAction(it, "") }?.let { authVerifier.buildLink(it, receiver, reservation, reservable) }
                 }
             }
             is CreateAction -> if (requiresVerification) authVerifier.buildLink(action, receiver, reservation, reservable) else {
-                if (reservation?.email?.address.equals(receiver.address) == true) {
+                if (!toModerator) {
                     //to creator
                     reservation?.id?.let { WithdrawAction(it, "") }?.let { authVerifier.buildLink(it, receiver, reservation, reservable) }
                 } else {
@@ -99,11 +99,11 @@ class MailServiceImpl(private val kodein: Kodein) : MailService, MailTemplater {
         TemplateContants.NEGATIVE_ACTION_LINK -> when (action) {
             is AcceptAction -> null
             is CreateAction -> if (requiresVerification) null else {
-                if (reservation?.email?.address.equals(receiver.address) == true) {
-                    null
-                } else {
+                if (toModerator) {
                     //to moderator
                     reservation?.id?.let { DeclineAction(it, "") }?.let { authVerifier.buildLink(it, receiver, reservation, reservable) }
+                } else {
+                    null
                 }
             }
             is DeclineAction -> null
@@ -128,9 +128,9 @@ class MailServiceImpl(private val kodein: Kodein) : MailService, MailTemplater {
     }
 
 
-    fun String.replaceVariables(action: PostAction?, requiresVerification: Boolean, reservable: Reservable?, reservation: Reservation?, receiver: Email): String {
+    fun String.replaceVariables(action: PostAction?, requiresVerification: Boolean, reservable: Reservable?, reservation: Reservation?, receiver: Email, toModerator: Boolean): String {
         var str = this
-        TemplateContants.values().forEach { str = str.replaceVariable(it, action, requiresVerification, reservable, reservation, receiver) }
+        TemplateContants.values().forEach { str = str.replaceVariable(it, action, requiresVerification, reservable, reservation, receiver, toModerator) }
         return str
     }
 

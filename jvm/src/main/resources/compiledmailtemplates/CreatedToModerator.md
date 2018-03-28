@@ -11,11 +11,11 @@ Between RESERVATION_FROM_STRING and RESERVATION_TO_STRING.
  <br>
  To accept the reservation, press: <br>
 
-[POSITIVE_ACTION_LINK](POSITIVE_ACTION_LINK)
+<a href="POSITIVE_ACTION_LINK" >POSITIVE_ACTION_LINK</a>
 <br>
 <br>
 If you do not want to confirm the reservation, decline it (which will remove the reservation and inform NAME_OF_CREATOR of this), by pressing the following link:<br>
 
-[NEGATIVE_ACTION_LINK](NEGATIVE_ACTION_LINK)
+<a href="NEGATIVE_ACTION_LINK" >NEGATIVE_ACTION_LINK</a>
 <br>
 The given links will continue to work for LINK_DURATION after receiving this email.

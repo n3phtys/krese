@@ -34,7 +34,7 @@ class JWTReceiverImpl(private val kodein: Kodein): JWTReceiver {
     override fun relogin(email: String, key: UniqueReservableKey?) {
         val recipient = Email(email)
         //use mail template
-        val mail = mailTemplater.construct(TemplateTypes.LoginVerification, key, null, true, null, null, recipient)
+        val mail = mailTemplater.construct(TemplateTypes.LoginVerification, key, null, true, null, null, recipient, false)
         mailService.sendEmail(recipient, mail)
     }
 

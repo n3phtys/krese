@@ -1,5 +1,6 @@
 package krese
 
+import kotlinx.coroutines.experimental.launch
 import krese.data.*
 import krese.impl.DbBookingInputData
 import krese.impl.DbBookingOutputData
@@ -101,13 +102,17 @@ interface ApplicationConfiguration : MailFileConfigGlobal {
 }
 
 interface MailService {
-    fun sendEmail(receivers: List<Email>, bodyHTML: String, subject: String)
-    fun sendEmail(receiver: Email, content: ProcessedMailTemplate) = this.sendEmail(kotlin.collections.listOf(receiver), content.body, content.subject)
+    suspend fun sendEmail(receivers: List<Email>, bodyHTML: String, subject: String)
+    fun sendEmail(receiver: Email, content: ProcessedMailTemplate): Unit {
+        launch {
+            sendEmail(kotlin.collections.listOf(receiver), content.body, content.subject)
+        }
+    }
 }
 
 
 interface MailTemplater {
-    fun construct(template: TemplateTypes, key: UniqueReservableKey?, action: PostAction?, requiresVerification: Boolean, reservable: Reservable?, reservation: Reservation?, receiver: Email): ProcessedMailTemplate
+    fun construct(template: TemplateTypes, key: UniqueReservableKey?, action: PostAction?, requiresVerification: Boolean, reservable: Reservable?, reservation: Reservation?, receiver: Email, toModerator: Boolean): ProcessedMailTemplate
 }
 
 interface BusinessLogic {
