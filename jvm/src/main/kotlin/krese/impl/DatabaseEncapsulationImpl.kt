@@ -14,11 +14,8 @@ import org.jetbrains.exposed.dao.EntityID
 import org.jetbrains.exposed.dao.LongEntity
 import org.jetbrains.exposed.dao.LongEntityClass
 import org.jetbrains.exposed.dao.LongIdTable
-import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SchemaUtils.create
-import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.deleteWhere
-import org.jetbrains.exposed.sql.or
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.joda.time.DateTime
 
@@ -29,8 +26,7 @@ class DatabaseEncapsulationImpl(private val kodein: Kodein) : DatabaseEncapsulat
     private val sanitizer: HTMLSanitizer = kodein.instance()
 
     init {
-        createSchemaIfNotExists()
-        if (databaseConfig.loadMigrationData) {
+        if (createSchemaIfNotExists() && databaseConfig.loadMigrationData) {
             val importedData = migrationFileLoaded
             if (importedData != null) {
                 importedData.toDBElements().forEach { this.createUpdateBooking(null, it) }
@@ -38,17 +34,23 @@ class DatabaseEncapsulationImpl(private val kodein: Kodein) : DatabaseEncapsulat
         }
     }
 
-    fun createSchemaIfNotExists(): Unit {
+    fun createSchemaIfNotExists(): Boolean {
         Database.connect(databaseConfig.databaseJDBC, driver = databaseConfig.databaseDriver)
+        var v = false
+        transaction {
+            v = DbBookings.exists()
+        }
+
         transaction {
             create(DbBookings, DbBlocks)
         }
+        return !v
     }
 
 
     override fun isFree(key: UniqueReservableKey, blocks: List<DbBlockData>, startMillis: Long, endMillis: Long, reservableElement: ReservableElement): Boolean {
         //TODO: improve performance
-        return reservableElement.allows(blocks + this.retrieveBookingsForKey(key).filter { !(it.endTime.millis <= startMillis || it.startTime.millis > endMillis) }.flatMap { it.blocks } )
+        return reservableElement.allows(blocks + this.retrieveBookingsForKey(key).filter { !(it.endTime.millis <= startMillis || it.startTime.millis > endMillis) }.flatMap { it.blocks })
     }
 
     override fun get(id: Long?): DbBookingOutputData? {
@@ -71,7 +73,7 @@ class DatabaseEncapsulationImpl(private val kodein: Kodein) : DatabaseEncapsulat
 
     override fun createUpdateBooking(id: Long?, data: DbBookingInputData): DbBookingOutputData? {
         Database.connect(databaseConfig.databaseJDBC, driver = databaseConfig.databaseDriver)
-        var dbb : DbBookingOutputData? = null
+        var dbb: DbBookingOutputData? = null
         val ts = DateTime.now()
         if (id != null) {
             transaction {
@@ -138,11 +140,11 @@ class DatabaseEncapsulationImpl(private val kodein: Kodein) : DatabaseEncapsulat
     override fun deleteBooking(id: Long): DbBookingOutputData? {
         val x = this.get(id)
         Database.connect(databaseConfig.databaseJDBC, driver = databaseConfig.databaseDriver)
-        var exists : Boolean = false
+        var exists: Boolean = false
         transaction {
             exists = DbBooking.findById(id) != null
             DbBlocks.deleteWhere { DbBlocks.dBBookingId eq id }
-            DbBookings.deleteWhere { DbBookings.id eq id}
+            DbBookings.deleteWhere { DbBookings.id eq id }
 
         }
         return if (exists) x else null
@@ -151,7 +153,7 @@ class DatabaseEncapsulationImpl(private val kodein: Kodein) : DatabaseEncapsulat
     override fun acceptBooking(id: Long): DbBookingOutputData? {
         val x = this.get(id)
         Database.connect(databaseConfig.databaseJDBC, driver = databaseConfig.databaseDriver)
-        var found : Boolean = false
+        var found: Boolean = false
         transaction {
             val dbB = DbBooking.findById(id)
             if (dbB != null) {
@@ -162,7 +164,7 @@ class DatabaseEncapsulationImpl(private val kodein: Kodein) : DatabaseEncapsulat
         return if (found) x else null
     }
 
-    override fun retrieveBookingsForKey(key: UniqueReservableKey, includeMinTimestamp: DateTime, excludeMaxTimestamp: DateTime) : List<DbBookingOutputData> {
+    override fun retrieveBookingsForKey(key: UniqueReservableKey, includeMinTimestamp: DateTime, excludeMaxTimestamp: DateTime): List<DbBookingOutputData> {
 
         val myBookings = mutableListOf<DbBookingOutputData>()
         val skey = key.id
@@ -170,7 +172,7 @@ class DatabaseEncapsulationImpl(private val kodein: Kodein) : DatabaseEncapsulat
         Database.connect(databaseConfig.databaseJDBC, driver = databaseConfig.databaseDriver)
         transaction {
             myBookings.addAll(
-                    DbBooking.find { DbBookings.reservableKey eq skey and (DbBookings.startDateTime less excludeMaxTimestamp or DbBookings.endDateTime.greaterEq(includeMinTimestamp))} .sortedByDescending { DbBookings.startDateTime }.map { it.toOutput() }
+                    DbBooking.find { DbBookings.reservableKey eq skey and (DbBookings.startDateTime less excludeMaxTimestamp or DbBookings.endDateTime.greaterEq(includeMinTimestamp)) }.sortedByDescending { DbBookings.startDateTime }.map { it.toOutput() }
             )
         }
         return myBookings.map { it.copy(name = sanitizer.sanitize(it.name), telephone = sanitizer.sanitize(it.telephone), commentOperator = sanitizer.sanitize(it.commentOperator), commentUser = sanitizer.sanitize(it.commentUser), email = Email(sanitizer.sanitize(it.email.address)), key = UniqueReservableKey(sanitizer.sanitize(it.key.id))) }
@@ -184,7 +186,7 @@ fun createInMemoryElements() {
     transaction {
         //logger.addLogger(StdOutSqlLogger)
 
-        create (DbBookings, DbBlocks)
+        create(DbBookings, DbBlocks)
 
         val firstB = DbBooking.new {
             name = "first booking"
@@ -192,12 +194,12 @@ fun createInMemoryElements() {
             reservableKey = "reservable/key"
             email = "placeholder@email.com"
             telephone = "1234567890"
-             commentUser = "N/A"
-             commentOperator = "N/A"
-             startDateTime = DateTime.now().plusDays(4)
-             endDateTime = DateTime.now().plusDays(5)
-             createdTimestamp = DateTime.now()
-             modifiedTimestamp = DateTime.now()
+            commentUser = "N/A"
+            commentOperator = "N/A"
+            startDateTime = DateTime.now().plusDays(4)
+            endDateTime = DateTime.now().plusDays(5)
+            createdTimestamp = DateTime.now()
+            modifiedTimestamp = DateTime.now()
         }
 
         val secondB = DbBooking.new {
@@ -222,12 +224,11 @@ fun createInMemoryElements() {
 
 
 
-        println("Bookings: ${DbBooking.all().joinToString {it.name}}")
-        println("Blocks in ${firstB.name}: ${firstB.blocks.joinToString {it.elementPath}}")
-        println("Accepted Bookings: ${DbBooking.find { DbBookings.accepted eq true}.joinToString {it.name}}")
+        println("Bookings: ${DbBooking.all().joinToString { it.name }}")
+        println("Blocks in ${firstB.name}: ${firstB.blocks.joinToString { it.elementPath }}")
+        println("Accepted Bookings: ${DbBooking.find { DbBookings.accepted eq true }.joinToString { it.name }}")
     }
 }
-
 
 
 object DbBookings : LongIdTable("db_bookings", "id") {
@@ -264,27 +265,26 @@ class DbBooking(id: EntityID<Long>) : LongEntity(id) {
 
     val blocks by DbBlock referrersOn DbBlocks.dBBookingId
 
-    fun getReservableKey() : UniqueReservableKey {
+    fun getReservableKey(): UniqueReservableKey {
         return UniqueReservableKey(this.reservableKey)
     }
 
 
-    fun toOutput() : DbBookingOutputData = DbBookingOutputData(id.value, getReservableKey(), Email(email), name, telephone, commentUser, commentOperator, startDateTime, endDateTime, createdTimestamp, modifiedTimestamp, accepted, blocks.map { it.toOutput() })
+    fun toOutput(): DbBookingOutputData = DbBookingOutputData(id.value, getReservableKey(), Email(email), name, telephone, commentUser, commentOperator, startDateTime, endDateTime, createdTimestamp, modifiedTimestamp, accepted, blocks.map { it.toOutput() })
 }
 
 
-data class DbBookingOutputData(val id : Long, val key: UniqueReservableKey, val email: Email, val name: String, val telephone: String, val commentUser: String, val commentOperator: String, val startTime: DateTime, val endTime: DateTime, val createdTimestamp: DateTime, val modifiedTimestamp: DateTime, val accepted: Boolean, val blocks: List<DbBlockData>) {
-        fun toOutput(isOperator: Boolean) : Reservation {
-            return Reservation(id, key, if (isOperator) email else null, name, if (isOperator) telephone else null, commentUser, if (isOperator) commentOperator else null, startTime.millis, endTime.millis, createdTimestamp.millis, if (isOperator) modifiedTimestamp.millis else null, accepted, blocks)
-        }
+data class DbBookingOutputData(val id: Long, val key: UniqueReservableKey, val email: Email, val name: String, val telephone: String, val commentUser: String, val commentOperator: String, val startTime: DateTime, val endTime: DateTime, val createdTimestamp: DateTime, val modifiedTimestamp: DateTime, val accepted: Boolean, val blocks: List<DbBlockData>) {
+    fun toOutput(isOperator: Boolean): Reservation {
+        return Reservation(id, key, if (isOperator) email else null, name, if (isOperator) telephone else null, commentUser, if (isOperator) commentOperator else null, startTime.millis, endTime.millis, createdTimestamp.millis, if (isOperator) modifiedTimestamp.millis else null, accepted, blocks)
+    }
 
 }
 
 
+object DbBlocks : LongIdTable("db_blocks", "id") {
 
-object DbBlocks: LongIdTable("db_blocks", "id") {
-
-    val dBBookingId  = reference("db_booking_id", DbBookings)
+    val dBBookingId = reference("db_booking_id", DbBookings)
     val elementPath = varchar("elementh_path", 255).index(false)
     val usedNumber = integer("used_number")
 }
@@ -297,11 +297,11 @@ class DbBlock(id: EntityID<Long>) : LongEntity(id) {
     var usedNumber by DbBlocks.usedNumber //should be positive number (zero makes no sense)
     var dBBooking by DbBooking referencedOn DbBlocks.dBBookingId
 
-    fun getElementPathSegments() : List<Int> {
+    fun getElementPathSegments(): List<Int> {
         return JSON.parse(IntSerializer.list, this.elementPath)
     }
 
 
-    fun toOutput() : DbBlockData = DbBlockData(getElementPathSegments(), usedNumber)
+    fun toOutput(): DbBlockData = DbBlockData(getElementPathSegments(), usedNumber)
 }
 
