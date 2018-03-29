@@ -1,0 +1,4 @@
+KRESE_DATABASE_JDBC=jdbc:mysql://localhost:3306/test
+KRESE_DATABASE_DRIVER=org.mariadb.jdbc.Driver
+
+docker run -p 3306:3306 --name mariadb-for-krese -e MYSQL_USER=admin -e MYSQL_PASSWORD=secret -e MYSQL_DATABASE=test -e MYSQL_ROOT_PASSWORD=secret -d mariadb:latest --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci

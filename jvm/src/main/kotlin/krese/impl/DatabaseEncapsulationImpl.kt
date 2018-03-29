@@ -35,7 +35,7 @@ class DatabaseEncapsulationImpl(private val kodein: Kodein) : DatabaseEncapsulat
     }
 
     fun createSchemaIfNotExists(): Boolean {
-        Database.connect(databaseConfig.databaseJDBC, driver = databaseConfig.databaseDriver)
+        Database.connect(url = databaseConfig.databaseJDBC, driver = databaseConfig.databaseDriver, user = databaseConfig.databaseUsername, password = databaseConfig.databasePassword)
         var v = false
         transaction {
             v = DbBookings.exists()
@@ -55,7 +55,7 @@ class DatabaseEncapsulationImpl(private val kodein: Kodein) : DatabaseEncapsulat
 
     override fun get(id: Long?): DbBookingOutputData? {
         if (id != null) {
-            Database.connect(databaseConfig.databaseJDBC, driver = databaseConfig.databaseDriver)
+            Database.connect(url = databaseConfig.databaseJDBC, driver = databaseConfig.databaseDriver, user = databaseConfig.databaseUsername, password = databaseConfig.databasePassword)
 
             var myBooking: DbBookingOutputData? = null
 
@@ -72,7 +72,7 @@ class DatabaseEncapsulationImpl(private val kodein: Kodein) : DatabaseEncapsulat
 
 
     override fun createUpdateBooking(id: Long?, data: DbBookingInputData): DbBookingOutputData? {
-        Database.connect(databaseConfig.databaseJDBC, driver = databaseConfig.databaseDriver)
+        Database.connect(url = databaseConfig.databaseJDBC, driver = databaseConfig.databaseDriver, user = databaseConfig.databaseUsername, password = databaseConfig.databasePassword)
         var dbb: DbBookingOutputData? = null
         val ts = DateTime.now()
         if (id != null) {
@@ -131,7 +131,7 @@ class DatabaseEncapsulationImpl(private val kodein: Kodein) : DatabaseEncapsulat
     }
 
     fun deleteBlocks(bookingId: Long) {
-        Database.connect(databaseConfig.databaseJDBC, driver = databaseConfig.databaseDriver)
+        Database.connect(url = databaseConfig.databaseJDBC, driver = databaseConfig.databaseDriver, user = databaseConfig.databaseUsername, password = databaseConfig.databasePassword)
         transaction {
             DbBlocks.deleteWhere { DbBlocks.dBBookingId eq bookingId }
         }
@@ -139,7 +139,7 @@ class DatabaseEncapsulationImpl(private val kodein: Kodein) : DatabaseEncapsulat
 
     override fun deleteBooking(id: Long): DbBookingOutputData? {
         val x = this.get(id)
-        Database.connect(databaseConfig.databaseJDBC, driver = databaseConfig.databaseDriver)
+        Database.connect(url = databaseConfig.databaseJDBC, driver = databaseConfig.databaseDriver, user = databaseConfig.databaseUsername, password = databaseConfig.databasePassword)
         var exists: Boolean = false
         transaction {
             exists = DbBooking.findById(id) != null
@@ -152,7 +152,7 @@ class DatabaseEncapsulationImpl(private val kodein: Kodein) : DatabaseEncapsulat
 
     override fun acceptBooking(id: Long): DbBookingOutputData? {
         val x = this.get(id)
-        Database.connect(databaseConfig.databaseJDBC, driver = databaseConfig.databaseDriver)
+        Database.connect(url = databaseConfig.databaseJDBC, driver = databaseConfig.databaseDriver, user = databaseConfig.databaseUsername, password = databaseConfig.databasePassword)
         var found: Boolean = false
         transaction {
             val dbB = DbBooking.findById(id)
@@ -169,7 +169,7 @@ class DatabaseEncapsulationImpl(private val kodein: Kodein) : DatabaseEncapsulat
         val myBookings = mutableListOf<DbBookingOutputData>()
         val skey = key.id
 
-        Database.connect(databaseConfig.databaseJDBC, driver = databaseConfig.databaseDriver)
+        Database.connect(url = databaseConfig.databaseJDBC, driver = databaseConfig.databaseDriver, user = databaseConfig.databaseUsername, password = databaseConfig.databasePassword)
         transaction {
             myBookings.addAll(
                     DbBooking.find { DbBookings.reservableKey eq skey and (DbBookings.startDateTime less excludeMaxTimestamp or DbBookings.endDateTime.greaterEq(includeMinTimestamp)) }.sortedByDescending { DbBookings.startDateTime }.map { it.toOutput() }
