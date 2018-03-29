@@ -3,10 +3,6 @@ package krese.data
 import org.joda.time.DateTime
 
 
-
-
-
-
 fun buildUserProfile(email: Email, validFrom: DateTime, validTo: DateTime): UserProfile {
     return UserProfile(email, if (validFrom.millisOfSecond == 0) {
         validFrom.millis

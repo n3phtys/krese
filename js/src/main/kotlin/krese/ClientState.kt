@@ -9,6 +9,7 @@ import kotlinx.serialization.json.JSON
 import krese.data.*
 import org.w3c.dom.*
 import org.w3c.dom.events.Event
+import org.w3c.dom.parsing.DOMParser
 import org.w3c.xhr.XMLHttpRequest
 import kotlin.browser.document
 import kotlin.browser.localStorage
@@ -25,7 +26,7 @@ external fun decodeURIComponent(str: String): String
 
 val LOCALSTORAGE_KRESE_LOGIN_JWT_KEY = "LOCALSTORAGE_KRESE_LOGIN_JWT_KEY"
 
-
+val domparser = DOMParser()
 
 class ClientState {
     private val creationDate = Date.now()
@@ -466,10 +467,14 @@ class ClientState {
         val collapseId = "collapsedList_${uniqueReservableKey.id}"
 
         val el = document.create.div {
-            unsafe {
-                +"""<a class="btn btn-primary" data-toggle="collapse" href="#$collapseId" role="button" aria-expanded="false" aria-controls="$collapseId">
-    Show list
+            style = "width: 100%;margin-top:40px;margin-bottom:40px;"
+            div {
+                style = "margin:0 auto;"
+                unsafe {
+                    +"""<a class="btn btn-primary" data-toggle="collapse" style="width:30%;white-space: normal;" href="#$collapseId" role="button" aria-expanded="false" aria-controls="$collapseId">
+    Show all entries in list form
   </a>"""
+                }
             }
 
             div {
@@ -514,7 +519,7 @@ class ClientState {
                                             +reservation.endTime.toDate().toLocalizedDateShort()
                                         }
                                         td {
-                                            +reservation.name
+                                            +reservation.name.deescape()
                                         }
                                         td {
                                             +reservation.toBlockTableCellString()
@@ -523,7 +528,7 @@ class ClientState {
                                             ActionButtons(reservation)
                                         }
                                         td {
-                                            +reservation.commentUser
+                                            +reservation.commentUser.deescape()
                                         }
                                     }
                                 }
@@ -899,6 +904,13 @@ class ClientState {
         }
     }
 }
+
+private fun String.unescape(): String {
+    val dom = domparser.parseFromString("<!doctype html><body>" + this, "text/html")
+    return dom.body?.textContent.or("HTML_PARSER_ERROR")
+}
+
+fun String.deescape(): String = this.unescape()
 
 private fun Date.nextFullDay(): Date {
     val d: Date = Date(this.getTime() + (1000L * 60 * 60 * 24))

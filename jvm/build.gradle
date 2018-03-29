@@ -2,7 +2,7 @@ buildscript {
     ext.kotlin_version = '1.2.30'
 
     repositories {
-        maven {     url 'http://dl.bintray.com/kotlin/kotlin-eap-1.2' }
+        maven { url 'http://dl.bintray.com/kotlin/kotlin-eap-1.2' }
         mavenCentral()
         jcenter()
         maven { url "https://kotlin.bintray.com/kotlinx" }
@@ -89,6 +89,8 @@ dependencies {
 
     // https://mvnrepository.com/artifact/org.mariadb.jdbc/mariadb-java-client
     compile group: 'org.mariadb.jdbc', name: 'mariadb-java-client', version: '2.2.3'
+
+    compile 'io.github.microutils:kotlin-logging:1.4.9'
 
     // https://mvnrepository.com/artifact/mysql/mysql-connector-java
     //compile group: 'mysql', name: 'mysql-connector-java', version: '8.0.9-rc'

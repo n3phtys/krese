@@ -4,6 +4,7 @@ import kotlinx.coroutines.experimental.launch
 import krese.data.*
 import krese.impl.DbBookingInputData
 import krese.impl.DbBookingOutputData
+import mu.KotlinLogging
 import org.joda.time.DateTime
 import java.nio.file.Path
 
@@ -59,6 +60,8 @@ interface PostReceiver {
 interface HTMLSanitizer {
     fun sanitize(html: String): String
 }
+
+val logger = KotlinLogging.logger {}
 
 interface StringLocalizer {
     fun getTranslations(): Map<String, String>

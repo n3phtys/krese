@@ -32,7 +32,7 @@ class ConfigMock(val uniqueNumber: Int) : DatabaseConfiguration, ApplicationConf
     override val staticDirectory: String
         get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
     override val filePathOfLocalization: String
-        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
+        get() = "locale.properties"
     override val loadMigrationData: Boolean
         get() = false
     override val databasePort: String
@@ -126,6 +126,7 @@ fun getMockKodein(): Kodein {
         bind<MailService>() with singleton { MailerMock() }
         bind<MailTemplater>() with singleton { MailServiceImpl(kodein) }
         bind<HTMLSanitizer>() with singleton { HTMLSanitizerImpl(kodein) }
+        bind<StringLocalizer>() with singleton { StringLocalizerImpl(kodein) }
     }
 
     return kodein

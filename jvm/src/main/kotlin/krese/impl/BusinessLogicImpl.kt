@@ -110,7 +110,7 @@ class BusinessLogicImpl(private val kodein: Kodein) : BusinessLogic {
     }
 
 
-    //TODO: currently overlying reservations are still possible, needs to be fixed
+    //TODO: currently overlying reservations are still possible, needs to be fixed (or is it already?)
 
     private fun isPossible(action: CreateAction): Boolean {
         val res = fileSystemWrapper.getReservableToKey(action.key)
@@ -118,6 +118,8 @@ class BusinessLogicImpl(private val kodein: Kodein) : BusinessLogic {
         return action.endTime > action.startTime + 1000L &&
                 //key exists
                 res != null &&
+                //at least one block
+                action.blocks.isNotEmpty() &&
                 //blocks exist for key
                 action.blocks.all { res.elements.allows(it) } &&
                 //blocks are free for reservation
@@ -127,7 +129,7 @@ class BusinessLogicImpl(private val kodein: Kodein) : BusinessLogic {
     }
 
     fun requiresEmailVerification(action: PostAction, verification: Email?, verificationValid: Boolean): Boolean {
-        //("check if immediate")
+        //check if immediate
         return !verificationValid
     }
 
@@ -170,7 +172,7 @@ class BusinessLogicImpl(private val kodein: Kodein) : BusinessLogic {
                 throw IllegalArgumentException()
             }
         }
-        //("actually write data to database")
+        //actually write data to database
     }
 
     fun notifyCreator(action: PostAction, creator: Email, key: UniqueReservableKey, reservable: Reservable?, reservation: Reservation?) {
@@ -230,7 +232,7 @@ class BusinessLogicImpl(private val kodein: Kodein) : BusinessLogic {
 
     override fun process(action: PostAction, verification: Email?, verificationValid: Boolean): PostResponse {
         val actioneer: Email? = legalInGeneral(action, verification)
-        println("actioneer = $actioneer  with verification = $verification")
+        logger.debug("actioneer = $actioneer  with verification = $verification")
         if (actioneer != null && (verification == null || actioneer.equals(verification))) {
             val key = getKey(action)
             if (key != null) {
@@ -239,7 +241,7 @@ class BusinessLogicImpl(private val kodein: Kodein) : BusinessLogic {
                 val isModerator: Boolean = reservable?.operatorEmails?.any { it.equals(actioneer.address) } == true
                 if (requiresEmailVerification(action, verification, verificationValid)) {
                     sendEmailVerificationRequest(action, key, reservable, reservation, actioneer, isModerator)
-                    return PostResponse(true, false, "verification request send to user email address")
+                    return PostResponse(true, false, "verification.request.send.to.user.email.address".localize(kodein.instance()))
                 } else {
                     if (isLegalWithGivenVerification(action, actioneer)) {
                         val mods = getModerator(action)
@@ -271,16 +273,16 @@ class BusinessLogicImpl(private val kodein: Kodein) : BusinessLogic {
                             }
                         }
 
-                        return PostResponse(true, true, "post request processed successfully")
+                        return PostResponse(true, true, "post.request.processed.successfully".localize(kodein.instance()))
                     } else {
-                        return PostResponse(false, false, "user is not authorized")
+                        return PostResponse(false, false, "user.is.not.authorized".localize(kodein.instance()))
                     }
                 }
             } else {
-                return PostResponse(false, false, "UniqueReservableKey not recognized")
+                return PostResponse(false, false, "uniquereservablekey.not.recognized".localize(kodein.instance()))
             }
         } else {
-            return PostResponse(false, false, "invalid post request")
+            return PostResponse(false, false, "invalid.post.request".localize(kodein.instance()))
         }
     }
 }

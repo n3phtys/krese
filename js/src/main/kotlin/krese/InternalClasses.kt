@@ -3,7 +3,6 @@ package krese
 import kotlinx.serialization.Serializable
 import krese.data.GetResponse
 import krese.data.Reservation
-import org.w3c.dom.Element
 import kotlin.js.Date
 
 
@@ -24,7 +23,7 @@ data class FullCalendarConfig(
 )
 
 fun Reservation.toCalendarEntry(acceptedColor: String , pendingColor: String, blockAllDay: Boolean ) : CalendarEntry {
-    return CalendarEntry(this.name, Date(this.startTime).toISOString(), Date(this.endTime).toISOString(), blockAllDay, if (this.accepted) acceptedColor else pendingColor )
+    return CalendarEntry(this.name.deescape(), Date(this.startTime).toISOString(), Date(this.endTime).toISOString(), blockAllDay, if (this.accepted) acceptedColor else pendingColor)
 }
 
 fun GetResponse.toCalendarConfig(acceptedColor: String  ="green" , pendingColor: String = "blue", textColor: String = "orange", totalColor: String = "red", blockAllDay: Boolean = true) : FullCalendarConfig {

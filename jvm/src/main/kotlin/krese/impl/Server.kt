@@ -35,8 +35,9 @@ class Server(private val kodein: Kodein) {
 
 
     val server = embeddedServer(Netty, appConfig.applicationPort) {
-        println("appConfig.webDirectory = " + File(appConfig.webDirectory).absolutePath)
-        println("get entries = /" + Routes.GET_RESERVABLES.path)
+        logger.info("appConfig.webDirectory = " + File(appConfig.webDirectory).absolutePath)
+        logger.info("get entries = /" + Routes.GET_RESERVABLES.path)
+        logger.info("Binding to port ${appConfig.applicationPort} with outside url: ${appConfig.applicationRoot}")
         routing {
 
             get("/" + Routes.GET_RESERVABLES.path) {
@@ -46,8 +47,6 @@ class Server(private val kodein: Kodein) {
                 val fromStr = params.get("from")
                 val toStr = params.get("to")
 
-                println("params:")
-                println(params)
                 val key: UniqueReservableKey? = params.get("key").let { if (it != null) UniqueReservableKey(it) else null }
 
 
@@ -71,48 +70,48 @@ class Server(private val kodein: Kodein) {
             post("/" + Routes.POST_ACTION_ACCEPT.path) {
                 val params = call.receive<Parameters>()
                 val postStr = params.get("action")
-                println("INPUT: postStr= $postStr ")
+                logger.info("INPUT: postStr= $postStr ")
                 if (postStr != null) {
                     val postAction: AcceptActionInput = JSON.parse(postStr)
                     call.respondText(JSON.stringify(postReceiver.submitForm(postAction)))
                 } else {
-                    call.respond(HttpStatusCode.BadRequest, "could not read action param")
+                    call.respond(HttpStatusCode.BadRequest, "could.not.read.action.param".localize(kodein.instance()))
                 }
             }
 
             post("/" + Routes.POST_ACTION_CREATE.path) {
                 val params = call.receive<Parameters>()
                 val postStr = params.get("action")
-                println("INPUT: postStr= $postStr ")
+                logger.info("INPUT: postStr= $postStr ")
                 if (postStr != null) {
                     val postAction: CreateActionInput = JSON.parse(postStr)
                     call.respondText(JSON.stringify(postReceiver.submitForm(postAction)))
                 } else {
-                    call.respond(HttpStatusCode.BadRequest, "could not read action param")
+                    call.respond(HttpStatusCode.BadRequest, "could.not.read.action.param".localize(kodein.instance()))
                 }
             }
 
             post("/" + Routes.POST_ACTION_DECLINE.path) {
                 val params = call.receive<Parameters>()
                 val postStr = params.get("action")
-                println("INPUT: postStr= $postStr ")
+                logger.info("INPUT: postStr= $postStr ")
                 if (postStr != null) {
                     val postAction: DeclineActionInput = JSON.parse(postStr)
                     call.respondText(JSON.stringify(postReceiver.submitForm(postAction)))
                 } else {
-                    call.respond(HttpStatusCode.BadRequest, "could not read action param")
+                    call.respond(HttpStatusCode.BadRequest, "could.not.read.action.param".localize(kodein.instance()))
                 }
             }
 
             post("/" + Routes.POST_ACTION_WITHDRAW.path) {
                 val params = call.receive<Parameters>()
                 val postStr = params.get("action")
-                println("INPUT: postStr= $postStr ")
+                logger.info("INPUT: postStr= $postStr ")
                 if (postStr != null) {
                     val postAction: WithdrawActionInput = JSON.parse(postStr)
                     call.respondText(JSON.stringify(postReceiver.submitForm(postAction)))
                 } else {
-                    call.respond(HttpStatusCode.BadRequest, "could not read action param")
+                    call.respond(HttpStatusCode.BadRequest, "could.not.read.action.param".localize(kodein.instance()))
                 }
             }
 
@@ -123,7 +122,7 @@ class Server(private val kodein: Kodein) {
                 if (jwt != null) {
                     call.respondText(jwtReceiver.loginStillValid(jwt).toString())
                 } else {
-                    call.respond(HttpStatusCode.BadRequest, "could not read jwt param")
+                    call.respond(HttpStatusCode.BadRequest, "could.not.read.jwt.param".localize(kodein.instance()))
                 }
 
             }
@@ -133,9 +132,9 @@ class Server(private val kodein: Kodein) {
                 val key = params.get("key")
                 if (email != null) {
                     jwtReceiver.relogin(email, key?.let { it1 -> UniqueReservableKey(it1) })
-                    call.respondText("true")
+                    call.respondText(true.toString())
                 } else {
-                    call.respond(HttpStatusCode.BadRequest, "could not read email param")
+                    call.respond(HttpStatusCode.BadRequest, "could.not.read.email.param".localize(kodein.instance()))
                 }
 
             }
@@ -143,17 +142,17 @@ class Server(private val kodein: Kodein) {
             post("/" + Routes.POST_ACTION_SIGNED.path) {
                 val params = call.receive<Parameters>()
                 val postStr = params.get("action")
-                println("INPUT: postStr= $postStr ")
+                logger.info("INPUT: postStr= $postStr ")
                 if (postStr != null) {
                     val action = authVerifier.decodeJWT(postStr)
                     if (action != null && action.action != null) {
-                        println("action = ${action.toString()}")
+                        logger.debug("action = $action")
                         call.respondText(JSON.stringify(postReceiver.submitForm(PostActionInput.build(postStr, action.action!!))))
                     } else {
-                        call.respond(HttpStatusCode.BadRequest, "could not validate crypto signature of link")
+                        call.respond(HttpStatusCode.BadRequest, "could.not.validate.crypto.signature.of.link".localize(kodein.instance()))
                     }
                 } else {
-                    call.respond(HttpStatusCode.BadRequest, "could not read action param")
+                    call.respond(HttpStatusCode.BadRequest, "could.not.read.action.param".localize(kodein.instance()))
                 }
 
             }

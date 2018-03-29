@@ -160,7 +160,7 @@ fun toJson(action: PostAction?): Pair<String, String> {
     }
 }
 
-private fun String?.or(s: String): String = if (this != null) this else s
+fun String?.or(s: String): String = if (this != null) this else s
 
 fun buildFromJson(tag: String?, json: String?): PostAction? {
     if (json == null) {

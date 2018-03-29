@@ -4,7 +4,6 @@ import com.github.salomonbrys.kodein.Kodein
 import com.github.salomonbrys.kodein.instance
 import krese.*
 import krese.data.*
-import org.jetbrains.exposed.sql.exposedLogger
 import org.joda.time.DateTime
 import org.joda.time.format.ISODateTimeFormat
 import java.util.*
@@ -18,8 +17,7 @@ class MailServiceImpl(private val kodein: Kodein) : MailService, MailTemplater {
     private val fileSystemWrapper: FileSystemWrapper = kodein.instance()
 
     override suspend fun sendEmail(receivers: List<Email>, bodyHTML: String, subject: String) {
-        //TODO: use own logger
-        exposedLogger.debug("Sending email to [${(receivers.map { it.address }.joinToString(","))}] with subject=$subject and body: $bodyHTML")
+        logger.debug("Sending email to [${(receivers.map { it.address }.joinToString(","))}] with subject=$subject and body: $bodyHTML")
 
         val from = appConfig.mailFrom
         val properties: Properties = Properties().let {

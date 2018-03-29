@@ -180,57 +180,6 @@ class DatabaseEncapsulationImpl(private val kodein: Kodein) : DatabaseEncapsulat
 
 }
 
-fun createInMemoryElements() {
-    Database.connect("jdbc:h2:mem:test", driver = "org.h2.Driver")
-
-    transaction {
-        //logger.addLogger(StdOutSqlLogger)
-
-        create(DbBookings, DbBlocks)
-
-        val firstB = DbBooking.new {
-            name = "first booking"
-            accepted = false
-            reservableKey = "reservable/key"
-            email = "placeholder@email.com"
-            telephone = "1234567890"
-            commentUser = "N/A"
-            commentOperator = "N/A"
-            startDateTime = DateTime.now().plusDays(4)
-            endDateTime = DateTime.now().plusDays(5)
-            createdTimestamp = DateTime.now()
-            modifiedTimestamp = DateTime.now()
-        }
-
-        val secondB = DbBooking.new {
-            name = "second booking"
-            accepted = true
-            reservableKey = "reservable/key"
-            email = "placeholder@email.com"
-            telephone = "1234567890"
-            commentUser = "N/A"
-            commentOperator = "N/A"
-            startDateTime = DateTime.now().plusDays(2)
-            endDateTime = DateTime.now().plusDays(3)
-            createdTimestamp = DateTime.now()
-            modifiedTimestamp = DateTime.now()
-        }
-
-        DbBlock.new {
-            usedNumber = 1
-            dBBooking = firstB
-            elementPath = "[5,21,53]"
-        }
-
-
-
-        println("Bookings: ${DbBooking.all().joinToString { it.name }}")
-        println("Blocks in ${firstB.name}: ${firstB.blocks.joinToString { it.elementPath }}")
-        println("Accepted Bookings: ${DbBooking.find { DbBookings.accepted eq true }.joinToString { it.name }}")
-    }
-}
-
-
 object DbBookings : LongIdTable("db_bookings", "id") {
     val reservableKey = varchar("reservable_key", 127).index(false)
     val email = varchar("email", 255)
