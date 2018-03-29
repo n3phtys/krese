@@ -104,7 +104,7 @@ data class DbBlockData(val elementPath: List<Int>, val usedNumber: Int) {
                     current = ne
                 }
             }
-            return "* ${current.name} (x${this.usedNumber})"
+            return "* ${current.name}${if (current.units > 1) " × ${this.usedNumber}" else ""}"
         } else {
             return ""
         }

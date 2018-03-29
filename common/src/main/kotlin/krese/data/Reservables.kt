@@ -41,8 +41,13 @@ data class ReservableElement(
 data class Reservation(
         val id: Long, val key: UniqueReservableKey, val email: Email?, val name: String, val telephone: String?, val commentUser: String, val commentOperator: String?, val startTime: Long, val endTime: Long, val createdTimestamp: Long, val modifiedTimestamp: Long?, val accepted: Boolean, val blocks: List<DbBlockData>
 ) {
-    fun toBlockTableCellString(): String {
-        return blocks.map { "${it.usedNumber} * ${it.elementPath}" }.joinToString()
+
+    fun toBlockTableCellHTML(reservable: Reservable?): String {
+        if (reservable != null) {
+            return "<ul>${blocks.map { "<li>${it.namedBlock(reservable).drop(2)}</li>" }.joinToString("\n")}</ul>"
+        } else {
+            return ""
+        }
     }
 
     fun namedBlocks(reservable: Reservable?): String {

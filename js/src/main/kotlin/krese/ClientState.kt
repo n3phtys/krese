@@ -54,6 +54,10 @@ class ClientState {
 
 
     init {
+        document.title = "frontend.title".localize()
+        document.getElementById("krese_header")!!.innerHTML = "frontend.header".localize()
+
+
         if (localStorage.get(LOCALSTORAGE_KRESE_MY_EMAIL) == null && jwt != null) {
             localStorage.set(LOCALSTORAGE_KRESE_MY_EMAIL, decodeJWT(jwt!!).email)
         }
@@ -98,15 +102,17 @@ class ClientState {
             when (jwtState) {
                 JWTStatus.UNCHECKED -> button {
                     classes = setOf("btn", jwtState.buttonStyle)
+                    style = "white-space: normal;"
                     onClickFunction = { relogin() }
                     span {
                         classes = jwtState.glyphname.split(" ").toSet()
                         style = "padding:5px;"
                     }
-                    +"Login via Email ${localStorage.get(LOCALSTORAGE_KRESE_MY_EMAIL)}"
+                    +"${"frontend.loginbtn.fresh".localize()} ${localStorage.get(LOCALSTORAGE_KRESE_MY_EMAIL)}"
                 }
                 JWTStatus.PENDING -> button {
                     classes = setOf("btn", jwtState.buttonStyle)
+                    style = "white-space: normal;"
                     onClickFunction = { logout() }
                     span {
                         classes = jwtState.glyphname.split(" ").toSet()
@@ -116,6 +122,7 @@ class ClientState {
                 }
                 JWTStatus.VALID -> button {
                     classes = setOf("btn", jwtState.buttonStyle)
+                    style = "white-space: normal;"
                     onClickFunction = { logout() }
                     span {
                         classes = jwtState.glyphname.split(" ").toSet()
@@ -125,6 +132,7 @@ class ClientState {
                 }
                 JWTStatus.INVALID -> button {
                     classes = setOf("btn", jwtState.buttonStyle)
+                    style = "white-space: normal;"
                     onClickFunction = { logout() }
                     span {
                         classes = jwtState.glyphname.split(" ").toSet()
@@ -464,6 +472,8 @@ class ClientState {
 </div>
          */
 
+        val reservable = this.reservables.get(uniqueReservableKey)
+
         val collapseId = "collapsedList_${uniqueReservableKey.id}"
 
         val el = document.create.div {
@@ -472,7 +482,7 @@ class ClientState {
                 style = "margin:0 auto;"
                 unsafe {
                     +"""<a class="btn btn-primary" data-toggle="collapse" style="width:30%;white-space: normal;" href="#$collapseId" role="button" aria-expanded="false" aria-controls="$collapseId">
-    Show all entries in list form
+    ${"frontend.list.showallbtn".localize()}
   </a>"""
                 }
             }
@@ -522,7 +532,9 @@ class ClientState {
                                             +reservation.name.deescape()
                                         }
                                         td {
-                                            +reservation.toBlockTableCellString()
+                                            unsafe {
+                                                +reservation.toBlockTableCellHTML(reservable)
+                                            }
                                         }
                                         td {
                                             ActionButtons(reservation)
@@ -615,9 +627,9 @@ class ClientState {
     fun DIV.toFormularInputDiv(element: ReservableElement, key: UniqueReservableKey, prefix: String): Unit {
         val r = element
 
-        //TODO: buggy, does not really work
 
         console.log("creating $this with $key and $prefix")
+
 
 
         label { +"${r.name}: ${r.description}" }
@@ -629,9 +641,9 @@ class ClientState {
                 input {
                     classes = setOf("form-control")
                     type = InputType.number
-                    name = "count_input_${key.id}_${prefix}"
+                    name = "count_input_${key.id}_${prefix}_${r.id}"
                     step = 1.toString()
-                    min = 1.toString()
+                    min = if (prefix.equals("ROOT") && r.subElements.isEmpty()) 1.toString() else 0.toString()
                     max = r.units.toString()
                     value = 1.toString()
                 }
@@ -639,7 +651,7 @@ class ClientState {
                 input {
                     classes = setOf("form-control")
                     type = InputType.checkBox
-                    name = "check_input_${key.id}_${prefix}"
+                    name = "check_input_${key.id}_${prefix}_${r.id}"
                     checked = prefix.equals("ROOT") && r.subElements.isEmpty()
                     disabled = prefix.equals("ROOT") && r.subElements.isEmpty()
                 }
@@ -693,25 +705,29 @@ class ClientState {
                     div {
                         classes = setOf("form-group col-lg-6")
                         label {
-                            +"Name"
+                            +"formfield.label.name".localize()
                         }
-                        input(type = InputType.text, name = FormFieldNames.Name.name, classes = "form-control")
+                        input(type = InputType.text, name = FormFieldNames.Name.name, classes = "form-control") {
+                            required = true
+                        }
                     }
 
 
                     div {
                         classes = setOf("form-group col-lg-6")
                         label {
-                            +"Email"
+                            +"formfield.label.email".localize()
                         }
-                        input(type = InputType.email, name = FormFieldNames.Email.name, classes = "form-control")
+                        input(type = InputType.email, name = FormFieldNames.Email.name, classes = "form-control") {
+                            required = true
+                        }
                     }
 
 
                     div {
                         classes = setOf("form-group col-lg-6")
                         label {
-                            +"Phone"
+                            +"formfield.label.phone".localize()
                         }
                         input(type = InputType.tel, name = FormFieldNames.Telephone.name, classes = "form-control")
                     }
@@ -719,7 +735,7 @@ class ClientState {
                     div {
                         classes = setOf("form-group col-lg-6")
                         label {
-                            +"From"
+                            +"formfield.label.from".localize()
                         }
                         input(type = InputType.date, name = FormFieldNames.From.name, classes = "form-control") {
                             value = Date(creationDate).nextFullDay().toDateShort()
@@ -729,7 +745,7 @@ class ClientState {
                     div {
                         classes = setOf("form-group col-lg-6")
                         label {
-                            +"To"
+                            +"formfield.label.to".localize()
                         }
                         input(type = InputType.date, name = FormFieldNames.To.name, classes = "form-control") {
                             value = Date(creationDate).nextFullDay().nextFullDay().toDateShort()
@@ -740,7 +756,7 @@ class ClientState {
                     div {
                         classes = setOf("form-group col-lg-6")
                         label {
-                            +"Reserved Elements"
+                            +"formfield.label.reservedelements".localize()
                         }
                         div {
                             classes = setOf("form-group col-lg-6")
@@ -750,7 +766,7 @@ class ClientState {
 
                     div {
                         classes = setOf("form-group col-lg-6")
-                        label { +"Comment" }
+                        label { +"formfield.label.comment".localize() }
                         textArea {
                             name = FormFieldNames.Comment.name
                             classes = setOf("form-control")
@@ -927,6 +943,16 @@ fun String.toNamedMap(): Map<String, String> {
     }.toMap()
 }
 
+private fun String.getTrailingIds(prefix: String, uniqueReservableKey: UniqueReservableKey): List<Int> {
+    val previousStr = "$prefix${uniqueReservableKey.id}_ROOT_"
+    val suffix = this.substring(previousStr.length)
+    println("suffix: $suffix")
+    return suffix.split("_").map {
+        println("Parsing id to Int = $it")
+        it.toInt()
+    }
+}
+
 fun Map<String, String>.toCreateAction(uniqueReservableKey: UniqueReservableKey): CreateAction {
     console.log("Building CreateAction:")
     console.log(uniqueReservableKey)
@@ -939,7 +965,18 @@ fun Map<String, String>.toCreateAction(uniqueReservableKey: UniqueReservableKey)
     val from = this.get(FormFieldNames.From.name)!!.dateStringToMillis()
     val to = this.get(FormFieldNames.To.name)!!.dateStringToMillis()
     val comment = this.get(FormFieldNames.Comment.name)!!
-    val blocks = listOf<DbBlockData>() //TODO("implement extracting the blocks") //TODO: this is the most important todo left
+
+    val blocks: List<DbBlockData> = this.toList().map {
+        println("analyzing pair: ${it.first} -> ${it.second}")
+        if (it.first.startsWith("count_input_")) {
+            DbBlockData(it.first.getTrailingIds("count_input_", uniqueReservableKey), it.second.toInt())
+        } else if (it.first.startsWith("check_input_") && it.second.equals("on", true)) {
+            DbBlockData(it.first.getTrailingIds("check_input_", uniqueReservableKey), 1)
+        } else {
+            null
+        }
+    }.filter { it != null && it.usedNumber > 0 }.map { it!! }
+
     val ca = CreateAction(uniqueReservableKey, email, name, phone, comment, from, to, blocks)
     console.log("CreateAction:")
     console.log(ca)
