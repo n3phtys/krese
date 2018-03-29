@@ -26,8 +26,6 @@ external fun decodeURIComponent(str: String): String
 val LOCALSTORAGE_KRESE_LOGIN_JWT_KEY = "LOCALSTORAGE_KRESE_LOGIN_JWT_KEY"
 
 
-//TODO: add confirm() check before each posting (even url given actions!)
-
 
 class ClientState {
     private val creationDate = Date.now()
@@ -59,8 +57,8 @@ class ClientState {
             localStorage.set(LOCALSTORAGE_KRESE_MY_EMAIL, decodeJWT(jwt!!).email)
         }
 
-        testForReceiveRelogin()
         testForReceiveAction()
+        testForReceiveRelogin()
         loadAllKeys()
 
         writeLoginStatus(if (jwt != null && jwt!!.isNotBlank()) JWTStatus.PENDING else JWTStatus.UNCHECKED)
@@ -138,49 +136,55 @@ class ClientState {
     }
 
     fun executeAccept(id: Long) {
-        ServerPost(AcceptAction(id, ""), jwt).asyncCall {
-            //process result in callback
-            if (it.successful) {
-                if (it.finished) {
-                    window.alert("Successfully accepted reservation, message from server = '${it.message}'")
-                    window.location.reload()
+        if (window.confirm("Do you really want to accept this reservation (ID$id)?")) {
+            ServerPost(AcceptAction(id, ""), jwt).asyncCall {
+                //process result in callback
+                if (it.successful) {
+                    if (it.finished) {
+                        window.alert("Successfully accepted reservation, message from server = '${it.message}'")
+                        window.location.reload()
+                    } else {
+                        window.alert("Acceptance of Reservation requires reauthentication. Please check your email. Message from server = '${it.message}'")
+                    }
                 } else {
-                    window.alert("Acceptance of Reservation requires reauthentication. Please check your email. Message from server = '${it.message}'")
+                    window.alert("Error while trying to accept reservation, message from server: '${it.message}'")
                 }
-            } else {
-                window.alert("Error while trying to accept reservation, message from server: '${it.message}'")
             }
         }
     }
 
     fun executeDecline(id: Long) {
-        ServerPost(DeclineAction(id, ""), jwt).asyncCall {
-            //process result in callback
-            if (it.successful) {
-                if (it.finished) {
-                    window.alert("Successfully declined reservation, message from server = '${it.message}'")
-                    window.location.reload()
+        if (window.confirm("Do you really want to permanently decline and delete this reservation (ID$id)?")) {
+            ServerPost(DeclineAction(id, ""), jwt).asyncCall {
+                //process result in callback
+                if (it.successful) {
+                    if (it.finished) {
+                        window.alert("Successfully declined reservation, message from server = '${it.message}'")
+                        window.location.reload()
+                    } else {
+                        window.alert("Decline of Reservation requires reauthentication. Please check your email. Message from server = '${it.message}'")
+                    }
                 } else {
-                    window.alert("Decline of Reservation requires reauthentication. Please check your email. Message from server = '${it.message}'")
+                    window.alert("Error while trying to decline reservation, message from server: '${it.message}'")
                 }
-            } else {
-                window.alert("Error while trying to decline reservation, message from server: '${it.message}'")
             }
         }
     }
 
     fun executeWithdraw(id: Long) {
-        ServerPost(WithdrawAction(id, ""), jwt).asyncCall {
-            //process result in callback
-            if (it.successful) {
-                if (it.finished) {
-                    window.alert("Successfully withdrawn reservation, message from server = '${it.message}'")
-                    window.location.reload()
+        if (window.confirm("Do you really want to permanently withdraw and delete your reservation (ID$id)?")) {
+            ServerPost(WithdrawAction(id, ""), jwt).asyncCall {
+                //process result in callback
+                if (it.successful) {
+                    if (it.finished) {
+                        window.alert("Successfully withdrawn reservation, message from server = '${it.message}'")
+                        window.location.reload()
+                    } else {
+                        window.alert("Withdrawal of Reservation requires reauthentication. Please check your email. Message from server = '${it.message}'")
+                    }
                 } else {
-                    window.alert("Withdrawal of Reservation requires reauthentication. Please check your email. Message from server = '${it.message}'")
+                    window.alert("Error while trying to withdraw reservation, message from server: '${it.message}'")
                 }
-            } else {
-                window.alert("Error while trying to withdraw reservation, message from server: '${it.message}'")
             }
         }
     }
@@ -247,8 +251,6 @@ class ClientState {
             //("unset relogin parameter")
             unsetURLParameter("relogin")
         }
-
-        //TODO: check for action to commit
     }
 
     fun testForReceiveAction() {
@@ -256,16 +258,21 @@ class ClientState {
         val action = getURLParameters().get("action")
         val cs: ClientState = this
         if (action != null) {
-            ServerActionPost(action).asyncCall {
-                window.alert(if (it.successful) {
-                    if (it.finished) {
-                        "Success! Message from Server: ${it.message}"
+
+            if (window.confirm("You are committing the following action based on your link, do you really want to do that? Action: $action")) {
+                ServerActionPost(action).asyncCall {
+                    window.alert(if (it.successful) {
+                        if (it.finished) {
+                            "Success! Message from Server: ${it.message}"
+                        } else {
+                            "Still requiring authentication! Message from Server: ${it.message}"
+                        }
                     } else {
-                        "Still requiring authentication! Message from Server: ${it.message}"
-                    }
-                } else {
-                    "Failure! Message from Server: ${it.message}"
-                })
+                        "Failure! Message from Server: ${it.message}"
+                    })
+                    cs.unsetURLParameter("action")
+                }
+            } else {
                 cs.unsetURLParameter("action")
             }
         }
@@ -785,8 +792,12 @@ class ClientState {
     fun formSubmit(uniqueReservableKey: UniqueReservableKey, formEvent: Event): Boolean {
         formEvent.preventDefault()
         formEvent.stopPropagation()
-        parseFormularToData(uniqueReservableKey)
-        return true
+        if (window.confirm("Do you really want to create this new reservation?")) {
+            parseFormularToData(uniqueReservableKey)
+            return true
+        } else {
+            return false
+        }
     }
 
     fun addDatePickers(formDiv: Element) {
@@ -887,13 +898,6 @@ class ClientState {
             }
         }
     }
-
-
-    //TODO: withdraw accept decline only shown if jwt is set, valid, and is possible (compare email vs moderator and vs creator)
-
-
-    //TODO: add small buttons for withdraw/accept/decline, with confirm for each
-
 }
 
 private fun Date.nextFullDay(): Date {
@@ -922,8 +926,8 @@ fun Map<String, String>.toCreateAction(uniqueReservableKey: UniqueReservableKey)
     val phone = this.get(FormFieldNames.Telephone.name)!!
     val from = this.get(FormFieldNames.From.name)!!.dateStringToMillis()
     val to = this.get(FormFieldNames.To.name)!!.dateStringToMillis()
-    val comment = this.get(FormFieldNames.Email.name)!!
-    val blocks = listOf<DbBlockData>() //TODO("implement extracting the blocks")
+    val comment = this.get(FormFieldNames.Comment.name)!!
+    val blocks = listOf<DbBlockData>() //TODO("implement extracting the blocks") //TODO: this is the most important todo left
     val ca = CreateAction(uniqueReservableKey, email, name, phone, comment, from, to, blocks)
     console.log("CreateAction:")
     console.log(ca)

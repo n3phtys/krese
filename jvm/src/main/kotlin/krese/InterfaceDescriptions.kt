@@ -70,7 +70,11 @@ interface StringLocalizer {
         }.joinToString(",\n")
         }};"""
     }
+
+    fun localize(key: String): String = getTranslations().getOrDefault(key, key)
 }
+
+fun String.localize(localizer: StringLocalizer): String = localizer.localize(this)
 
 interface DatabaseConfiguration {
     val databasePort: String

@@ -3,11 +3,15 @@ package krese.test
 import com.github.salomonbrys.kodein.Kodein
 import com.github.salomonbrys.kodein.bind
 import com.github.salomonbrys.kodein.singleton
-import krese.*
+import krese.DatabaseConfiguration
+import krese.DatabaseEncapsulation
+import krese.HTMLSanitizer
 import krese.data.DbBlockData
 import krese.data.Email
 import krese.data.UniqueReservableKey
-import krese.impl.*
+import krese.impl.DatabaseEncapsulationImpl
+import krese.impl.DbBookingInputData
+import krese.impl.HTMLSanitizerImpl
 import org.joda.time.DateTime
 import org.junit.Test
 import kotlin.test.assertEquals
@@ -25,9 +29,9 @@ class DBTest {
         override val databaseName: String
             get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
         override val databaseUsername: String
-            get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
+            get() = "admin"
         override val databasePassword: String
-            get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
+            get() = "secret"
     }
 
     val kodein = Kodein {

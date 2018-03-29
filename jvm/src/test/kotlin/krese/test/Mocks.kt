@@ -42,9 +42,9 @@ class ConfigMock(val uniqueNumber: Int) : DatabaseConfiguration, ApplicationConf
     override val databaseName: String
         get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
     override val databaseUsername: String
-        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
+        get() = "admin"
     override val databasePassword: String
-        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
+        get() = "secret"
     override val databaseDriver: String
         get() = "org.h2.Driver"
     override val databaseJDBC: String
