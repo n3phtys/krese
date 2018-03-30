@@ -54,7 +54,8 @@ class MailServiceImpl(private val kodein: Kodein) : MailService, MailTemplater {
 
             Transport.send(message)
         } catch (e: MessagingException) {
-
+            logger.debug("Mailer Exception: ${e.message}")
+            e.printStackTrace()
         }
 
     }
