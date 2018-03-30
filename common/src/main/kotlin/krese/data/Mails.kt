@@ -52,7 +52,7 @@ enum class TemplateTypes {
     LoginVerification;
 
 
-    fun fileName(): String = "${this.name}.md"
+    fun fileName(): String = "${this.name}.html"
 
     fun getResourceTemplate(reader: MailFileReader): MailTemplate {
         val folder = "compiledmailtemplates"

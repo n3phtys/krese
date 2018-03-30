@@ -84,7 +84,7 @@ class FileSystemWrapperImpl(private val kodein: Kodein) : FileSystemWrapper {
         val jsonPath: Path? = this.getKeysFromDirectory().get(key)
         if (jsonPath != null) {
             try {
-                return parseMarkdownToHtml(File((jsonPath.toString().substring(0, jsonPath.toString().length - jsonfilename.length) + "prologue.md")).readText())
+                return (File((jsonPath.toString().substring(0, jsonPath.toString().length - jsonfilename.length) + "prologue.html")).readText())
             } catch (e: Exception) {
                 return null
             }
@@ -97,7 +97,7 @@ class FileSystemWrapperImpl(private val kodein: Kodein) : FileSystemWrapper {
         val jsonPath: Path? = this.getKeysFromDirectory().get(key)
         if (jsonPath != null) {
             try {
-                return parseMarkdownToHtml(File((jsonPath.toString().substring(0, jsonPath.toString().length - jsonfilename.length) + "epilogue.md")).readText())
+                return (File((jsonPath.toString().substring(0, jsonPath.toString().length - jsonfilename.length) + "epilogue.html")).readText())
             } catch (e: Exception) {
                 return null
             }

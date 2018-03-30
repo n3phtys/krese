@@ -113,7 +113,7 @@ class MailServiceImpl(private val kodein: Kodein) : MailService, MailTemplater {
         TemplateContants.EMAIL_OF_CREATOR -> reservation?.email?.address.or()
         TemplateContants.TELEPHONE_OF_CREATOR -> reservation?.telephone.or()
         TemplateContants.TITLE_OF_RESERVABLE -> reservable?.title.or()
-        TemplateContants.MODERATOR_MARKDOWN_LINKS -> reservable?.operatorEmails?.toMarkdownLinks()
+        TemplateContants.MODERATOR_MARKDOWN_LINKS -> reservable?.operatorEmails?.toHtmlLinks()
         TemplateContants.LOGIN_LINK -> authVerifier.buildLink(null, receiver, reservation, reservable)
         TemplateContants.LIST_OF_RESERVED_ELEMENTS -> reservation?.namedBlocks(reservable)
         TemplateContants.RESERVATION_COMMENT -> reservation?.commentUser
@@ -137,9 +137,9 @@ class MailServiceImpl(private val kodein: Kodein) : MailService, MailTemplater {
     fun String?.or(default: String = "null"): String = if (this != null) this else default
 }
 
-private fun List<String>?.toMarkdownLinks(): String {
+private fun List<String>?.toHtmlLinks(): String {
     if (this != null) {
-        return this.map { "[$it](mailto:$it)" }.joinToString(", ")
+        return this.map { "<a href=\"mailto:$it\">$it</a>" }.joinToString(", ")
     } else {
         return ""
     }

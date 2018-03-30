@@ -280,6 +280,7 @@ class ClientState {
                         "${"frontend.error.action".localize()} ${it.message}"
                     })
                     cs.unsetURLParameter("action")
+                    window.location.reload()
                 }
             } else {
                 cs.unsetURLParameter("action")
@@ -625,6 +626,7 @@ class ClientState {
             }
         }
 
+        @Suppress("DEPRECATION")
         jq(calid).asDynamic().fullCalendar(js("JSON.parse(configJson)"))
     }
 
@@ -928,6 +930,7 @@ class ClientState {
     fun parseFormularToData(uniqueReservableKey: UniqueReservableKey) {
         //collect all form data
         val id = "#submitform_${uniqueReservableKey.id}"
+        @Suppress("DEPRECATION")
         val formURLString: String = jq(id).asDynamic().serialize()
         val fields = formURLString.toNamedMap()
         //post as action

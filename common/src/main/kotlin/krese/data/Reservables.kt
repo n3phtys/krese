@@ -52,7 +52,7 @@ data class Reservation(
 
     fun namedBlocks(reservable: Reservable?): String {
         if (reservable != null) {
-            return blocks.map { it.namedBlock(reservable) }.joinToString("\n")
+            return "<ul>" +blocks.map { it.namedBlockHTML(reservable) }.joinToString("\n") + "</ul>"
         } else {
             return ""
         }

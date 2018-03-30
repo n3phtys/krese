@@ -109,6 +109,21 @@ data class DbBlockData(val elementPath: List<Int>, val usedNumber: Int) {
             return ""
         }
     }
+
+    fun namedBlockHTML(reservable: Reservable?): Any {
+        if (reservable != null) {
+            var current = reservable.elements
+            this.elementPath.drop(1).forEach { id ->
+                val ne = current.subElements.find { it.id == id }
+                if (ne != null) {
+                    current = ne
+                }
+            }
+            return "<li> ${current.name}${if (current.units > 1) " × ${this.usedNumber}" else ""} </li>"
+        } else {
+            return ""
+        }
+    }
 }
 
 @Serializable
