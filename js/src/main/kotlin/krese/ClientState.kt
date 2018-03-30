@@ -423,6 +423,7 @@ class ClientState {
             navbar.appendChild(transformKeyIntoButton(it))
             tabcontainer.appendChild(transformKeyIntoDiv(it))
             addDatePickers(document.getElementById("dap_" + it.id)!!)
+            setReservableToKey(it)
         }
     }
 
@@ -438,12 +439,17 @@ class ClientState {
         xhttp.send()
     }
 
-    fun setEntriesToKey(uniqueReservableKey: UniqueReservableKey) {
+    fun setReservableToKey(uniqueReservableKey: UniqueReservableKey) {
         document.getElementById("title_header_${uniqueReservableKey.id}")!!.innerHTML = reservables.get(uniqueReservableKey)!!.title
         document.getElementById("pro_" + uniqueReservableKey.id)!!.innerHTML = reservables.get(uniqueReservableKey)!!.prologue
         val epilogue = reservables.get(uniqueReservableKey)!!.epilogue
         document.getElementById("epi_" + uniqueReservableKey.id)!!.innerHTML = epilogue
         addFormular(document.getElementById("for_" + uniqueReservableKey.id)!!, uniqueReservableKey)
+
+    }
+
+    fun setEntriesToKey(uniqueReservableKey: UniqueReservableKey) {
+        setReservableToKey(uniqueReservableKey)
         setReservationList(document.getElementById("lis_" + uniqueReservableKey.id)!!, uniqueReservableKey)
         setReservationCalendar(document.getElementById("cal_" + uniqueReservableKey.id)!!, uniqueReservableKey)
     }

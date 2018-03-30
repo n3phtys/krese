@@ -12,7 +12,7 @@ import java.nio.file.Path
 interface FileSystemWrapper : MailFileReader, MailFileConfigSpecific {
     fun getKeysFromDirectory(): Map<UniqueReservableKey, Path>
     fun getReservableToKey(key: UniqueReservableKey): Reservable?
-} //TODO: also includes static files in subdirectory
+}
 
 interface DatabaseEncapsulation {
 
