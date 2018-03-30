@@ -93,7 +93,7 @@ class AuthVerifierImpl(private val kodein: Kodein) : AuthVerifier {
         val actionFrom = DateTime.now()
         val actionTo = DateTime.now().plusDays(90)
         val reloginjwt: String? = encodeJWT(JWTPayload(null, listOf(), buildUserProfile(receiver, loginFrom, loginTo)))
-        val actionjwt: String? = encodeJWT(JWTPayload(action, listOf(), buildUserProfile(receiver, actionFrom, actionTo)))
+        val actionjwt: String? = if (action != null) encodeJWT(JWTPayload(action, listOf(), buildUserProfile(receiver, actionFrom, actionTo))) else null
         val key: String? = reservable?.uniqueId
 
         val map: Map<String, String> = mapOf("relogin" to reloginjwt, "action" to actionjwt, "selected_key" to key).filter { it.value != null }.mapValues { it.value!! }

@@ -28,7 +28,6 @@ fun Reservation.toCalendarEntry(acceptedColor: String , pendingColor: String, bl
 
 fun GetResponse.toCalendarConfig(acceptedColor: String  ="green" , pendingColor: String = "blue", textColor: String = "orange", totalColor: String = "red", blockAllDay: Boolean = true) : FullCalendarConfig {
     val x =  FullCalendarConfig(this.existingReservations.map{it.toCalendarEntry(acceptedColor, pendingColor, blockAllDay)}, totalColor, textColor)
-    console.log(x)
     return x
 }
 

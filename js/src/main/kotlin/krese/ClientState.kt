@@ -108,7 +108,7 @@ class ClientState {
                         classes = jwtState.glyphname.split(" ").toSet()
                         style = "padding:5px;"
                     }
-                    +"${"frontend.loginbtn.fresh".localize()} ${localStorage.get(LOCALSTORAGE_KRESE_MY_EMAIL)}"
+                    +"${"frontend.loginbtn.fresh".localize()} ${if (localStorage.get(LOCALSTORAGE_KRESE_MY_EMAIL) != null) localStorage.get(LOCALSTORAGE_KRESE_MY_EMAIL) else ""}"
                 }
                 JWTStatus.PENDING -> button {
                     classes = setOf("btn", jwtState.buttonStyle)
@@ -118,7 +118,7 @@ class ClientState {
                         classes = jwtState.glyphname.split(" ").toSet()
                         style = "padding:5px;"
                     }
-                    +"Logged in as ${localStorage.get(LOCALSTORAGE_KRESE_MY_EMAIL)} | Pending verification..."
+                    +"${"frontend.loginbtn.pending".localize()} ${localStorage.get(LOCALSTORAGE_KRESE_MY_EMAIL)} | ${"pending.verification".localize()}"
                 }
                 JWTStatus.VALID -> button {
                     classes = setOf("btn", jwtState.buttonStyle)
@@ -128,7 +128,7 @@ class ClientState {
                         classes = jwtState.glyphname.split(" ").toSet()
                         style = "padding:5px;"
                     }
-                    +"Successfully logged in as ${localStorage.get(LOCALSTORAGE_KRESE_MY_EMAIL)} | click to logout"
+                    +"${"frontend.loginbtn.success".localize()} ${localStorage.get(LOCALSTORAGE_KRESE_MY_EMAIL)} | ${"click.to.logout".localize()}"
                 }
                 JWTStatus.INVALID -> button {
                     classes = setOf("btn", jwtState.buttonStyle)
@@ -138,61 +138,61 @@ class ClientState {
                         classes = jwtState.glyphname.split(" ").toSet()
                         style = "padding:5px;"
                     }
-                    +"Invalid Credentials for ${localStorage.get(LOCALSTORAGE_KRESE_MY_EMAIL)}, please logout"
+                    +"${"frontend.loginbtn.invalid".localize()} ${localStorage.get(LOCALSTORAGE_KRESE_MY_EMAIL)}, ${"please.log.out".localize()}"
                 }
             }
         }
     }
 
     fun executeAccept(id: Long) {
-        if (window.confirm("Do you really want to accept this reservation (ID$id)?")) {
+        if (window.confirm("${"frontend.confirm.accept".localize()} (ID #$id)?")) {
             ServerPost(AcceptAction(id, ""), jwt).asyncCall {
                 //process result in callback
                 if (it.successful) {
                     if (it.finished) {
-                        window.alert("Successfully accepted reservation, message from server = '${it.message}'")
+                        window.alert("${"frontend.success.accept".localize()} '${it.message}'")
                         window.location.reload()
                     } else {
-                        window.alert("Acceptance of Reservation requires reauthentication. Please check your email. Message from server = '${it.message}'")
+                        window.alert("${"frontend.uncomplete.accept".localize()} '${it.message}'")
                     }
                 } else {
-                    window.alert("Error while trying to accept reservation, message from server: '${it.message}'")
+                    window.alert("${"frontend.error.accept".localize()} '${it.message}'")
                 }
             }
         }
     }
 
     fun executeDecline(id: Long) {
-        if (window.confirm("Do you really want to permanently decline and delete this reservation (ID$id)?")) {
+        if (window.confirm("${"frontend.confirm.decline".localize()} (ID$id)?")) {
             ServerPost(DeclineAction(id, ""), jwt).asyncCall {
                 //process result in callback
                 if (it.successful) {
                     if (it.finished) {
-                        window.alert("Successfully declined reservation, message from server = '${it.message}'")
+                        window.alert("${"frontend.success.decline".localize()} '${it.message}'")
                         window.location.reload()
                     } else {
-                        window.alert("Decline of Reservation requires reauthentication. Please check your email. Message from server = '${it.message}'")
+                        window.alert("${"frontend.uncomplete.decline".localize()} '${it.message}'")
                     }
                 } else {
-                    window.alert("Error while trying to decline reservation, message from server: '${it.message}'")
+                    window.alert("${"frontend.error.decline".localize()} '${it.message}'")
                 }
             }
         }
     }
 
     fun executeWithdraw(id: Long) {
-        if (window.confirm("Do you really want to permanently withdraw and delete your reservation (ID$id)?")) {
+        if (window.confirm("${"frontend.confirm.withdraw".localize()} (ID$id)?")) {
             ServerPost(WithdrawAction(id, ""), jwt).asyncCall {
                 //process result in callback
                 if (it.successful) {
                     if (it.finished) {
-                        window.alert("Successfully withdrawn reservation, message from server = '${it.message}'")
+                        window.alert("${"frontend.success.withdrawn".localize()} '${it.message}'")
                         window.location.reload()
                     } else {
-                        window.alert("Withdrawal of Reservation requires reauthentication. Please check your email. Message from server = '${it.message}'")
+                        window.alert("${"frontend.uncomplete.withdrawn".localize()} '${it.message}'")
                     }
                 } else {
-                    window.alert("Error while trying to withdraw reservation, message from server: '${it.message}'")
+                    window.alert("${"frontend.error.withdrawn".localize()} '${it.message}'")
                 }
             }
         }
@@ -202,9 +202,9 @@ class ClientState {
     fun relogin() {
         val oldemail = localStorage.get(LOCALSTORAGE_KRESE_MY_EMAIL)
         val result = if (oldemail != null) {
-            window.prompt("Enter your email address to proceed", oldemail)
+            window.prompt("enter.your.email".localize(), oldemail)
         } else {
-            window.prompt("Enter your email address to proceed")
+            window.prompt("enter.your.email".localize())
         }
 
         if (result != null && result.isNotBlank()) {
@@ -215,7 +215,7 @@ class ClientState {
             xhttp.onreadystatechange = {
                 println("Received something... state = ${xhttp.readyState} and status = ${xhttp.status}")
                 if (xhttp.readyState == 4.toShort() && xhttp.status == 200.toShort()) {
-                    window.alert("We have sent you an email. Please open it and follow the link to log in. You should close this Tab now.")
+                    window.alert("we.have.send.you.an.email".localize())
                 }
             }
             xhttp.send("email=$result")
@@ -248,7 +248,7 @@ class ClientState {
     fun testForReceiveRelogin() {
         //("check url for relogin parameter")
         val relogin = getURLParameters().get("relogin")
-        if (relogin != null) {
+        if (relogin != null && relogin.isNotBlank()) {
             //("decode both jwts and compare their creation timestamp")
             val decodedRelogin = decodeJWT(relogin)
             //("keep the newer one")
@@ -266,18 +266,18 @@ class ClientState {
 
         val action = getURLParameters().get("action")
         val cs: ClientState = this
-        if (action != null) {
+        if (action != null && action.isNotBlank()) {
 
-            if (window.confirm("You are committing the following action based on your link, do you really want to do that? Action: $action")) {
+            if (window.confirm("${"frontend.confirm.action".localize()} $action")) {
                 ServerActionPost(action).asyncCall {
                     window.alert(if (it.successful) {
                         if (it.finished) {
-                            "Success! Message from Server: ${it.message}"
+                            "${"frontend.success.action".localize()} ${it.message}"
                         } else {
-                            "Still requiring authentication! Message from Server: ${it.message}"
+                            "${"frontend.uncomplete.action".localize()} ${it.message}"
                         }
                     } else {
-                        "Failure! Message from Server: ${it.message}"
+                        "${"frontend.error.action".localize()} ${it.message}"
                     })
                     cs.unsetURLParameter("action")
                 }
@@ -400,18 +400,12 @@ class ClientState {
                 }
             }
             div {
-                hr {
-
-                }
-            }
-            div {
                 div {
                     id = "cal_" + key.id
                     +"Kalender"
                 }
                 div {
                     id = "dap_" + key.id
-                    +"From To Date Picker"
                 }
                 div {
                     id = "lis_" + key.id
@@ -422,7 +416,6 @@ class ClientState {
     }
 
     private fun setAllKeysToGUI() {
-        println("setting all keys to gui")
         navbar.innerHTML = ""
         tabcontainer.innerHTML = ""
         allKeys.sortedBy { it.id }.forEach {
@@ -532,6 +525,17 @@ class ClientState {
                                             +reservation.name.deescape()
                                         }
                                         td {
+                                            div {
+                                                if (reservation.accepted) {
+                                                    span {
+                                                        classes = setOf("glyphicon", "glyphicon-ok-sign")
+                                                    }
+                                                } else {
+                                                    span {
+                                                        classes = setOf("glyphicon", "glyphicon-question-sign")
+                                                    }
+                                                }
+                                            }
                                             unsafe {
                                                 +reservation.toBlockTableCellHTML(reservable)
                                             }
@@ -628,42 +632,47 @@ class ClientState {
         val r = element
 
 
-        console.log("creating $this with $key and $prefix")
-
-
-
-        label { +"${r.name}: ${r.description}" }
-        if (r.units != 0) {
-            if (r.units != 1) {
-                label {
-                    +"Number:"
-                }
-                input {
-                    classes = setOf("form-control")
-                    type = InputType.number
-                    name = "count_input_${key.id}_${prefix}_${r.id}"
-                    step = 1.toString()
-                    min = if (prefix.equals("ROOT") && r.subElements.isEmpty()) 1.toString() else 0.toString()
-                    max = r.units.toString()
-                    value = 1.toString()
-                }
-            } else {
-                input {
-                    classes = setOf("form-control")
-                    type = InputType.checkBox
-                    name = "check_input_${key.id}_${prefix}_${r.id}"
-                    checked = prefix.equals("ROOT") && r.subElements.isEmpty()
-                    disabled = prefix.equals("ROOT") && r.subElements.isEmpty()
-                }
-                label { +"Reserve this element" }
-            }
-        }
         div {
-            classes = setOf("form-group col-lg-6")
-            for (@Suppress("NAME_SHADOWING") element in r.subElements) {
-                this.toFormularInputDiv(element, key, prefix + "_" + r.id)
+            style = "margin-top:15px;margin-bottom:3px;border:2px #AACFEF solid;border-radius: 8px;padding:8px;"
+            div {
+                div {
+                    label { +"${r.name}: " }
+                }
+                div {
+                    +r.description
+                }
+            }
+            if (r.units != 0) {
+                if (r.units != 1) {
+                    input {
+                        classes = setOf("form-control")
+                        type = InputType.number
+                        name = "count_input_${key.id}_${prefix}_${r.id}"
+                        step = 1.toString()
+                        min = if (prefix.equals("ROOT") && r.subElements.isEmpty()) 1.toString() else 0.toString()
+                        max = r.units.toString()
+                        value = 1.toString()
+                    }
+                } else {
+                    div {
+                        classes = setOf("checkbox")
+                        label {
+                            input {
+                                type = InputType.checkBox
+                                name = "check_input_${key.id}_${prefix}_${r.id}"
+                                checked = prefix.equals("ROOT") && r.subElements.isEmpty()
+                                disabled = prefix.equals("ROOT") && r.subElements.isEmpty()
+                            }
+                            +"reserve.this.element".localize()
+                        }
+                    }
+                }
             }
         }
+        for (@Suppress("NAME_SHADOWING") element in r.subElements) {
+            this.toFormularInputDiv(element, key, prefix + "_" + r.id)
+        }
+
     }
 
     fun addFormular(formDiv: Element, uniqueReservableKey: UniqueReservableKey) {
@@ -703,69 +712,65 @@ class ClientState {
                         it.stopPropagation()
                     }
                     div {
-                        classes = setOf("form-group col-lg-6")
-                        label {
-                            +"formfield.label.name".localize()
-                        }
-                        input(type = InputType.text, name = FormFieldNames.Name.name, classes = "form-control") {
-                            required = true
-                        }
-                    }
-
-
-                    div {
-                        classes = setOf("form-group col-lg-6")
-                        label {
-                            +"formfield.label.email".localize()
-                        }
-                        input(type = InputType.email, name = FormFieldNames.Email.name, classes = "form-control") {
-                            required = true
-                        }
-                    }
-
-
-                    div {
-                        classes = setOf("form-group col-lg-6")
-                        label {
-                            +"formfield.label.phone".localize()
-                        }
-                        input(type = InputType.tel, name = FormFieldNames.Telephone.name, classes = "form-control")
-                    }
-
-                    div {
-                        classes = setOf("form-group col-lg-6")
-                        label {
-                            +"formfield.label.from".localize()
-                        }
-                        input(type = InputType.date, name = FormFieldNames.From.name, classes = "form-control") {
-                            value = Date(creationDate).nextFullDay().toDateShort()
-                        }
-                    }
-
-                    div {
-                        classes = setOf("form-group col-lg-6")
-                        label {
-                            +"formfield.label.to".localize()
-                        }
-                        input(type = InputType.date, name = FormFieldNames.To.name, classes = "form-control") {
-                            value = Date(creationDate).nextFullDay().nextFullDay().toDateShort()
-                        }
-                    }
-
-
-                    div {
-                        classes = setOf("form-group col-lg-6")
-                        label {
-                            +"formfield.label.reservedelements".localize()
-                        }
+                        classes = setOf("col-lg-6")
                         div {
-                            classes = setOf("form-group col-lg-6")
-                            toFormularInputDiv(r.elements, uniqueReservableKey, "ROOT")
+                            label {
+                                +"formfield.label.name".localize()
+                            }
+                            input(type = InputType.text, name = FormFieldNames.Name.name, classes = "form-control") {
+                                required = true
+                            }
                         }
+
+
+                        div {
+                            classes = setOf("form-group")
+                            label {
+                                +"formfield.label.email".localize()
+                            }
+                            input(type = InputType.email, name = FormFieldNames.Email.name, classes = "form-control") {
+                                required = true
+                            }
+                        }
+
+
+                        div {
+                            classes = setOf("form-group")
+                            label {
+                                +"formfield.label.phone".localize()
+                            }
+                            input(type = InputType.tel, name = FormFieldNames.Telephone.name, classes = "form-control")
+                        }
+
+                        div {
+                            classes = setOf("form-group")
+                            label {
+                                +"formfield.label.from".localize()
+                            }
+                            input(type = InputType.date, name = FormFieldNames.From.name, classes = "form-control") {
+                                value = Date(creationDate).nextFullDay().toDateShort()
+                            }
+                        }
+
+                        div {
+                            classes = setOf("form-group")
+                            label {
+                                +"formfield.label.to".localize()
+                            }
+                            input(type = InputType.date, name = FormFieldNames.To.name, classes = "form-control") {
+                                value = Date(creationDate).nextFullDay().nextFullDay().toDateShort()
+                            }
+                        }
+
                     }
 
                     div {
-                        classes = setOf("form-group col-lg-6")
+                        classes = setOf("form-group", "col-lg-6")
+                        toFormularInputDiv(r.elements, uniqueReservableKey, "ROOT")
+                    }
+
+                    div {
+                        classes = setOf("form-group", "col-lg-6")
                         label { +"formfield.label.comment".localize() }
                         textArea {
                             name = FormFieldNames.Comment.name
@@ -774,6 +779,7 @@ class ClientState {
                     }
 
                     div {
+                        classes = setOf("form-group", "col-lg-6")
                         if (r.checkBoxes.isNotEmpty())
                             r.checkBoxes.map {
                                 div {
@@ -789,6 +795,7 @@ class ClientState {
                             }
                     }
                     div {
+                        classes = setOf("form-group", "col-lg-6")
 
                         submitInput {
                             classes = setOf("btn", "btn-info")
@@ -813,7 +820,7 @@ class ClientState {
     fun formSubmit(uniqueReservableKey: UniqueReservableKey, formEvent: Event): Boolean {
         formEvent.preventDefault()
         formEvent.stopPropagation()
-        if (window.confirm("Do you really want to create this new reservation?")) {
+        if (window.confirm("frontend.confirm.create".localize())) {
             parseFormularToData(uniqueReservableKey)
             return true
         } else {
@@ -826,33 +833,52 @@ class ClientState {
                 document.create.form(action = null, encType = null,
                         method = null) {
                     onSubmitFunction = {
+                        println("Getting new events to key = $selectedKey from = $from until $to")
                         selectedKey?.let { it1 -> loadEntriesToKey(it1, from, to) }
                         it.preventDefault()
+
                         it.stopPropagation()
                     }
-                    label {
-                        +"from:"
-                    }
-                    input(type = InputType.date, name = "from-picker") {
-                        value = from.toDateShort()
-                        onChangeFunction = {
-                            from = Date(this.value)
+                    div {
+
+                        style = "padding:15px;"
+                    div {
+                        classes = setOf("form-inline")
+                        div {
+                            classes = setOf("form-group")
+                            style = "margin-left:20px;"
+                            label {
+                                +"filter.label.from".localize()
+                            }
+                            input(type = InputType.date, name = "from-picker") {
+                                classes = setOf("form-control")
+                                value = from.toDateShort()
+                                onChangeFunction = {
+                                    from = Date(this.value)
+                                }
+                            }
+                        }
+                        div {
+                            classes = setOf("form-group")
+                            style = "margin-left:20px;"
+                            label {
+                                +"filter.label.to".localize()
+                            }
+                            input(type = InputType.date, name = "to-picker") {
+                                classes = setOf("form-control")
+                                value = to.toDateShort()
+                                onChangeFunction = {
+                                    to = Date(this.value)
+                                }
+                            }
+                            button {
+                                type = ButtonType.submit
+                                classes = setOf("btn", "btn-default")
+                                style = "margin-left:20px;"
+                                +"filter.btn.submit".localize()
+                            }
                         }
                     }
-                    br()
-                    label {
-                        +"to:"
-                    }
-                    input(type = InputType.date, name = "to-picker") {
-                        value = to.toDateShort()
-                        println("to.toUTCString() = " + to.toDateShort())
-                        onChangeFunction = {
-                            to = Date(this.value)
-                        }
-                    }
-                    button {
-                        type = ButtonType.submit
-                        +"Change Filter"
                     }
                 }
         )
@@ -909,13 +935,13 @@ class ClientState {
             //process result in callback
             if (it.successful) {
                 if (it.finished) {
-                    window.alert("Successfully created reservation, message from server = '${it.message}', please wait for confirmation by the acting moderator")
+                    window.alert("${"frontend.error.create.before".localize()} '${it.message}', ${"frontend.error.create.after".localize()}")
                     window.location.reload()
                 } else {
-                    window.alert("Reservation was posted but not finished. Please check your email. Message from server = '${it.message}'")
+                    window.alert("${"frontend.uncomplete.create".localize()} '${it.message}'")
                 }
             } else {
-                window.alert("Error while trying to post new reservation, message from server: '${it.message}'")
+                window.alert("${"frontend.error.create".localize()} '${it.message}'")
             }
         }
     }
@@ -931,7 +957,6 @@ fun String.deescape(): String = this.unescape()
 private fun Date.nextFullDay(): Date {
     val d: Date = Date(this.getTime() + (1000L * 60 * 60 * 24))
     val r = Date(d.getFullYear(), d.getMonth(), d.getDate(), 12, 0)
-    println("NextFullDate from ${this.toISOString()} to ${d.toISOString()} and ${r.toISOString()}")
     return r
 }
 
