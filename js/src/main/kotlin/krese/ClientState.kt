@@ -659,7 +659,7 @@ class ClientState {
                         step = 1.toString()
                         min = if (prefix.equals("ROOT") && r.subElements.isEmpty()) 1.toString() else 0.toString()
                         max = r.units.toString()
-                        value = 1.toString()
+                        value = if (prefix.equals("ROOT") && r.subElements.isEmpty()) 1.toString() else 0.toString()
                     }
                 } else {
                     div {

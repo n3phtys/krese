@@ -31,6 +31,8 @@ data class ReservableElement(
         }
     }
 
+    fun countSubelements() : Int = 1 + subElements.map { it.countSubelements() }.sum()
+
     fun allows(blocks: List<DbBlockData>): Boolean {
         val map: Map<List<Int>, Int> = blocks.groupBy { it.elementPath }.mapValues { it.value.map { it.usedNumber }.sum() }
         return map.map { DbBlockData(it.key, it.value) }.all { this.allows(it) }
