@@ -499,22 +499,22 @@ class ClientState {
                             thead {
                                 tr {
                                     th {
-                                        +"From"
+                                        +"list.header.from".localize()
                                     }
                                     th {
-                                        +"To"
+                                        +"list.header.to".localize()
                                     }
                                     th {
-                                        +"Name"
+                                        +"list.header.name".localize()
                                     }
                                     th {
-                                        +"Elements"
+                                        +"list.header.elements".localize()
                                     }
                                     th {
-                                        +"Actions"
+                                        +"list.header.actions".localize()
                                     }
                                     th {
-                                        +"Comments"
+                                        +"list.header.comments".localize()
                                     }
                                 }
                             }
