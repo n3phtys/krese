@@ -64,6 +64,12 @@ class ClientState {
 
         testForReceiveAction()
         testForReceiveRelogin()
+
+
+        if (localStorage.get(LOCALSTORAGE_KRESE_MY_EMAIL) == null && jwt != null) {
+            localStorage.set(LOCALSTORAGE_KRESE_MY_EMAIL, decodeJWT(jwt!!).email)
+        }
+
         loadAllKeys()
 
         writeLoginStatus(if (jwt != null && jwt!!.isNotBlank()) JWTStatus.PENDING else JWTStatus.UNCHECKED)

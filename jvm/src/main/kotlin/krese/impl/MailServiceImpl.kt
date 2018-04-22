@@ -119,8 +119,8 @@ class MailServiceImpl(private val kodein: Kodein) : MailService, MailTemplater {
         TemplateContants.RESERVATION_COMMENT -> reservation?.commentUser
         TemplateContants.RESERVATION_FROM_STRING -> reservation?.startTime?.toDateShort()
         TemplateContants.RESERVATION_TO_STRING -> reservation?.endTime?.toDateShort()
-        TemplateContants.LINK_DURATION -> "90 days"
-        TemplateContants.FULL_HOST_ROOT -> "http://localhost:8080"
+        TemplateContants.LINK_DURATION -> "90d"
+        TemplateContants.FULL_HOST_ROOT -> this.appConfig.applicationRoot
         TemplateContants.CREATION_DATE -> reservation?.createdTimestamp?.toDateShort()
         TemplateContants.RESERVATION_DATE -> DateTime(reservation?.startTime).toString(ISODateTimeFormat.date())
 
