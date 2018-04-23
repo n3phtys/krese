@@ -123,7 +123,7 @@ class MailServiceImpl(private val kodein: Kodein) : MailService, MailTemplater {
         TemplateContants.FULL_HOST_ROOT -> this.appConfig.applicationRoot
         TemplateContants.CREATION_DATE -> reservation?.createdTimestamp?.toDateShort()
         TemplateContants.RESERVATION_DATE -> DateTime(reservation?.startTime).toString(ISODateTimeFormat.date())
-
+        TemplateContants.COMMENT -> reservation?.commentUser
     }
 
 

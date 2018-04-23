@@ -175,6 +175,22 @@ class BusinessLogicImpl(private val kodein: Kodein) : BusinessLogic {
         //actually write data to database
     }
 
+    fun dryRunAction(action: PostAction): DbBookingOutputData? {
+        return when (action) {
+            is CreateAction -> {
+                DbBookingOutputData(-1, action.key, action.email, action.name, action.telephone, action.commentUser, "", DateTime(action.startTime), DateTime(action.endTime), DateTime.now(),  DateTime.now(), false, action.blocks)
+            }
+            is DeclineAction -> {
+                databaseEncapsulation.get(action.id)
+            }
+            is WithdrawAction -> databaseEncapsulation.get(action.id)
+            is AcceptAction -> databaseEncapsulation.get(action.id)
+            else -> {
+                throw IllegalArgumentException()
+            }
+        }
+    }
+
     fun notifyCreator(action: PostAction, creator: Email, key: UniqueReservableKey, reservable: Reservable?, reservation: Reservation?) {
         mailService.sendEmail(creator, when (action) {
 
@@ -240,6 +256,8 @@ class BusinessLogicImpl(private val kodein: Kodein) : BusinessLogic {
                 var reservation = getReservation(action)
                 val isModerator: Boolean = reservable?.operatorEmails?.any { it.equals(actioneer.address) } == true
                 if (requiresEmailVerification(action, verification, verificationValid)) {
+                    reservation = dryRunAction(action)?.toOutput(false)
+
                     sendEmailVerificationRequest(action, key, reservable, reservation, actioneer, isModerator)
                     return PostResponse(true, false, "verification.request.send.to.user.email.address".localize(kodein.instance()))
                 } else {
