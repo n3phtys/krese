@@ -943,8 +943,13 @@ class ClientState {
         //collect all form data
         val id = "#submitform_${uniqueReservableKey.id}"
         @Suppress("DEPRECATION")
-        val formURLString: String = jq(id).asDynamic().serialize()
+        val myform = jq(id).asDynamic()
+        val disabled = myform.find(":input:disabled").removeAttr("disabled")
+        val formURLString: String = myform.serialize()
+        disabled.attr("disabled","disabled")
         val fields = formURLString.toNamedMap()
+        console.log("formUrlsString: " + formURLString);
+        console.log(fields);
         //post as action
         ServerPost(fields.toCreateAction(uniqueReservableKey), jwt).asyncCall {
             //process result in callback
