@@ -526,7 +526,7 @@ class ClientState {
                             }
                             tbody {
 
-                                for (reservation in reservations.get(uniqueReservableKey)!!.existingReservations) {
+                                for (reservation in reservations.get(uniqueReservableKey)!!.existingReservations.sortedBy { it.startTime }) {
                                     tr {
                                         td {
                                             +reservation.startTime.toDate().toLocalizedDateShort()
