@@ -50,7 +50,7 @@ class DatabaseEncapsulationImpl(private val kodein: Kodein) : DatabaseEncapsulat
 
     override fun isFree(key: UniqueReservableKey, blocks: List<DbBlockData>, startMillis: Long, endMillis: Long, reservableElement: ReservableElement): Boolean {
         //TODO: improve performance
-        return reservableElement.allows(blocks + this.retrieveBookingsForKey(key).filter { !(it.endTime.millis <= startMillis || it.startTime.millis > endMillis) }.flatMap { it.blocks })
+        return reservableElement.allows(blocks + this.retrieveBookingsForKey(key).filter { !(it.endTime.millis <= startMillis || it.startTime.millis >= endMillis) }.flatMap { it.blocks })
     }
 
     override fun get(id: Long?): DbBookingOutputData? {
