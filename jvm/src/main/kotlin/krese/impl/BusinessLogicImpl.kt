@@ -60,12 +60,14 @@ class BusinessLogicImpl(private val kodein: Kodein) : BusinessLogic {
 
     }
 
-    fun legalInGeneral(action: PostAction, verifiedSender: Email?): Email? {
+    data class LegalResult(val email: Email?, val result: CreateResult)
+
+    fun legalInGeneral(action: PostAction, verifiedSender: Email?): LegalResult {
         val sender: Email = when (action) {
             is CreateAction -> action.email
             else -> {
                 if (verifiedSender == null) {
-                    return null
+                    return LegalResult(null, CreateResult.UnknownError)
                 } else {
                     verifiedSender
                 }
@@ -73,34 +75,35 @@ class BusinessLogicImpl(private val kodein: Kodein) : BusinessLogic {
         }
         when (action) {
             is CreateAction -> {
-                if (isPossible(action)) {
-                    return sender
+                val res = isPossible(action)
+                if (res == CreateResult.Correct) {
+                    return LegalResult(sender, res)
                 } else {
-                    return null
+                    return LegalResult(null, res)
                 }
             }
             is DeclineAction -> {
                 val entry = databaseEncapsulation.get(action.id)
                 if (entry != null && entry.managedBy(sender)) {
-                    return sender
+                    return LegalResult(sender, CreateResult.Correct)
                 } else {
-                    return null
+                    return LegalResult(null, CreateResult.UnknownError)
                 }
             }
             is WithdrawAction -> {
                 val entry = databaseEncapsulation.get(action.id)
                 if (entry != null && entry.createdBy(sender)) {
-                    return sender
+                    return LegalResult(sender, CreateResult.Correct)
                 } else {
-                    return null
+                    return LegalResult(null, CreateResult.UnknownError)
                 }
             }
             is AcceptAction -> {
                 val entry = databaseEncapsulation.get(action.id)
                 if (entry != null && entry.managedBy(sender) && !entry.accepted) {
-                    return sender
+                    return LegalResult(sender, CreateResult.Correct)
                 } else {
-                    return null
+                    return LegalResult(null, CreateResult.UnknownError)
                 }
             }
             else -> {
@@ -110,22 +113,41 @@ class BusinessLogicImpl(private val kodein: Kodein) : BusinessLogic {
     }
 
 
+    enum class CreateResult(val err: String) {
+        Correct("create.result.correct"),
+        EndBeforeStart("create.result.endbeforestart"),
+        BlocksAreEmpty("create.result.blocksempty"),
+        BlocksAreNotAllowed("create.result.blocksnotallowed"),
+        CollisionWithOtherReservation("create.result.collision"),
+        ActionNameIsBlank("create.result.actionblank"),
+        EmailIsInvalid("create.result.emailinvalid"),
+        UnknownError("create.result.unknownerror")
+    }
+
     //TODO: currently overlying reservations are still possible, needs to be fixed (or is it already?)
 
-    private fun isPossible(action: CreateAction): Boolean {
+    private fun isPossible(action: CreateAction): CreateResult {
         val res = fileSystemWrapper.getReservableToKey(action.key)
         //end date at least 1s after start date
-        return action.endTime > action.startTime + 1000L &&
-                //key exists
-                res != null &&
-                //at least one block
-                action.blocks.isNotEmpty() &&
-                //blocks exist for key
-                action.blocks.all { res.elements.allows(it) } &&
-                //blocks are free for reservation
-                this.databaseEncapsulation.isFree(action.key, action.blocks, action.startTime, action.endTime, res.elements) &&
-                //name and email is not blank
-                action.name.isNotBlank() && action.email.address.isNotBlank() && isValidEmail(action.email.address)
+        if (action.endTime <= action.startTime + 1000L) {
+            return CreateResult.EndBeforeStart
+        }
+        if (res == null || action.blocks.isEmpty()) {
+            return CreateResult.BlocksAreEmpty
+        }
+        if (!(action.blocks.all { res.elements.allows(it) })) {
+            return CreateResult.BlocksAreNotAllowed
+        }
+        if (!this.databaseEncapsulation.isFree(action.key, action.blocks, action.startTime, action.endTime, res.elements)) {
+            return CreateResult.CollisionWithOtherReservation
+        }
+        if (action.name.isBlank()) {
+            return CreateResult.ActionNameIsBlank
+        }
+        if (action.email.address.isBlank() || !isValidEmail(action.email.address)) {
+            return CreateResult.EmailIsInvalid
+        }
+        return CreateResult.Correct
     }
 
     fun requiresEmailVerification(action: PostAction, verification: Email?, verificationValid: Boolean): Boolean {
@@ -247,8 +269,9 @@ class BusinessLogicImpl(private val kodein: Kodein) : BusinessLogic {
     }
 
     override fun process(action: PostAction, verification: Email?, verificationValid: Boolean): PostResponse {
-        val actioneer: Email? = legalInGeneral(action, verification)
-        logger.debug("actioneer = $actioneer  with verification = $verification")
+        val actioneerFull = legalInGeneral(action, verification)
+        val actioneer = actioneerFull.email
+        logger.info("actioneer = $actioneer  with verification = $verification")
         if (actioneer != null && (verification == null || actioneer.equals(verification))) {
             val key = getKey(action)
             if (key != null) {
@@ -300,7 +323,7 @@ class BusinessLogicImpl(private val kodein: Kodein) : BusinessLogic {
                 return PostResponse(false, false, "uniquereservablekey.not.recognized".localize(kodein.instance()))
             }
         } else {
-            return PostResponse(false, false, "invalid.post.request".localize(kodein.instance()))
+            return PostResponse(false, false, actioneerFull.result.err.localize(kodein.instance()))
         }
     }
 }
