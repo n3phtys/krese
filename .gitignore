@@ -20,3 +20,4 @@ js/static/web/index.html
 web/favicon.ico
 *.kjsm
 old_migrated_data.json
+run_container.sh
